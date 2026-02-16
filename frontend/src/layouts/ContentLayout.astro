@@ -1,0 +1,78 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import Header from '../components/layout/Header.astro';
+import Footer from '../components/layout/Footer.astro';
+
+interface SidebarLink {
+  title: string;
+  slug: string;
+  href: string;
+}
+
+interface Props {
+  title: string;
+  description?: string;
+  section?: string;
+  showSidebar?: boolean;
+  sidebarLinks?: SidebarLink[];
+}
+
+const {
+  title,
+  description,
+  section,
+  showSidebar = false,
+  sidebarLinks = [],
+} = Astro.props;
+
+const currentPath = Astro.url.pathname;
+---
+
+<BaseLayout title={title} description={description}>
+  <Header />
+
+  <main class="flex-1">
+    <div class="container-page py-8 md:py-12">
+      {showSidebar && sidebarLinks.length > 0 ? (
+        <div class="flex flex-col md:flex-row gap-8 md:gap-12">
+          <aside class="w-full md:w-64 shrink-0">
+            <nav aria-label="Seitennavigation">
+              <h2 class="text-lg font-semibold text-primary-800 mb-4 capitalize">
+                {section || 'Navigation'}
+              </h2>
+              <ul class="space-y-1">
+                {sidebarLinks.map((link) => {
+                  const isActive = currentPath === link.href || currentPath === `${link.href}/`;
+                  return (
+                    <li>
+                      <a
+                        href={link.href}
+                        class:list={[
+                          'block px-3 py-2 rounded-md text-sm transition-colors',
+                          isActive
+                            ? 'bg-primary-100 text-primary-800 font-semibold'
+                            : 'text-gray-600 hover:bg-primary-50 hover:text-primary-700',
+                        ]}
+                        aria-current={isActive ? 'page' : undefined}
+                      >
+                        {link.title}
+                      </a>
+                    </li>
+                  );
+                })}
+              </ul>
+            </nav>
+          </aside>
+
+          <div class="flex-1 min-w-0">
+            <slot />
+          </div>
+        </div>
+      ) : (
+        <slot />
+      )}
+    </div>
+  </main>
+
+  <Footer />
+</BaseLayout>

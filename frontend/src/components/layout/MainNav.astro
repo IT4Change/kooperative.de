@@ -1,0 +1,45 @@
+---
+interface NavItem {
+  label: string;
+  href: string;
+}
+
+const navItems: NavItem[] = [
+  { label: 'Arbeit', href: '/arbeit' },
+  { label: 'Kultur', href: '/kultur' },
+  { label: 'Bildung', href: '/bildung' },
+  { label: 'Gäste', href: '/gaeste' },
+  { label: 'Bestellung', href: '/bestellung' },
+  { label: 'Kalender', href: '/kalender' },
+];
+
+const currentPath = Astro.url.pathname;
+
+function isActive(href: string): boolean {
+  if (href === '/') {
+    return currentPath === '/';
+  }
+  return currentPath === href || currentPath.startsWith(`${href}/`);
+}
+---
+
+<nav aria-label="Hauptnavigation">
+  <ul class="flex items-center gap-1">
+    {navItems.map((item) => (
+      <li>
+        <a
+          href={item.href}
+          class:list={[
+            'px-3 py-2 rounded-md text-sm font-medium transition-colors no-underline',
+            isActive(item.href)
+              ? 'bg-primary-100 text-primary-800'
+              : 'text-gray-700 hover:bg-primary-50 hover:text-primary-700',
+          ]}
+          aria-current={isActive(item.href) ? 'page' : undefined}
+        >
+          {item.label}
+        </a>
+      </li>
+    ))}
+  </ul>
+</nav>
