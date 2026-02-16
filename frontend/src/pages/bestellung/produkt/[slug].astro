@@ -1,0 +1,310 @@
+---
+import ShopLayout from '../../../layouts/ShopLayout.astro';
+import Breadcrumb from '../../../components/common/Breadcrumb.astro';
+import RichText from '../../../components/common/RichText.astro';
+import { getProducts, getProductBySlug, getCategories, getStrapiMedia } from '../../../lib/strapi';
+
+export async function getStaticPaths() {
+  try {
+    const response = await getProducts();
+    const products = response.data || [];
+    return products.map((product: any) => ({
+      params: { slug: product.slug },
+      props: { product },
+    }));
+  } catch (e) {
+    console.error('Failed to fetch products for static paths:', e);
+    return [];
+  }
+}
+
+const { slug } = Astro.params;
+const { product: preloaded } = Astro.props;
+
+let product = preloaded;
+let allCategories: any[] = [];
+let error = false;
+
+if (!product) {
+  try {
+    const response = await getProductBySlug(slug!);
+    const products = response.data || [];
+    product = products[0] || null;
+  } catch (e) {
+    console.error(`Failed to fetch product "${slug}":`, e);
+    error = true;
+  }
+}
+
+try {
+  const catResponse = await getCategories();
+  allCategories = catResponse.data || [];
+} catch (e) {
+  // Sidebar categories are optional
+}
+
+if (!product) {
+  return Astro.redirect('/404');
+}
+
+const subcategory = product.subcategory;
+const category = subcategory?.category;
+const categorySlug = category?.slug || '';
+const categoryName = category?.name || 'Kategorie';
+const subcategoryName = subcategory?.name || '';
+const subcategorySlug = subcategory?.slug || '';
+
+const images = product.images || [];
+const mainImage = images[0] ? getStrapiMedia(images[0].url) : null;
+
+const breadcrumbs = [
+  { label: 'Home', href: '/' },
+  { label: 'Bestellung', href: '/bestellung/' },
+  ...(categorySlug ? [{ label: categoryName, href: `/bestellung/${categorySlug}` }] : []),
+  ...(subcategorySlug ? [{ label: subcategoryName, href: `/bestellung/${categorySlug}/${subcategorySlug}` }] : []),
+  { label: product.name },
+];
+
+// Prepare cart data for the add-to-cart button
+const cartItemData = JSON.stringify({
+  productId: product.id,
+  documentId: product.documentId,
+  name: product.name,
+  slug: product.slug,
+  sku: product.sku,
+  price: product.price,
+  image: mainImage,
+});
+---
+
+<ShopLayout title={product.name} activeCategory={categorySlug}>
+  <Fragment slot="sidebar">
+    <ul class="space-y-1">
+      {allCategories.map((cat: any) => {
+        const isActive = cat.slug === categorySlug;
+        return (
+          <li>
+            <a
+              href={`/bestellung/${cat.slug}`}
+              class:list={[
+                'block px-3 py-2 rounded-md text-sm transition-colors',
+                isActive
+                  ? 'bg-primary-100 text-primary-800 font-semibold'
+                  : 'text-gray-600 hover:bg-primary-50 hover:text-primary-700',
+              ]}
+            >
+              {cat.name}
+            </a>
+          </li>
+        );
+      })}
+    </ul>
+  </Fragment>
+
+  <Breadcrumb items={breadcrumbs} />
+
+  {error && (
+    <p class="text-gray-500 italic mb-8">
+      Produkt konnte nicht geladen werden. Bitte versuchen Sie es sp&auml;ter erneut.
+    </p>
+  )}
+
+  <article class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+    <div class="flex flex-col md:flex-row">
+      {/* Product images */}
+      <div class="md:w-1/2">
+        {mainImage ? (
+          <div class="aspect-square overflow-hidden bg-gray-100">
+            <img
+              src={mainImage}
+              alt={product.name}
+              class="w-full h-full object-cover"
+              id="main-product-image"
+            />
+          </div>
+        ) : (
+          <div class="aspect-square bg-gray-100 flex items-center justify-center">
+            <svg class="w-20 h-20 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0 0 22.5 18.75V5.25A2.25 2.25 0 0 0 20.25 3H3.75A2.25 2.25 0 0 0 1.5 5.25v13.5A2.25 2.25 0 0 0 3.75 21Z" />
+            </svg>
+          </div>
+        )}
+
+        {/* Thumbnail gallery */}
+        {images.length > 1 && (
+          <div class="flex gap-2 p-4 overflow-x-auto">
+            {images.map((img: any, index: number) => {
+              const thumbSrc = getStrapiMedia(img.url);
+              return (
+                <button
+                  class:list={[
+                    'shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-colors',
+                    index === 0 ? 'border-primary-500' : 'border-gray-200 hover:border-primary-300',
+                  ]}
+                  data-image-src={thumbSrc}
+                  data-image-index={index}
+                  aria-label={`Bild ${index + 1} anzeigen`}
+                >
+                  <img
+                    src={thumbSrc}
+                    alt={`${product.name} Bild ${index + 1}`}
+                    class="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Product details */}
+      <div class="md:w-1/2 p-6 md:p-8">
+        <h1 class="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
+          {product.name}
+        </h1>
+
+        {subcategoryName && (
+          <p class="text-sm text-gray-500 mb-4">
+            {categoryName} &rsaquo; {subcategoryName}
+          </p>
+        )}
+
+        {product.sku && (
+          <p class="text-xs text-gray-400 mb-4">Art.-Nr.: {product.sku}</p>
+        )}
+
+        <div class="mb-6">
+          <span class="text-3xl font-bold text-primary-800">
+            {product.price.toFixed(2).replace('.', ',')} &euro;
+          </span>
+        </div>
+
+        {/* Stock status */}
+        <div class="mb-6">
+          {product.inStock ? (
+            <span class="inline-flex items-center gap-1.5 text-sm text-green-700 bg-green-50 px-3 py-1 rounded-full border border-green-200">
+              <span class="w-2 h-2 rounded-full bg-green-500" aria-hidden="true"></span>
+              Verf&uuml;gbar
+            </span>
+          ) : (
+            <span class="inline-flex items-center gap-1.5 text-sm text-red-700 bg-red-50 px-3 py-1 rounded-full border border-red-200">
+              <span class="w-2 h-2 rounded-full bg-red-500" aria-hidden="true"></span>
+              Nicht verf&uuml;gbar
+            </span>
+          )}
+        </div>
+
+        {/* Add to cart button */}
+        {product.inStock && (
+          <div class="mb-8">
+            <button
+              id="add-to-cart-btn"
+              data-cart-item={cartItemData}
+              class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-primary-700 text-white px-8 py-3 rounded-lg font-semibold text-base hover:bg-primary-600 transition-colors shadow-md hover:shadow-lg active:scale-[0.98]"
+            >
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 0 0-16.536-1.84M7.5 14.25 5.106 5.272M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" />
+              </svg>
+              In den Warenkorb
+            </button>
+          </div>
+        )}
+
+        {/* Description */}
+        {product.description && (
+          <div class="border-t border-gray-100 pt-6">
+            <h2 class="text-lg font-semibold text-gray-800 mb-3">Beschreibung</h2>
+            <RichText content={product.description} />
+          </div>
+        )}
+      </div>
+    </div>
+  </article>
+
+  {/* Back link */}
+  <div class="mt-6">
+    <a
+      href={categorySlug ? `/bestellung/${categorySlug}` : '/bestellung/'}
+      class="inline-flex items-center gap-1 text-sm text-primary-600 hover:text-primary-500 transition-colors no-underline"
+    >
+      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
+      </svg>
+      Zur&uuml;ck zur &Uuml;bersicht
+    </a>
+  </div>
+</ShopLayout>
+
+<script>
+  // Image gallery switching
+  const mainImage = document.getElementById('main-product-image') as HTMLImageElement;
+  const thumbnails = document.querySelectorAll<HTMLButtonElement>('[data-image-src]');
+
+  if (mainImage && thumbnails.length > 0) {
+    thumbnails.forEach((thumb) => {
+      thumb.addEventListener('click', () => {
+        const src = thumb.dataset.imageSrc;
+        if (src) {
+          mainImage.src = src;
+          // Update active state
+          thumbnails.forEach((t) => t.classList.replace('border-primary-500', 'border-gray-200'));
+          thumb.classList.replace('border-gray-200', 'border-primary-500');
+        }
+      });
+    });
+  }
+
+  // Add to cart functionality
+  const addToCartBtn = document.getElementById('add-to-cart-btn');
+  if (addToCartBtn) {
+    addToCartBtn.addEventListener('click', () => {
+      const itemData = addToCartBtn.dataset.cartItem;
+      if (!itemData) return;
+
+      try {
+        const item = JSON.parse(itemData);
+
+        // Get current cart from localStorage
+        const cartKey = 'kooperative-cart';
+        const stored = localStorage.getItem(cartKey);
+        const cart = stored ? JSON.parse(stored) : { items: [] };
+
+        // Check if product already in cart
+        const existingIndex = cart.items.findIndex(
+          (ci: any) => ci.productId === item.productId
+        );
+
+        if (existingIndex >= 0) {
+          cart.items[existingIndex].quantity += 1;
+        } else {
+          cart.items.push({ ...item, quantity: 1 });
+        }
+
+        localStorage.setItem(cartKey, JSON.stringify(cart));
+
+        // Dispatch custom event for cart UI updates
+        window.dispatchEvent(new CustomEvent('cart-updated', { detail: cart }));
+
+        // Button feedback
+        const originalText = addToCartBtn.innerHTML;
+        addToCartBtn.innerHTML = `
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+          </svg>
+          Hinzugef&uuml;gt!
+        `;
+        addToCartBtn.classList.replace('bg-primary-700', 'bg-green-600');
+        addToCartBtn.classList.replace('hover:bg-primary-600', 'hover:bg-green-500');
+
+        setTimeout(() => {
+          addToCartBtn.innerHTML = originalText;
+          addToCartBtn.classList.replace('bg-green-600', 'bg-primary-700');
+          addToCartBtn.classList.replace('hover:bg-green-500', 'hover:bg-primary-600');
+        }, 2000);
+      } catch (e) {
+        console.error('Failed to add to cart:', e);
+      }
+    });
+  }
+</script>
