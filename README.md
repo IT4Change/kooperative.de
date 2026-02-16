@@ -104,3 +104,76 @@ Veranstaltungen verlinken auf einen gemeinsamen **Kalender**.
 - **Kalender**: Gemeinsamer Veranstaltungskalender für Kultur, Bildung und Gäste
 - **Suche**: Globale Suchfunktion
 - **WWW-Marker**: Einige Unterbereiche (Gärtnerei Morgengrauen, Allround Dienst Reisiger, poinz zero, Dorfuniversität) verlinken auf externe Websites
+
+---
+
+## Bestehende Websites
+
+Websites der Kooperative und ihrer Teilbereiche, die als Referenz und Inhaltsquelle für das neue Projekt dienen.
+
+### kooperative.de (Hauptseite)
+
+> https://www.kooperative.de/
+
+Aktuelle Website der Kooperative Dürnau. Klassisches HTML-Design.
+
+**Navigation:** Vertrieb, Betriebe, Info, Einkaufsbummel (Online-Shop), Kontakt aufnehmen, Soziales, Särge, Impressum, Datenschutz
+
+**Technik:** Statisches HTML, GIF-Grafiken, JavaScript-Popups. Kein CMS.
+
+---
+
+### gaertnerei-morgengrauen.de (Gärtnerei)
+
+> https://www.gaertnerei-morgengrauen.de/
+
+Website der Gärtnerei Morgengrauen, einem Zweckbetrieb der Kooperative (seit 2016).
+
+**Navigation:** Produkte, Über uns, Impressum, Kontakt, Datenschutz
+
+**Inhalte:**
+- Porträt der Leiterin Mirea Puente de la Vega Costa (Agrarwissenschaftlerin, Waldorf-Pädagogin)
+- Profil der Kooperative: Betriebsbereiche Druck, Verlag, Vertrieb, Schreinerei
+- Schwerpunkte: Bildung, Handwerk, Kunstförderung
+- Verbindung zur Dorfuniversität (Kurse zu Landwirtschaft und Handwerk)
+
+---
+
+### dorf-uni.de (Dorfuniversität)
+
+> https://www.dorf-uni.de/
+
+Website der Dorf-Universität Dürnau (Bildungseinrichtung der Kooperative).
+
+**Inhalte:**
+- Lageplan des Dorfes (Illustration von Camila Paris)
+- Aktuelles / News-Bereich
+
+**Technik:** PHP-basiert, minimalistisches Design.
+
+---
+
+### ferchervonsteinwand.org (Kulturverein)
+
+> https://www.ferchervonsteinwand.org/
+
+Website des Fercher von Steinwand e.V. (Kulturverein, Teil des Bereichs Kultur/poinz zero).
+
+**Navigation:** Verein, Aktivitäten
+
+**Besonderheit:** Zweisprachig (Deutsch/Englisch), Frame-basiertes Layout.
+
+---
+
+### restderwelt.de (Privat)
+
+> https://www.restderwelt.de/
+
+Private Website des Betreibers.
+
+**Inhalte:**
+- Klettern/Outdoor: Routen und Spots (Brüggler, Madrisa, Dalmatien, Bockmattli, Lalidererkante u.a.)
+- Reisen & Essays: Kenya, Gran Sasso, Dublin, Schottland, Stuttgart 21, Genderdebatte
+- Experimente: Umkehrbrillenversuch, Lichtsinn
+
+**Design:** Kreatives Planeten-Navigationssystem (Sonne, Jupiter, Merkur, Venus, Erde).
