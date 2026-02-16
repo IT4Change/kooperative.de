@@ -1,10 +1,9 @@
 services:
   strapi:
-    build:
-      context: ./cms
-      dockerfile: Dockerfile
+    image: node:20-alpine
     container_name: kooperative-strapi-dev
     restart: unless-stopped
+    working_dir: /app
     depends_on:
       postgres:
         condition: service_healthy
@@ -24,8 +23,8 @@ services:
       - "1337:1337"
     volumes:
       - ./cms:/app
-      - /app/node_modules
-    command: npm run develop
+      - strapi-node-modules:/app/node_modules
+    command: sh -c "npm install --legacy-peer-deps && npm run develop"
     networks:
       - kooperative-dev-net
 
@@ -51,6 +50,7 @@ services:
 
 volumes:
   postgres-dev-data:
+  strapi-node-modules:
 
 networks:
   kooperative-dev-net:
