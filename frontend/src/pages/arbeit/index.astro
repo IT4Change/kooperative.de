@@ -1,0 +1,106 @@
+---
+import ContentLayout from '../../layouts/ContentLayout.astro';
+import Hero from '../../components/common/Hero.astro';
+import RichText from '../../components/common/RichText.astro';
+import Breadcrumb from '../../components/common/Breadcrumb.astro';
+import ExternalLinkCard from '../../components/common/ExternalLinkCard.astro';
+import { getSectionBySlug, getStrapiMedia } from '../../lib/strapi';
+
+let section: any = null;
+let error = false;
+
+try {
+  const response = await getSectionBySlug('arbeit');
+  const sections = response.data || [];
+  section = sections[0] || null;
+} catch (e) {
+  console.error('Failed to fetch section "arbeit":', e);
+  error = true;
+}
+
+const heroImage = section?.heroImage ? getStrapiMedia(section.heroImage.url) : undefined;
+const subPages = section?.subPages || [];
+const externalLinks = section?.externalLinks || [];
+
+const sidebarLinks = subPages.map((sp: any) => ({
+  title: sp.title,
+  slug: sp.slug,
+  href: `/arbeit/${sp.slug}`,
+}));
+
+const breadcrumbs = [
+  { label: 'Home', href: '/' },
+  { label: 'Arbeit' },
+];
+---
+
+<ContentLayout
+  title="Arbeit"
+  section="Arbeit"
+  showSidebar={sidebarLinks.length > 0}
+  sidebarLinks={sidebarLinks}
+>
+  <Breadcrumb items={breadcrumbs} />
+
+  {section ? (
+    <Hero
+      title={section.name || 'Arbeit'}
+      image={heroImage}
+    />
+  ) : (
+    <Hero title="Arbeit" />
+  )}
+
+  <div class="mt-8">
+    {error && (
+      <p class="text-gray-500 italic mb-8">
+        Inhalte konnten nicht geladen werden. Bitte versuchen Sie es sp&auml;ter erneut.
+      </p>
+    )}
+
+    {section?.description && (
+      <div class="mb-10">
+        <RichText content={section.description} />
+      </div>
+    )}
+
+    {/* Sub-page cards */}
+    {subPages.length > 0 && (
+      <section class="mb-10">
+        <h2 class="text-xl font-semibold text-primary-800 mb-6">Bereiche</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {subPages.map((sp: any) => (
+            <a
+              href={`/arbeit/${sp.slug}`}
+              class="group block bg-white rounded-xl border border-gray-200 p-5 no-underline hover:shadow-md hover:border-primary-300 transition-all duration-200"
+            >
+              <h3 class="text-lg font-semibold text-primary-800 group-hover:text-primary-600 transition-colors mb-2">
+                {sp.title}
+              </h3>
+              <span class="text-sm text-primary-600 group-hover:text-primary-500">
+                Mehr erfahren &rarr;
+              </span>
+            </a>
+          ))}
+        </div>
+      </section>
+    )}
+
+    {/* External links (www entries) */}
+    {externalLinks.length > 0 && (
+      <section class="mb-10">
+        <h2 class="text-xl font-semibold text-primary-800 mb-6">Im Web</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {externalLinks.map((link: any) => (
+            <ExternalLinkCard
+              name={link.name}
+              url={link.url}
+              teaser={link.teaser}
+              logo={link.logo ? getStrapiMedia(link.logo.url) : undefined}
+            />
+          ))}
+        </div>
+      </section>
+    )}
+  </div>
+</ContentLayout>

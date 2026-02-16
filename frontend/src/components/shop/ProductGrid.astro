@@ -1,0 +1,43 @@
+---
+import ProductCard from './ProductCard.astro';
+import { getStrapiMedia } from '../../lib/strapi';
+
+interface ProductItem {
+  id: number;
+  documentId: string;
+  name: string;
+  slug: string;
+  price: number;
+  sku: string;
+  images?: { url: string }[];
+}
+
+interface Props {
+  products: ProductItem[];
+}
+
+const { products } = Astro.props;
+---
+
+{products.length > 0 ? (
+  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+    {products.map((product) => (
+      <ProductCard
+        name={product.name}
+        slug={product.slug}
+        price={product.price}
+        image={product.images?.[0] ? getStrapiMedia(product.images[0].url) : undefined}
+        sku={product.sku}
+        productId={product.id}
+        documentId={product.documentId}
+      />
+    ))}
+  </div>
+) : (
+  <div class="text-center py-16">
+    <svg class="mx-auto w-16 h-16 text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5m8.25 3v6.75m0 0-3-3m3 3 3-3M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" />
+    </svg>
+    <p class="text-gray-500 text-lg">Keine Produkte gefunden</p>
+  </div>
+)}

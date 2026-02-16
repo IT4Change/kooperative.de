@@ -1,0 +1,91 @@
+---
+import ContentLayout from '../../layouts/ContentLayout.astro';
+import Breadcrumb from '../../components/common/Breadcrumb.astro';
+import RichText from '../../components/common/RichText.astro';
+import ImageGallery from '../../components/common/ImageGallery.astro';
+import { getSubPagesBySectionSlug, getSubPageBySlug } from '../../lib/strapi';
+
+export async function getStaticPaths() {
+  try {
+    const response = await getSubPagesBySectionSlug('arbeit');
+    const subPages = response.data || [];
+    return subPages.map((sp: any) => ({
+      params: { slug: sp.slug },
+      props: { subPage: sp },
+    }));
+  } catch (e) {
+    console.error('Failed to fetch sub-pages for section "arbeit":', e);
+    return [];
+  }
+}
+
+const { slug } = Astro.params;
+const { subPage: preloaded } = Astro.props;
+
+let subPage = preloaded;
+
+if (!subPage) {
+  try {
+    const response = await getSubPageBySlug(slug!);
+    const pages = response.data || [];
+    subPage = pages[0] || null;
+  } catch (e) {
+    console.error(`Failed to fetch sub-page "${slug}":`, e);
+  }
+}
+
+if (!subPage) {
+  return Astro.redirect('/404');
+}
+
+// Build sidebar links from section's sub-pages
+let sidebarLinks: any[] = [];
+try {
+  const response = await getSubPagesBySectionSlug('arbeit');
+  const allSubPages = response.data || [];
+  sidebarLinks = allSubPages.map((sp: any) => ({
+    title: sp.title,
+    slug: sp.slug,
+    href: `/arbeit/${sp.slug}`,
+  }));
+} catch (e) {
+  // Sidebar links are optional, continue without them
+}
+
+const gallery = subPage.gallery || [];
+
+const breadcrumbs = [
+  { label: 'Home', href: '/' },
+  { label: 'Arbeit', href: '/arbeit/' },
+  { label: subPage.title },
+];
+---
+
+<ContentLayout
+  title={subPage.title}
+  description={subPage.seo?.metaDescription}
+  section="Arbeit"
+  showSidebar={sidebarLinks.length > 0}
+  sidebarLinks={sidebarLinks}
+>
+  <Breadcrumb items={breadcrumbs} />
+
+  <article>
+    <h1 class="mb-8">{subPage.title}</h1>
+
+    {subPage.content ? (
+      <div class="mb-10">
+        <RichText content={subPage.content} />
+      </div>
+    ) : (
+      <p class="text-gray-500 italic mb-10">Diese Seite hat noch keinen Inhalt.</p>
+    )}
+
+    {gallery.length > 0 && (
+      <section class="mt-8">
+        <h2 class="text-xl font-semibold text-primary-800 mb-4">Galerie</h2>
+        <ImageGallery images={gallery} />
+      </section>
+    )}
+  </article>
+</ContentLayout>

@@ -1,0 +1,123 @@
+---
+import ContentLayout from '../layouts/ContentLayout.astro';
+import Breadcrumb from '../components/common/Breadcrumb.astro';
+import { getAllEvents } from '../lib/strapi';
+
+let events: any[] = [];
+let error = false;
+
+try {
+  const response = await getAllEvents();
+  events = response.data || [];
+} catch (e) {
+  console.error('Failed to fetch events:', e);
+  error = true;
+}
+
+const breadcrumbs = [
+  { label: 'Home', href: '/' },
+  { label: 'Kalender' },
+];
+
+// Serialize events to JSON for the Vue component
+const eventsJson = JSON.stringify(events.map((event: any) => ({
+  id: event.id,
+  title: event.title,
+  description: event.description,
+  startDate: event.startDate,
+  endDate: event.endDate,
+  location: event.location,
+  section: event.section ? {
+    name: event.section.name,
+    slug: event.section.slug,
+  } : null,
+})));
+---
+
+<ContentLayout title="Kalender">
+  <Breadcrumb items={breadcrumbs} />
+
+  <h1 class="mb-8">Veranstaltungskalender</h1>
+
+  {error && (
+    <p class="text-gray-500 italic mb-8">
+      Der Kalender konnte nicht geladen werden. Bitte versuchen Sie es sp&auml;ter erneut.
+    </p>
+  )}
+
+  {!error && events.length === 0 && (
+    <p class="text-gray-500 italic">
+      Derzeit sind keine Veranstaltungen geplant.
+    </p>
+  )}
+
+  {!error && events.length > 0 && (
+    <div id="calendar-container">
+      {/* CalendarView Vue island - will be hydrated client-side */}
+      <div
+        data-calendar-events={eventsJson}
+        id="calendar-app"
+      >
+        {/* Fallback: list view for non-JS or during hydration */}
+        <noscript>
+          <div class="space-y-4">
+            {events.map((event: any) => {
+              const startDate = new Date(event.startDate);
+              return (
+                <div class="bg-white rounded-lg border border-gray-200 p-4">
+                  <h3 class="font-semibold text-primary-800">{event.title}</h3>
+                  <p class="text-sm text-gray-500">
+                    {startDate.toLocaleDateString('de-DE', {
+                      weekday: 'long',
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                    })}
+                    {event.location && ` \u2013 ${event.location}`}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        </noscript>
+      </div>
+
+      {/* Loading placeholder while Vue hydrates */}
+      <div id="calendar-loading" class="flex items-center justify-center py-12">
+        <div class="text-gray-400 text-sm">Kalender wird geladen...</div>
+      </div>
+    </div>
+  )}
+</ContentLayout>
+
+<script>
+  // Mount CalendarView Vue component when ready
+  async function mountCalendar() {
+    const container = document.getElementById('calendar-app');
+    const loading = document.getElementById('calendar-loading');
+    if (!container) return;
+
+    const eventsData = container.dataset.calendarEvents;
+    if (!eventsData) return;
+
+    try {
+      const { createApp } = await import('vue');
+      const { default: CalendarView } = await import('../components/calendar/CalendarView.vue');
+
+      const events = JSON.parse(eventsData);
+      const app = createApp(CalendarView, { events });
+      app.mount(container);
+
+      if (loading) loading.style.display = 'none';
+    } catch (e) {
+      console.error('Failed to mount calendar:', e);
+      if (loading) loading.textContent = 'Kalender konnte nicht geladen werden.';
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', mountCalendar);
+  } else {
+    mountCalendar();
+  }
+</script>

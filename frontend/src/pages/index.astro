@@ -1,0 +1,88 @@
+---
+import ContentLayout from '../layouts/ContentLayout.astro';
+import Hero from '../components/common/Hero.astro';
+import RichText from '../components/common/RichText.astro';
+import { getHomepage, getStrapiMedia } from '../lib/strapi';
+
+let homepage: any = null;
+let error = false;
+
+try {
+  const response = await getHomepage();
+  homepage = response.data;
+} catch (e) {
+  console.error('Failed to fetch homepage:', e);
+  error = true;
+}
+
+const heroImage = homepage?.heroImage ? getStrapiMedia(homepage.heroImage.url) : undefined;
+
+const sections = [
+  { title: 'Arbeit', href: '/arbeit/', description: 'Bau, Druckerei, Schreinerei und mehr', icon: 'hammer' },
+  { title: 'Kultur', href: '/kultur/', description: 'Theater, Veranstaltungen und Kulturfond', icon: 'music' },
+  { title: 'Bildung', href: '/bildung/', description: 'Sprache, Bienen, Praktika und Seminare', icon: 'book' },
+  { title: 'G\u00e4ste', href: '/gaeste/', description: 'Orientierung, Lernen, Hilfe und Tagesg\u00e4ste', icon: 'users' },
+];
+---
+
+<ContentLayout title="Kooperative D\u00fcrnau">
+  {homepage ? (
+    <Hero
+      title={homepage.title || 'Kooperative D\u00fcrnau'}
+      subtitle={homepage.subtitle}
+      image={heroImage}
+    />
+  ) : (
+    <Hero title="Kooperative D\u00fcrnau" subtitle="Gemeinschaftlich leben, arbeiten und gestalten." />
+  )}
+
+  <div class="py-12 md:py-16">
+    {/* Intro Section */}
+    {homepage?.introText && (
+      <section class="max-w-3xl mx-auto mb-12 md:mb-16 px-4">
+        <RichText content={homepage.introText} />
+      </section>
+    )}
+
+    {error && (
+      <div class="max-w-3xl mx-auto mb-12 px-4">
+        <p class="text-gray-500 italic">Inhalte konnten nicht geladen werden. Bitte versuchen Sie es sp\u00e4ter erneut.</p>
+      </div>
+    )}
+
+    {/* Section Links Grid */}
+    <section class="px-4">
+      <h2 class="text-2xl md:text-3xl font-semibold text-center text-primary-800 mb-8">
+        Unsere Bereiche
+      </h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
+        {sections.map((section) => (
+          <a
+            href={section.href}
+            class="group block bg-white rounded-xl border border-gray-200 p-6 text-center no-underline hover:shadow-lg hover:border-primary-300 transition-all duration-200"
+          >
+            <h3 class="text-xl font-semibold text-primary-800 group-hover:text-primary-600 transition-colors mb-2">
+              {section.title}
+            </h3>
+            <p class="text-sm text-gray-600 leading-relaxed">
+              {section.description}
+            </p>
+          </a>
+        ))}
+      </div>
+    </section>
+
+    {/* Shop Link */}
+    <section class="mt-12 md:mt-16 px-4 text-center">
+      <a
+        href="/bestellung/"
+        class="inline-flex items-center gap-2 bg-primary-700 text-white px-8 py-4 rounded-xl text-lg font-semibold no-underline hover:bg-primary-600 transition-colors shadow-md hover:shadow-lg"
+      >
+        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 0 0-16.536-1.84M7.5 14.25 5.106 5.272M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" />
+        </svg>
+        Produkte bestellen
+      </a>
+    </section>
+  </div>
+</ContentLayout>

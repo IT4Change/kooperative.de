@@ -1,0 +1,58 @@
+---
+import ContentLayout from '../layouts/ContentLayout.astro';
+import Breadcrumb from '../components/common/Breadcrumb.astro';
+import RichText from '../components/common/RichText.astro';
+import { getPages, getPageBySlug } from '../lib/strapi';
+
+export async function getStaticPaths() {
+  try {
+    const response = await getPages();
+    const pages = response.data || [];
+    return pages.map((page: any) => ({
+      params: { slug: page.slug },
+      props: { pageData: page },
+    }));
+  } catch (e) {
+    console.error('Failed to fetch pages for static paths:', e);
+    return [];
+  }
+}
+
+const { slug } = Astro.params;
+const { pageData: preloadedPage } = Astro.props;
+
+let page = preloadedPage;
+
+if (!page) {
+  try {
+    const response = await getPageBySlug(slug!);
+    const pages = response.data || [];
+    page = pages[0] || null;
+  } catch (e) {
+    console.error(`Failed to fetch page "${slug}":`, e);
+  }
+}
+
+if (!page) {
+  return Astro.redirect('/404');
+}
+
+const breadcrumbs = [
+  { label: 'Home', href: '/' },
+  { label: page.title },
+];
+---
+
+<ContentLayout title={page.title} description={page.seo?.metaDescription}>
+  <Breadcrumb items={breadcrumbs} />
+
+  <article>
+    <h1 class="mb-8">{page.title}</h1>
+
+    {page.content ? (
+      <RichText content={page.content} />
+    ) : (
+      <p class="text-gray-500 italic">Diese Seite hat noch keinen Inhalt.</p>
+    )}
+  </article>
+</ContentLayout>
