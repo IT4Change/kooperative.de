@@ -10,8 +10,8 @@ Website für die Kooperative Dürnau mit Informationsseiten, Veranstaltungskalen
 |---------|-------------|
 | **Frontend** | Astro 5 (Static Output) + Vue 3 (Islands) |
 | **Styling** | Tailwind CSS |
-| **CMS** | Strapi 5 (Community Edition, self-hosted) |
-| **Datenbank** | PostgreSQL (für Strapi) |
+| **CMS** | Payload CMS 3 (standalone, self-hosted) |
+| **Datenbank** | PostgreSQL (für Payload) |
 | **State (Client)** | nanostores + @nanostores/vue |
 | **Suche** | Fuse.js (client-seitig) |
 | **Hosting** | noch offen (lokal entwickeln, später entscheiden) |
@@ -76,8 +76,8 @@ Website für die Kooperative Dürnau mit Informationsseiten, Veranstaltungskalen
 | Entscheidung | Gewählt | Begründung |
 |-------------|---------|------------|
 | Payment | Kein Online-Payment | Bestellung per E-Mail reicht |
-| CMS | Strapi 5 | Bewährte Admin-UI, große Community |
+| CMS | Payload CMS 3 (standalone) | TypeScript-first, echte DB-Migrations, gutes Seeding |
 | Frontend | Astro 5 + Vue 3 | Statische Seiten + interaktive Inseln |
-| Seeding | bootstrap() + export/import | Strapi-Standard, kein eigenes Migrations-System |
+| Seeding | Payload Migrations + Seed-Scripts | Voll versionierbar im Code |
 | Hosting | offen | Später entscheiden |
 | Design | offen | Funktional starten, Design separat |
