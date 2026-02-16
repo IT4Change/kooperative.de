@@ -14,7 +14,13 @@
     "@strapi/plugin-users-permissions": "^5.36.0",
     "@strapi/plugin-cloud": "^5.36.0",
     "@strapi/provider-email-nodemailer": "^5.36.0",
-    "pg": "^8.13.0"
+    "esbuild": "^0.25.0",
+    "esbuild-register": "^3.6.0",
+    "pg": "^8.13.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.28.0",
+    "styled-components": "^6.1.13"
   },
   "devDependencies": {
     "typescript": "^5.5.0"
