@@ -1,0 +1,52 @@
+services:
+  strapi:
+    build:
+      context: ./cms
+      dockerfile: Dockerfile
+    container_name: kooperative-strapi-dev
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_NAME: kooperative
+      DATABASE_USERNAME: strapi
+      DATABASE_PASSWORD: strapi_dev
+      NODE_ENV: development
+    ports:
+      - "1337:1337"
+    volumes:
+      - ./cms:/app
+      - /app/node_modules
+    command: npm run develop
+    networks:
+      - kooperative-dev-net
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: kooperative-postgres-dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: kooperative
+      POSTGRES_USER: strapi
+      POSTGRES_PASSWORD: strapi_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-dev-data:/var/lib/postgresql/data
+    networks:
+      - kooperative-dev-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U strapi -d kooperative"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres-dev-data:
+
+networks:
+  kooperative-dev-net:
+    driver: bridge
