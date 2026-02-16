@@ -1,4 +1,4 @@
-export default ({ env }) => ({
+export default ({ env }: { env: any }) => ({
   connection: {
     client: "postgres",
     connection: {

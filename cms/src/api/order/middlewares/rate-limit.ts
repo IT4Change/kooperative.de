@@ -20,8 +20,8 @@ setInterval(() => {
   }
 }, 10 * 60 * 1000);
 
-export default (config, { strapi }) => {
-  return async (ctx, next) => {
+export default (config: any, { strapi }: { strapi: any }) => {
+  return async (ctx: any, next: any) => {
     const clientIp =
       ctx.request.ip ||
       ctx.request.headers["x-forwarded-for"] ||

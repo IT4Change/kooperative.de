@@ -214,8 +214,8 @@ Ihr Team von kooperative.de
       }
 
       // Return the created order with the generated order number
-      const sanitizedEntry = await this.sanitizeOutput(entry, ctx);
-      return this.transformResponse(sanitizedEntry);
+      const sanitizedEntry = await (this as any).sanitizeOutput(entry, ctx);
+      return (this as any).transformResponse(sanitizedEntry);
     },
   })
 );
