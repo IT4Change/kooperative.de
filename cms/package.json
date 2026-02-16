@@ -10,18 +10,17 @@
     "strapi": "strapi"
   },
   "dependencies": {
-    "@strapi/strapi": "^5.0.0",
-    "@strapi/plugin-users-permissions": "^5.0.0",
-    "@strapi/plugin-email": "^5.0.0",
-    "@strapi/plugin-cloud": "^5.0.0",
-    "pg": "^8.13.0",
-    "@strapi/provider-email-nodemailer": "^5.0.0"
+    "@strapi/strapi": "^5.36.0",
+    "@strapi/plugin-users-permissions": "^5.36.0",
+    "@strapi/plugin-cloud": "^5.36.0",
+    "@strapi/provider-email-nodemailer": "^5.36.0",
+    "pg": "^8.13.0"
   },
   "devDependencies": {
     "typescript": "^5.5.0"
   },
   "engines": {
-    "node": ">=18.0.0 <=22.x.x",
+    "node": ">=18.0.0",
     "npm": ">=6.0.0"
   },
   "strapi": {
