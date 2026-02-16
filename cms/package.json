@@ -1,0 +1,31 @@
+{
+  "name": "kooperative-cms",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Strapi 5 CMS for kooperative.de",
+  "scripts": {
+    "develop": "strapi develop",
+    "start": "strapi start",
+    "build": "strapi build",
+    "strapi": "strapi"
+  },
+  "dependencies": {
+    "@strapi/strapi": "^5.0.0",
+    "@strapi/plugin-users-permissions": "^5.0.0",
+    "@strapi/plugin-email": "^5.0.0",
+    "@strapi/plugin-cloud": "^5.0.0",
+    "pg": "^8.13.0",
+    "@strapi/provider-email-nodemailer": "^5.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0"
+  },
+  "engines": {
+    "node": ">=18.0.0 <=22.x.x",
+    "npm": ">=6.0.0"
+  },
+  "strapi": {
+    "uuid": "kooperative-de-cms"
+  },
+  "license": "UNLICENSED"
+}
