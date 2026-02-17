@@ -12,6 +12,52 @@
       </div>
     </section>
 
+    <!-- Bestellung -->
+    <section id="bestellung" class="h-screen flex flex-col items-center justify-center bg-[#4a7c59] relative overflow-hidden">
+      <div class="relative z-10 text-center text-white max-w-3xl px-6">
+        <h2 class="text-4xl font-bold mb-4">Unser Sortiment</h2>
+        <p class="text-lg mb-10 text-white/80">Bücher, Papeterie, Medien, Körperpflege, Holzwaren und mehr &mdash; direkt von der Kooperative.</p>
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <a href="https://shop.kooperative.de/buecher_aktuell.php" target="_blank" rel="noopener" class="bg-white/10 hover:bg-white/20 backdrop-blur rounded-lg p-5 transition">
+            <span class="block text-xl font-semibold mb-1">Bücher</span>
+            <span class="text-sm text-white/70">Kooperative, Gebrauchte, Kataloge, Noten</span>
+          </a>
+          <a href="https://shop.kooperative.de/papeterie_aktuell.php" target="_blank" rel="noopener" class="bg-white/10 hover:bg-white/20 backdrop-blur rounded-lg p-5 transition">
+            <span class="block text-xl font-semibold mb-1">Papeterie</span>
+            <span class="text-sm text-white/70">Notizblöcke, Postkarten, Poster</span>
+          </a>
+          <a href="https://shop.kooperative.de/medien_aktuell.php" target="_blank" rel="noopener" class="bg-white/10 hover:bg-white/20 backdrop-blur rounded-lg p-5 transition">
+            <span class="block text-xl font-semibold mb-1">Medien</span>
+            <span class="text-sm text-white/70">Texte, Sprache, Filme, Musik</span>
+          </a>
+          <a href="https://shop.kooperative.de/sonett_aktuell.php" target="_blank" rel="noopener" class="bg-white/10 hover:bg-white/20 backdrop-blur rounded-lg p-5 transition">
+            <span class="block text-xl font-semibold mb-1">Sonett</span>
+            <span class="text-sm text-white/70">Wäsche, Geschirr, Putzmittel</span>
+          </a>
+          <a href="https://shop.kooperative.de/koerperpflege_aktuell.php" target="_blank" rel="noopener" class="bg-white/10 hover:bg-white/20 backdrop-blur rounded-lg p-5 transition">
+            <span class="block text-xl font-semibold mb-1">Körperpflege</span>
+            <span class="text-sm text-white/70">Gesicht, Haut & Haare, Bad & Dusche</span>
+          </a>
+          <a href="https://shop.kooperative.de/holz_aktuell.php" target="_blank" rel="noopener" class="bg-white/10 hover:bg-white/20 backdrop-blur rounded-lg p-5 transition">
+            <span class="block text-xl font-semibold mb-1">Holz</span>
+            <span class="text-sm text-white/70">Spiele, Türen, Stühle, Särge</span>
+          </a>
+          <a href="https://shop.kooperative.de/lebensmittel_aktuell.php" target="_blank" rel="noopener" class="bg-white/10 hover:bg-white/20 backdrop-blur rounded-lg p-5 transition">
+            <span class="block text-xl font-semibold mb-1">Lebensmittel</span>
+            <span class="text-sm text-white/70">Aus der Kooperative</span>
+          </a>
+          <a href="https://shop.kooperative.de/diverses_aktuell.php" target="_blank" rel="noopener" class="bg-white/10 hover:bg-white/20 backdrop-blur rounded-lg p-5 transition">
+            <span class="block text-xl font-semibold mb-1">Diverses</span>
+            <span class="text-sm text-white/70">Weiteres aus dem Sortiment</span>
+          </a>
+        </div>
+        <a href="https://shop.kooperative.de/" target="_blank" rel="noopener" class="inline-block mt-10 px-8 py-3 bg-white text-[#4a7c59] font-semibold rounded-lg text-lg hover:bg-white/90 transition">
+          Zum Shop
+        </a>
+        <p class="mt-4 text-white/60 text-sm">Warenkorb &rarr; Bestellformular &rarr; Versand per E-Mail. Kein Online-Payment.</p>
+      </div>
+    </section>
+
     <!-- Hauptbereiche -->
     <div class="home">
     <section class="bereiche">
