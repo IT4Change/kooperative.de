@@ -326,23 +326,46 @@ function getSections(): HTMLElement[] {
     .filter((el): el is HTMLElement => el !== null)
 }
 
-function getNextSection(direction: 'down'): HTMLElement | null {
+function getTargetSection(direction: 'down' | 'up'): HTMLElement | null {
   const sections = getSections()
   const scrollY = window.scrollY
   const threshold = 20
 
-  for (const section of sections) {
-    if (section.offsetTop > scrollY + threshold) {
-      return section
+  if (direction === 'down') {
+    for (const section of sections) {
+      if (section.offsetTop > scrollY + threshold) {
+        return section
+      }
+    }
+  } else {
+    // Beim Hochscrollen: nur zur Startseite (erste Sektion) einrasten
+    const hero = sections[0]
+    if (hero && scrollY > threshold && scrollY < hero.offsetHeight) {
+      return hero
     }
   }
   return null
 }
 
 function onWheel(e: WheelEvent) {
-  if (isScrolling || e.deltaY <= 0) return
+  if (isScrolling) return
 
-  const next = getNextSection('down')
+  const direction = e.deltaY > 0 ? 'down' : 'up'
+
+  if (direction === 'up') {
+    const hero = getSections()[0]
+    if (!hero) return
+    const scrollY = window.scrollY
+    if (scrollY > 0 && scrollY <= hero.offsetHeight) {
+      e.preventDefault()
+      isScrolling = true
+      hero.scrollIntoView({ behavior: 'smooth' })
+      setTimeout(() => { isScrolling = false }, 800)
+    }
+    return
+  }
+
+  const next = getTargetSection('down')
   if (!next) return
 
   const scrollY = window.scrollY
@@ -368,9 +391,24 @@ function onTouchStart(e: TouchEvent) {
 function onTouchMove(e: TouchEvent) {
   if (isScrolling) return
   const deltaY = touchStartY - e.touches[0].clientY
+
+  // Swipe nach unten (Inhalt nach oben) → zur Hero snappen
+  if (deltaY < -30) {
+    const hero = getSections()[0]
+    if (!hero) return
+    const scrollY = window.scrollY
+    if (scrollY > 0 && scrollY <= hero.offsetHeight) {
+      e.preventDefault()
+      isScrolling = true
+      hero.scrollIntoView({ behavior: 'smooth' })
+      setTimeout(() => { isScrolling = false }, 800)
+    }
+    return
+  }
+
   if (deltaY <= 30) return
 
-  const next = getNextSection('down')
+  const next = getTargetSection('down')
   if (!next) return
 
   const scrollY = window.scrollY
