@@ -15,12 +15,22 @@
           <img src="/img/logo.gif" alt="Kooperative Dürnau" class="logo-img" />
         </NuxtLink>
 
-        <nav class="main-nav">
-          <NuxtLink to="/#bestellung">Bestellung</NuxtLink>
-          <NuxtLink to="/#arbeit">Arbeit</NuxtLink>
-          <NuxtLink to="/#kultur">Kultur</NuxtLink>
-          <NuxtLink to="/#bildung">Bildung</NuxtLink>
-          <NuxtLink to="/#gaeste">Gäste</NuxtLink>
+        <button class="burger" :class="{ open: menuOpen }" aria-label="Menü" @click="menuOpen = !menuOpen">
+          <span /><span /><span />
+        </button>
+
+        <nav class="main-nav" :class="{ open: menuOpen }">
+          <NuxtLink to="/#bestellung" :class="{ active: activeSection === 'bestellung' }" @click="menuOpen = false">Bestellung</NuxtLink>
+          <NuxtLink to="/#arbeit" :class="{ active: activeSection === 'arbeit' }" @click="menuOpen = false">Arbeit</NuxtLink>
+          <NuxtLink to="/#kultur" :class="{ active: activeSection === 'kultur' }" @click="menuOpen = false">Kultur</NuxtLink>
+          <NuxtLink to="/#bildung" :class="{ active: activeSection === 'bildung' }" @click="menuOpen = false">Bildung</NuxtLink>
+          <NuxtLink to="/#gaeste" :class="{ active: activeSection === 'gaeste' }" @click="menuOpen = false">Gäste</NuxtLink>
+          <div class="mobile-info-links">
+            <NuxtLink to="/historie" @click="menuOpen = false">Historie</NuxtLink>
+            <NuxtLink to="/kontakt" @click="menuOpen = false">Kontakt</NuxtLink>
+            <NuxtLink to="/impressum" @click="menuOpen = false">Impressum</NuxtLink>
+            <NuxtLink to="/datenschutz" @click="menuOpen = false">Datenschutz</NuxtLink>
+          </div>
         </nav>
       </div>
     </header>
@@ -50,6 +60,8 @@
 
 <script setup lang="ts">
 const scrolled = ref(false)
+const menuOpen = ref(false)
+const activeSection = ref('')
 const headerRef = ref<HTMLElement>()
 let lastScrollY = 0
 
@@ -64,6 +76,25 @@ onMounted(() => {
   }
   window.addEventListener('scroll', onScroll, { passive: true })
   onUnmounted(() => window.removeEventListener('scroll', onScroll))
+
+  const sectionIds = ['bestellung', 'arbeit', 'kultur', 'bildung', 'gaeste']
+  const observer = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) {
+          activeSection.value = entry.target.id
+        }
+      }
+    },
+    { threshold: 0.4 },
+  )
+
+  for (const id of sectionIds) {
+    const el = document.getElementById(id)
+    if (el) observer.observe(el)
+  }
+
+  onUnmounted(() => observer.disconnect())
 })
 </script>
 
@@ -119,7 +150,6 @@ onMounted(() => {
   align-items: center;
   gap: 2rem;
   padding: 1rem 1.5rem;
-  flex-wrap: wrap;
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(8px);
   transition: all 0.3s ease;
@@ -145,6 +175,40 @@ onMounted(() => {
   height: 28px;
 }
 
+/* Burger Button */
+.burger {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  margin-left: auto;
+}
+
+.burger span {
+  display: block;
+  width: 24px;
+  height: 2px;
+  background: #333;
+  transition: all 0.3s ease;
+  transform-origin: center;
+}
+
+.burger.open span:nth-child(1) {
+  transform: rotate(45deg) translate(5px, 5px);
+}
+
+.burger.open span:nth-child(2) {
+  opacity: 0;
+}
+
+.burger.open span:nth-child(3) {
+  transform: rotate(-45deg) translate(5px, -5px);
+}
+
+/* Desktop Nav */
 .main-nav {
   display: flex;
   gap: 1.5rem;
@@ -165,16 +229,25 @@ onMounted(() => {
   font-size: 0.9rem;
 }
 
-.main-nav a:hover,
-.main-nav a.router-link-active {
+.main-nav a:hover {
+  color: #4a7c59;
+}
+
+.main-nav a.active {
   border-bottom-color: #4a7c59;
   color: #4a7c59;
 }
 
+.mobile-info-links {
+  display: none;
+}
+
+/* Main */
 .main {
   flex: 1;
 }
 
+/* Footer */
 .footer {
   background: #333;
   color: #ddd;
@@ -211,5 +284,65 @@ onMounted(() => {
   margin: 0.5rem 0 0;
   font-size: 0.9rem;
   color: #aaa;
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .header-top {
+    display: none;
+  }
+
+  .burger {
+    display: flex;
+  }
+
+  .main-nav {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    flex-direction: column;
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(8px);
+    padding: 1rem 1.5rem 1.5rem;
+    gap: 0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  .main-nav.open {
+    display: flex;
+  }
+
+  .main-nav a {
+    padding: 0.75rem 0;
+    font-size: 1.1rem;
+    border-bottom: 1px solid #eee;
+  }
+
+  .main-nav a:last-of-type {
+    border-bottom: none;
+  }
+
+  .mobile-info-links {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 2px solid #4a7c59;
+  }
+
+  .mobile-info-links a {
+    padding: 0.5rem 0;
+    font-size: 0.9rem;
+    color: #666;
+    border-bottom: none;
+  }
+
+  .footer-content {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
 }
 </style>
