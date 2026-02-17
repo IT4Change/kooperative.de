@@ -177,3 +177,48 @@ Private Website des Betreibers.
 - Experimente: Umkehrbrillenversuch, Lichtsinn
 
 **Design:** Kreatives Planeten-Navigationssystem (Sonne, Jupiter, Merkur, Venus, Erde).
+
+---
+
+## Verlinkte externe URLs im Projekt
+
+Alle externen Links, die auf der neuen Website verwendet werden (öffnen in neuem Tab).
+
+### Shop (shop.kooperative.de)
+
+| Bereich | URL |
+|---------|-----|
+| Shop Startseite | https://shop.kooperative.de/ |
+| Bücher | https://shop.kooperative.de/buecher_aktuell.php |
+| Papeterie | https://shop.kooperative.de/papeterie_aktuell.php |
+| Medien | https://shop.kooperative.de/medien_aktuell.php |
+| Sonett | https://shop.kooperative.de/sonett_aktuell.php |
+| Körperpflege | https://shop.kooperative.de/koerperpflege_aktuell.php |
+| Holz | https://shop.kooperative.de/holz_aktuell.php |
+| Lebensmittel | https://shop.kooperative.de/lebensmittel_aktuell.php |
+| Diverses | https://shop.kooperative.de/diverses_aktuell.php |
+
+### Arbeitsbereiche
+
+| Bereich | URL |
+|---------|-----|
+| Gärtnerei Morgengrauen | https://www.gaertnerei-morgengrauen.de/ |
+
+### Kultur
+
+| Bereich | URL |
+|---------|-----|
+| poinz zero (Fercher von Steinwand e.V.) | https://www.ferchervonsteinwand.org/ |
+
+### Bildung
+
+| Bereich | URL |
+|---------|-----|
+| Dorfuniversität | https://www.dorf-uni.de/ |
+
+### Noch ohne externe URL
+
+- Bau
+- Druckerei
+- Schreinerei
+- Allround Dienst Reisiger
