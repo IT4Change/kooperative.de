@@ -12,7 +12,7 @@
 
       <div class="header-main">
         <NuxtLink to="/" class="logo">
-          <strong>Kooperative Dürnau</strong>
+          <img src="/img/logo.gif" alt="Kooperative Dürnau" class="logo-img" />
         </NuxtLink>
 
         <nav class="main-nav">
@@ -92,9 +92,12 @@
 
 .logo {
   text-decoration: none;
-  color: #4a7c59;
-  font-size: 1.3rem;
-  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.logo-img {
+  height: 40px;
+  width: auto;
 }
 
 .main-nav {
