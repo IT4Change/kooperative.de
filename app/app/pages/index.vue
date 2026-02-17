@@ -1,7 +1,7 @@
 <template>
   <div>
     <!-- Hero -->
-    <section id="hero" class="h-screen flex flex-col items-center justify-center bg-cover bg-center bg-no-repeat relative" style="background-image: url('/img/hero.jpg');">
+    <section id="hero" class="h-screen flex flex-col items-center justify-center bg-cover bg-center bg-no-repeat relative" :style="{ backgroundImage: `url('${baseURL}img/hero.jpg')` }">
       <div class="absolute inset-0 bg-black/50" />
       <div class="relative z-10 text-center text-white drop-shadow-lg">
         <h1 class="text-3xl md:text-5xl font-bold mb-4 px-4 [text-shadow:_0_2px_8px_rgba(0,0,0,0.5)]">Kooperative Dürnau</h1>
@@ -13,7 +13,7 @@
     </section>
 
     <!-- Bestellung -->
-    <section id="bestellung" class="min-h-screen md:h-screen flex flex-col items-center justify-center bg-cover bg-center bg-no-repeat relative overflow-hidden py-20 md:py-0" style="background-image: url('/img/sections/bestellung.jpg');">
+    <section id="bestellung" class="min-h-screen md:h-screen flex flex-col items-center justify-center bg-cover bg-center bg-no-repeat relative overflow-hidden py-20 md:py-0" :style="{ backgroundImage: `url('${baseURL}img/sections/bestellung.jpg')` }">
       <div class="absolute inset-0 bg-black/40" />
       <div class="relative z-10 text-center text-white max-w-3xl px-4 md:px-6 [text-shadow:_0_1px_4px_rgba(0,0,0,0.5)]">
         <h2 class="text-2xl md:text-4xl font-bold mb-4 [text-shadow:_0_2px_8px_rgba(0,0,0,0.5)]">Unser Sortiment</h2>
@@ -60,7 +60,7 @@
     </section>
 
     <!-- Arbeit -->
-    <section id="arbeit" class="min-h-screen md:h-screen flex flex-col items-center justify-center bg-cover bg-center bg-no-repeat relative overflow-hidden py-20 md:py-0" style="background-image: url('/img/sections/arbeit.jpg');">
+    <section id="arbeit" class="min-h-screen md:h-screen flex flex-col items-center justify-center bg-cover bg-center bg-no-repeat relative overflow-hidden py-20 md:py-0" :style="{ backgroundImage: `url('${baseURL}img/sections/arbeit.jpg')` }">
       <div class="absolute inset-0 bg-black/40" />
       <div class="relative z-10 text-center text-white max-w-3xl px-4 md:px-6 [text-shadow:_0_1px_4px_rgba(0,0,0,0.5)]">
         <h2 class="text-2xl md:text-4xl font-bold mb-4 [text-shadow:_0_2px_8px_rgba(0,0,0,0.5)]">Arbeitsbereiche</h2>
@@ -87,7 +87,7 @@
     </section>
 
     <!-- Kultur -->
-    <section id="kultur" class="min-h-screen md:h-screen flex flex-col items-center justify-center bg-cover bg-center bg-no-repeat relative overflow-hidden py-20 md:py-0" style="background-image: url('/img/sections/kultur.jpg');">
+    <section id="kultur" class="min-h-screen md:h-screen flex flex-col items-center justify-center bg-cover bg-center bg-no-repeat relative overflow-hidden py-20 md:py-0" :style="{ backgroundImage: `url('${baseURL}img/sections/kultur.jpg')` }">
       <div class="absolute inset-0 bg-black/40" />
       <div class="relative z-10 text-center text-white max-w-3xl px-4 md:px-6 [text-shadow:_0_1px_4px_rgba(0,0,0,0.5)]">
         <h2 class="text-2xl md:text-4xl font-bold mb-4 [text-shadow:_0_2px_8px_rgba(0,0,0,0.5)]">Kultur</h2>
@@ -114,7 +114,7 @@
     </section>
 
     <!-- Bildung -->
-    <section id="bildung" class="min-h-screen md:h-screen flex flex-col items-center justify-center bg-cover bg-center bg-no-repeat relative overflow-hidden py-20 md:py-0" style="background-image: url('/img/sections/bildung.jpg');">
+    <section id="bildung" class="min-h-screen md:h-screen flex flex-col items-center justify-center bg-cover bg-center bg-no-repeat relative overflow-hidden py-20 md:py-0" :style="{ backgroundImage: `url('${baseURL}img/sections/bildung.jpg')` }">
       <div class="absolute inset-0 bg-black/40" />
       <div class="relative z-10 text-center text-white max-w-3xl px-4 md:px-6 [text-shadow:_0_1px_4px_rgba(0,0,0,0.5)]">
         <h2 class="text-2xl md:text-4xl font-bold mb-4 [text-shadow:_0_2px_8px_rgba(0,0,0,0.5)]">Bildung</h2>
@@ -141,7 +141,7 @@
     </section>
 
     <!-- Gäste -->
-    <section id="gaeste" class="min-h-screen md:h-screen flex flex-col items-center justify-center bg-cover bg-center bg-no-repeat relative overflow-hidden py-20 md:py-0" style="background-image: url('/img/sections/gaeste.jpg');">
+    <section id="gaeste" class="min-h-screen md:h-screen flex flex-col items-center justify-center bg-cover bg-center bg-no-repeat relative overflow-hidden py-20 md:py-0" :style="{ backgroundImage: `url('${baseURL}img/sections/gaeste.jpg')` }">
       <div class="absolute inset-0 bg-black/40" />
       <div class="relative z-10 text-center text-white max-w-3xl px-4 md:px-6 [text-shadow:_0_1px_4px_rgba(0,0,0,0.5)]">
         <h2 class="text-2xl md:text-4xl font-bold mb-4 [text-shadow:_0_2px_8px_rgba(0,0,0,0.5)]">Gäste</h2>
@@ -307,6 +307,8 @@
 </template>
 
 <script setup lang="ts">
+const { baseURL } = useRuntimeConfig().app
+
 useHead({
   title: 'Kooperative Dürnau',
   meta: [

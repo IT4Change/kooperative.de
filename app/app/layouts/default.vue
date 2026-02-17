@@ -12,7 +12,7 @@
 
       <div class="header-main">
         <NuxtLink to="/" class="logo" :class="{ active: activeSection === 'hero' }">
-          <img src="/img/logo.gif" alt="Kooperative Dürnau" class="logo-img" />
+          <img :src="`${baseURL}img/logo.gif`" alt="Kooperative Dürnau" class="logo-img" />
         </NuxtLink>
 
         <button class="burger" :class="{ open: menuOpen }" aria-label="Menü" @click="menuOpen = !menuOpen">
@@ -59,6 +59,7 @@
 </template>
 
 <script setup lang="ts">
+const { baseURL } = useRuntimeConfig().app
 const scrolled = ref(false)
 const menuOpen = ref(false)
 const activeSection = ref('')
