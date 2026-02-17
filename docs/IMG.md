@@ -57,4 +57,4 @@ Alle Bilder wurden von den bestehenden Websites heruntergeladen und liegen unter
 
 | Bild | Verwendung | Ziel |
 |------|-----------|------|
-| `gaertnerei/ernte.jpg` | Hero-Hintergrund Startseite | `app/public/img/hero-ernte.jpg` |
+| `gaertnerei/produkte_alle.jpg` | Hero-Hintergrund Startseite (4272x2848px) | `app/public/img/hero-produkte.jpg` |

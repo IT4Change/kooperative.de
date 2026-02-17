@@ -1,15 +1,19 @@
 <template>
-  <div class="home">
+  <div>
     <!-- Hero -->
-    <section class="hero min-h-screen flex flex-col items-center justify-center">
-      <h1>Kooperative Dürnau</h1>
-      <p>Leben und Arbeiten in Gemeinschaft seit 1980</p>
-      <p class="hero-sub">
-        Genossenschaft in Dürnau &mdash; Handwerk, Bildung, Kultur und Vertrieb unter einem Dach.
-      </p>
+    <section class="min-h-screen flex flex-col items-center justify-center bg-cover bg-center bg-no-repeat relative" style="background-image: url('/img/hero-produkte.jpg');">
+      <div class="absolute inset-0 bg-black/50" />
+      <div class="relative z-10 text-center text-white">
+        <h1 class="text-5xl font-bold mb-4">Kooperative Dürnau</h1>
+        <p class="text-xl mb-2">Leben und Arbeiten in Gemeinschaft seit 1980</p>
+        <p class="text-base text-white/80 max-w-xl mx-auto">
+          Genossenschaft in Dürnau &mdash; Handwerk, Bildung, Kultur und Vertrieb unter einem Dach.
+        </p>
+      </div>
     </section>
 
     <!-- Hauptbereiche -->
+    <div class="home">
     <section class="bereiche">
       <h2>Unsere Bereiche</h2>
       <div class="grid">
@@ -144,6 +148,7 @@
       <p>Alle Veranstaltungen aus Kultur, Bildung und Gästebereich auf einen Blick.</p>
       <NuxtLink to="/kalender" class="kalender-link">Zum Kalender</NuxtLink>
     </section>
+    </div>
   </div>
 </template>
 
@@ -164,32 +169,6 @@ useHead({
   max-width: 960px;
   margin: 0 auto;
   padding: 0 1.5rem;
-}
-
-/* Hero */
-.hero {
-  text-align: center;
-  padding: 3rem 0;
-  border-bottom: 1px solid #e5e5e5;
-}
-
-.hero h1 {
-  font-size: 2.2rem;
-  color: #4a7c59;
-  margin: 0 0 0.5rem;
-}
-
-.hero p {
-  font-size: 1.1rem;
-  color: #555;
-  margin: 0.25rem 0;
-}
-
-.hero-sub {
-  font-size: 0.95rem !important;
-  color: #777 !important;
-  max-width: 500px;
-  margin: 0.75rem auto 0 !important;
 }
 
 /* Bereiche Grid */
