@@ -84,6 +84,32 @@
       </div>
     </section>
 
+    <!-- Kultur -->
+    <section id="kultur" class="h-screen flex flex-col items-center justify-center bg-[#c0392b] relative overflow-hidden">
+      <div class="relative z-10 text-center text-white max-w-3xl px-6">
+        <h2 class="text-4xl font-bold mb-4">Kultur</h2>
+        <p class="text-lg mb-10 text-white/80">Theater, Landwirtschaft, Kunst und Veranstaltungen in Dürnau.</p>
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div class="bg-white/10 backdrop-blur rounded-lg p-5">
+            <span class="block text-xl font-semibold mb-1">Veranstaltungen</span>
+          </div>
+          <div class="bg-white/10 backdrop-blur rounded-lg p-5">
+            <span class="block text-xl font-semibold mb-1">Theater</span>
+          </div>
+          <div class="bg-white/10 backdrop-blur rounded-lg p-5">
+            <span class="block text-xl font-semibold mb-1">Landwirtschaft</span>
+          </div>
+          <div class="bg-white/10 backdrop-blur rounded-lg p-5">
+            <span class="block text-xl font-semibold mb-1">Kulturfond</span>
+          </div>
+          <a href="https://www.ferchervonsteinwand.org/" target="_blank" rel="noopener" class="bg-white/10 hover:bg-white/20 backdrop-blur rounded-lg p-5 transition">
+            <span class="block text-xl font-semibold mb-1">poinz zero</span>
+            <span class="text-sm text-white/70">Fercher von Steinwand e.V. &rarr;</span>
+          </a>
+        </div>
+      </div>
+    </section>
+
     <!-- Hauptbereiche -->
     <div class="home">
     <section class="bereiche">
