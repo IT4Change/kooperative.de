@@ -1,7 +1,7 @@
 <template>
   <div>
     <!-- Hero -->
-    <section class="h-screen flex flex-col items-center justify-center bg-cover bg-center bg-no-repeat relative" style="background-image: url('/img/hero-produkte.jpg');">
+    <section class="h-screen flex flex-col items-center justify-center bg-cover bg-center bg-no-repeat relative" style="background-image: url('/img/hero.jpg');">
       <div class="absolute inset-0 bg-black/50" />
       <div class="relative z-10 text-center text-white">
         <h1 class="text-5xl font-bold mb-4">Kooperative Dürnau</h1>
@@ -13,7 +13,8 @@
     </section>
 
     <!-- Bestellung -->
-    <section id="bestellung" class="h-screen flex flex-col items-center justify-center bg-[#4a7c59] relative overflow-hidden">
+    <section id="bestellung" class="h-screen flex flex-col items-center justify-center bg-cover bg-center bg-no-repeat relative overflow-hidden" style="background-image: url('/img/sections/bestellung.jpg');">
+      <div class="absolute inset-0 bg-black/40" />
       <div class="relative z-10 text-center text-white max-w-3xl px-6">
         <h2 class="text-4xl font-bold mb-4">Unser Sortiment</h2>
         <p class="text-lg mb-10 text-white/80">Bücher, Papeterie, Medien, Körperpflege, Holzwaren und mehr &mdash; direkt von der Kooperative.</p>
@@ -59,7 +60,8 @@
     </section>
 
     <!-- Arbeit -->
-    <section id="arbeit" class="h-screen flex flex-col items-center justify-center bg-[#d4a843] relative overflow-hidden">
+    <section id="arbeit" class="h-screen flex flex-col items-center justify-center bg-cover bg-center bg-no-repeat relative overflow-hidden" style="background-image: url('/img/sections/arbeit.jpg');">
+      <div class="absolute inset-0 bg-black/40" />
       <div class="relative z-10 text-center text-white max-w-3xl px-6">
         <h2 class="text-4xl font-bold mb-4">Arbeitsbereiche</h2>
         <p class="text-lg mb-10 text-white/80">Handwerk, Bau und Gartenbau &mdash; die Betriebe der Kooperative.</p>
@@ -85,7 +87,8 @@
     </section>
 
     <!-- Kultur -->
-    <section id="kultur" class="h-screen flex flex-col items-center justify-center bg-[#c0392b] relative overflow-hidden">
+    <section id="kultur" class="h-screen flex flex-col items-center justify-center bg-cover bg-center bg-no-repeat relative overflow-hidden" style="background-image: url('/img/sections/kultur.jpg');">
+      <div class="absolute inset-0 bg-black/40" />
       <div class="relative z-10 text-center text-white max-w-3xl px-6">
         <h2 class="text-4xl font-bold mb-4">Kultur</h2>
         <p class="text-lg mb-10 text-white/80">Theater, Landwirtschaft, Kunst und Veranstaltungen in Dürnau.</p>
@@ -111,7 +114,8 @@
     </section>
 
     <!-- Bildung -->
-    <section id="bildung" class="h-screen flex flex-col items-center justify-center bg-[#2980b9] relative overflow-hidden">
+    <section id="bildung" class="h-screen flex flex-col items-center justify-center bg-cover bg-center bg-no-repeat relative overflow-hidden" style="background-image: url('/img/sections/bildung.jpg');">
+      <div class="absolute inset-0 bg-black/40" />
       <div class="relative z-10 text-center text-white max-w-3xl px-6">
         <h2 class="text-4xl font-bold mb-4">Bildung</h2>
         <p class="text-lg mb-10 text-white/80">Sprache, Natur, Praktika und die Dorfuniversität &mdash; Lernen in Dürnau.</p>
@@ -137,7 +141,8 @@
     </section>
 
     <!-- Gäste -->
-    <section id="gaeste" class="h-screen flex flex-col items-center justify-center bg-[#8e44ad] relative overflow-hidden">
+    <section id="gaeste" class="h-screen flex flex-col items-center justify-center bg-cover bg-center bg-no-repeat relative overflow-hidden" style="background-image: url('/img/sections/gaeste.jpg');">
+      <div class="absolute inset-0 bg-black/40" />
       <div class="relative z-10 text-center text-white max-w-3xl px-6">
         <h2 class="text-4xl font-bold mb-4">Gäste</h2>
         <p class="text-lg mb-10 text-white/80">Willkommen in Dürnau &mdash; Orientierung, Lernen und Hilfe für Besuchende.</p>
