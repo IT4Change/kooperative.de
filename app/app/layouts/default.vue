@@ -51,10 +51,16 @@
 <script setup lang="ts">
 const scrolled = ref(false)
 const headerRef = ref<HTMLElement>()
+let lastScrollY = 0
 
 onMounted(() => {
   const onScroll = () => {
-    scrolled.value = window.scrollY > 50
+    const currentY = window.scrollY
+    const scrollingUp = currentY < lastScrollY
+
+    scrolled.value = !scrollingUp && currentY > 50
+
+    lastScrollY = currentY
   }
   window.addEventListener('scroll', onScroll, { passive: true })
   onUnmounted(() => window.removeEventListener('scroll', onScroll))
