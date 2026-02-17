@@ -1,7 +1,7 @@
 <template>
   <div>
     <!-- Hero -->
-    <section class="min-h-screen flex flex-col items-center justify-center bg-cover bg-center bg-no-repeat relative" style="background-image: url('/img/hero-produkte.jpg');">
+    <section class="h-screen flex flex-col items-center justify-center bg-cover bg-center bg-no-repeat relative" style="background-image: url('/img/hero-produkte.jpg');">
       <div class="absolute inset-0 bg-black/50" />
       <div class="relative z-10 text-center text-white">
         <h1 class="text-5xl font-bold mb-4">Kooperative Dürnau</h1>

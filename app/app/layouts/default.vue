@@ -1,6 +1,6 @@
 <template>
   <div class="layout">
-    <header class="header">
+    <header ref="headerRef" class="header" :class="{ scrolled }">
       <div class="header-top">
         <nav class="info-nav">
           <NuxtLink to="/historie">Historie</NuxtLink>
@@ -48,6 +48,19 @@
   </div>
 </template>
 
+<script setup lang="ts">
+const scrolled = ref(false)
+const headerRef = ref<HTMLElement>()
+
+onMounted(() => {
+  const onScroll = () => {
+    scrolled.value = window.scrollY > 50
+  }
+  window.addEventListener('scroll', onScroll, { passive: true })
+  onUnmounted(() => window.removeEventListener('scroll', onScroll))
+})
+</script>
+
 <style scoped>
 .layout {
   min-height: 100vh;
@@ -58,12 +71,25 @@
 }
 
 .header {
-  border-bottom: 2px solid #4a7c59;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  transition: all 0.3s ease;
 }
 
 .header-top {
-  background: #4a7c59;
+  background: rgba(74, 124, 89, 0.9);
   padding: 0.25rem 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.header.scrolled .header-top {
+  max-height: 0;
+  padding: 0 1.5rem;
+  overflow: hidden;
+  opacity: 0;
 }
 
 .info-nav {
@@ -88,6 +114,14 @@
   gap: 2rem;
   padding: 1rem 1.5rem;
   flex-wrap: wrap;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  transition: all 0.3s ease;
+}
+
+.header.scrolled .header-main {
+  padding: 0.3rem 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .logo {
@@ -98,6 +132,11 @@
 .logo-img {
   height: 40px;
   width: auto;
+  transition: height 0.3s ease;
+}
+
+.header.scrolled .logo-img {
+  height: 28px;
 }
 
 .main-nav {
@@ -112,6 +151,12 @@
   font-weight: 500;
   padding: 0.25rem 0;
   border-bottom: 2px solid transparent;
+  transition: all 0.3s ease;
+  font-size: 1rem;
+}
+
+.header.scrolled .main-nav a {
+  font-size: 0.9rem;
 }
 
 .main-nav a:hover,
