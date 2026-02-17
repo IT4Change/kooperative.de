@@ -1,7 +1,7 @@
 <template>
   <div class="home">
     <!-- Hero -->
-    <section class="hero">
+    <section class="hero min-h-screen flex flex-col items-center justify-center">
       <h1>Kooperative Dürnau</h1>
       <p>Leben und Arbeiten in Gemeinschaft seit 1980</p>
       <p class="hero-sub">

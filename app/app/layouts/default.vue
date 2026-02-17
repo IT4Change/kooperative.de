@@ -22,10 +22,6 @@
           <NuxtLink to="/bildung">Bildung</NuxtLink>
           <NuxtLink to="/gaeste">Gäste</NuxtLink>
         </nav>
-
-        <div class="search">
-          <input type="search" placeholder="Suchen..." aria-label="Suche" />
-        </div>
       </div>
     </header>
 
@@ -119,13 +115,6 @@
 .main-nav a.router-link-active {
   border-bottom-color: #4a7c59;
   color: #4a7c59;
-}
-
-.search input {
-  padding: 0.4rem 0.75rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 0.9rem;
 }
 
 .main {
