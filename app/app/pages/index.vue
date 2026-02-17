@@ -136,6 +136,31 @@
       </div>
     </section>
 
+    <!-- Gäste -->
+    <section id="gaeste" class="h-screen flex flex-col items-center justify-center bg-[#8e44ad] relative overflow-hidden">
+      <div class="relative z-10 text-center text-white max-w-3xl px-6">
+        <h2 class="text-4xl font-bold mb-4">Gäste</h2>
+        <p class="text-lg mb-10 text-white/80">Willkommen in Dürnau &mdash; Orientierung, Lernen und Hilfe für Besuchende.</p>
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div class="bg-white/10 backdrop-blur rounded-lg p-5">
+            <span class="block text-xl font-semibold mb-1">Veranstaltungen</span>
+          </div>
+          <div class="bg-white/10 backdrop-blur rounded-lg p-5">
+            <span class="block text-xl font-semibold mb-1">Orientierung</span>
+          </div>
+          <div class="bg-white/10 backdrop-blur rounded-lg p-5">
+            <span class="block text-xl font-semibold mb-1">Lernen</span>
+          </div>
+          <div class="bg-white/10 backdrop-blur rounded-lg p-5">
+            <span class="block text-xl font-semibold mb-1">Hilfe</span>
+          </div>
+          <div class="bg-white/10 backdrop-blur rounded-lg p-5">
+            <span class="block text-xl font-semibold mb-1">Tagesgäste</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- Hauptbereiche -->
     <div class="home">
     <section class="bereiche">
