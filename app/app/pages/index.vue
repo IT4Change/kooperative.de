@@ -3,10 +3,10 @@
     <!-- Hero -->
     <section class="h-screen flex flex-col items-center justify-center bg-cover bg-center bg-no-repeat relative" style="background-image: url('/img/hero.jpg');">
       <div class="absolute inset-0 bg-black/50" />
-      <div class="relative z-10 text-center text-white">
-        <h1 class="text-5xl font-bold mb-4">Kooperative Dürnau</h1>
-        <p class="text-xl mb-2">Leben und Arbeiten in Gemeinschaft seit 1980</p>
-        <p class="text-base text-white/80 max-w-xl mx-auto">
+      <div class="relative z-10 text-center text-white drop-shadow-lg">
+        <h1 class="text-5xl font-bold mb-4 [text-shadow:_0_2px_8px_rgba(0,0,0,0.5)]">Kooperative Dürnau</h1>
+        <p class="text-xl mb-2 [text-shadow:_0_1px_4px_rgba(0,0,0,0.5)]">Leben und Arbeiten in Gemeinschaft seit 1980</p>
+        <p class="text-base text-white/80 max-w-xl mx-auto [text-shadow:_0_1px_4px_rgba(0,0,0,0.5)]">
           Genossenschaft in Dürnau &mdash; Handwerk, Bildung, Kultur und Vertrieb unter einem Dach.
         </p>
       </div>
@@ -15,39 +15,39 @@
     <!-- Bestellung -->
     <section id="bestellung" class="h-screen flex flex-col items-center justify-center bg-cover bg-center bg-no-repeat relative overflow-hidden" style="background-image: url('/img/sections/bestellung.jpg');">
       <div class="absolute inset-0 bg-black/40" />
-      <div class="relative z-10 text-center text-white max-w-3xl px-6">
-        <h2 class="text-4xl font-bold mb-4">Unser Sortiment</h2>
+      <div class="relative z-10 text-center text-white max-w-3xl px-6 [text-shadow:_0_1px_4px_rgba(0,0,0,0.5)]">
+        <h2 class="text-4xl font-bold mb-4 [text-shadow:_0_2px_8px_rgba(0,0,0,0.5)]">Unser Sortiment</h2>
         <p class="text-lg mb-10 text-white/80">Bücher, Papeterie, Medien, Körperpflege, Holzwaren und mehr &mdash; direkt von der Kooperative.</p>
         <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-          <a href="https://shop.kooperative.de/buecher_aktuell.php" target="_blank" rel="noopener" class="bg-white/10 hover:bg-white/20 backdrop-blur rounded-lg p-5 transition">
+          <a href="https://shop.kooperative.de/buecher_aktuell.php" target="_blank" rel="noopener" class="bg-black/30 hover:bg-black/40 backdrop-blur-sm rounded-lg p-5 transition">
             <span class="block text-xl font-semibold mb-1">Bücher</span>
             <span class="text-sm text-white/70">Kooperative, Gebrauchte, Kataloge, Noten</span>
           </a>
-          <a href="https://shop.kooperative.de/papeterie_aktuell.php" target="_blank" rel="noopener" class="bg-white/10 hover:bg-white/20 backdrop-blur rounded-lg p-5 transition">
+          <a href="https://shop.kooperative.de/papeterie_aktuell.php" target="_blank" rel="noopener" class="bg-black/30 hover:bg-black/40 backdrop-blur-sm rounded-lg p-5 transition">
             <span class="block text-xl font-semibold mb-1">Papeterie</span>
             <span class="text-sm text-white/70">Notizblöcke, Postkarten, Poster</span>
           </a>
-          <a href="https://shop.kooperative.de/medien_aktuell.php" target="_blank" rel="noopener" class="bg-white/10 hover:bg-white/20 backdrop-blur rounded-lg p-5 transition">
+          <a href="https://shop.kooperative.de/medien_aktuell.php" target="_blank" rel="noopener" class="bg-black/30 hover:bg-black/40 backdrop-blur-sm rounded-lg p-5 transition">
             <span class="block text-xl font-semibold mb-1">Medien</span>
             <span class="text-sm text-white/70">Texte, Sprache, Filme, Musik</span>
           </a>
-          <a href="https://shop.kooperative.de/sonett_aktuell.php" target="_blank" rel="noopener" class="bg-white/10 hover:bg-white/20 backdrop-blur rounded-lg p-5 transition">
+          <a href="https://shop.kooperative.de/sonett_aktuell.php" target="_blank" rel="noopener" class="bg-black/30 hover:bg-black/40 backdrop-blur-sm rounded-lg p-5 transition">
             <span class="block text-xl font-semibold mb-1">Sonett</span>
             <span class="text-sm text-white/70">Wäsche, Geschirr, Putzmittel</span>
           </a>
-          <a href="https://shop.kooperative.de/koerperpflege_aktuell.php" target="_blank" rel="noopener" class="bg-white/10 hover:bg-white/20 backdrop-blur rounded-lg p-5 transition">
+          <a href="https://shop.kooperative.de/koerperpflege_aktuell.php" target="_blank" rel="noopener" class="bg-black/30 hover:bg-black/40 backdrop-blur-sm rounded-lg p-5 transition">
             <span class="block text-xl font-semibold mb-1">Körperpflege</span>
             <span class="text-sm text-white/70">Gesicht, Haut & Haare, Bad & Dusche</span>
           </a>
-          <a href="https://shop.kooperative.de/holz_aktuell.php" target="_blank" rel="noopener" class="bg-white/10 hover:bg-white/20 backdrop-blur rounded-lg p-5 transition">
+          <a href="https://shop.kooperative.de/holz_aktuell.php" target="_blank" rel="noopener" class="bg-black/30 hover:bg-black/40 backdrop-blur-sm rounded-lg p-5 transition">
             <span class="block text-xl font-semibold mb-1">Holz</span>
             <span class="text-sm text-white/70">Spiele, Türen, Stühle, Särge</span>
           </a>
-          <a href="https://shop.kooperative.de/lebensmittel_aktuell.php" target="_blank" rel="noopener" class="bg-white/10 hover:bg-white/20 backdrop-blur rounded-lg p-5 transition">
+          <a href="https://shop.kooperative.de/lebensmittel_aktuell.php" target="_blank" rel="noopener" class="bg-black/30 hover:bg-black/40 backdrop-blur-sm rounded-lg p-5 transition">
             <span class="block text-xl font-semibold mb-1">Lebensmittel</span>
             <span class="text-sm text-white/70">Aus der Kooperative</span>
           </a>
-          <a href="https://shop.kooperative.de/diverses_aktuell.php" target="_blank" rel="noopener" class="bg-white/10 hover:bg-white/20 backdrop-blur rounded-lg p-5 transition">
+          <a href="https://shop.kooperative.de/diverses_aktuell.php" target="_blank" rel="noopener" class="bg-black/30 hover:bg-black/40 backdrop-blur-sm rounded-lg p-5 transition">
             <span class="block text-xl font-semibold mb-1">Diverses</span>
             <span class="text-sm text-white/70">Weiteres aus dem Sortiment</span>
           </a>
@@ -62,8 +62,8 @@
     <!-- Arbeit -->
     <section id="arbeit" class="h-screen flex flex-col items-center justify-center bg-cover bg-center bg-no-repeat relative overflow-hidden" style="background-image: url('/img/sections/arbeit.jpg');">
       <div class="absolute inset-0 bg-black/40" />
-      <div class="relative z-10 text-center text-white max-w-3xl px-6">
-        <h2 class="text-4xl font-bold mb-4">Arbeitsbereiche</h2>
+      <div class="relative z-10 text-center text-white max-w-3xl px-6 [text-shadow:_0_1px_4px_rgba(0,0,0,0.5)]">
+        <h2 class="text-4xl font-bold mb-4 [text-shadow:_0_2px_8px_rgba(0,0,0,0.5)]">Arbeitsbereiche</h2>
         <p class="text-lg mb-10 text-white/80">Handwerk, Bau und Gartenbau &mdash; die Betriebe der Kooperative.</p>
         <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
           <div class="bg-white/10 backdrop-blur rounded-lg p-5">
@@ -75,7 +75,7 @@
           <div class="bg-white/10 backdrop-blur rounded-lg p-5">
             <span class="block text-xl font-semibold mb-1">Schreinerei</span>
           </div>
-          <a href="https://www.gaertnerei-morgengrauen.de/" target="_blank" rel="noopener" class="bg-white/10 hover:bg-white/20 backdrop-blur rounded-lg p-5 transition">
+          <a href="https://www.gaertnerei-morgengrauen.de/" target="_blank" rel="noopener" class="bg-black/30 hover:bg-black/40 backdrop-blur-sm rounded-lg p-5 transition">
             <span class="block text-xl font-semibold mb-1">Gärtnerei Morgengrauen</span>
             <span class="text-sm text-white/70">Externe Website &rarr;</span>
           </a>
@@ -89,8 +89,8 @@
     <!-- Kultur -->
     <section id="kultur" class="h-screen flex flex-col items-center justify-center bg-cover bg-center bg-no-repeat relative overflow-hidden" style="background-image: url('/img/sections/kultur.jpg');">
       <div class="absolute inset-0 bg-black/40" />
-      <div class="relative z-10 text-center text-white max-w-3xl px-6">
-        <h2 class="text-4xl font-bold mb-4">Kultur</h2>
+      <div class="relative z-10 text-center text-white max-w-3xl px-6 [text-shadow:_0_1px_4px_rgba(0,0,0,0.5)]">
+        <h2 class="text-4xl font-bold mb-4 [text-shadow:_0_2px_8px_rgba(0,0,0,0.5)]">Kultur</h2>
         <p class="text-lg mb-10 text-white/80">Theater, Landwirtschaft, Kunst und Veranstaltungen in Dürnau.</p>
         <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
           <div class="bg-white/10 backdrop-blur rounded-lg p-5">
@@ -105,7 +105,7 @@
           <div class="bg-white/10 backdrop-blur rounded-lg p-5">
             <span class="block text-xl font-semibold mb-1">Kulturfond</span>
           </div>
-          <a href="https://www.ferchervonsteinwand.org/" target="_blank" rel="noopener" class="bg-white/10 hover:bg-white/20 backdrop-blur rounded-lg p-5 transition">
+          <a href="https://www.ferchervonsteinwand.org/" target="_blank" rel="noopener" class="bg-black/30 hover:bg-black/40 backdrop-blur-sm rounded-lg p-5 transition">
             <span class="block text-xl font-semibold mb-1">poinz zero</span>
             <span class="text-sm text-white/70">Fercher von Steinwand e.V. &rarr;</span>
           </a>
@@ -116,8 +116,8 @@
     <!-- Bildung -->
     <section id="bildung" class="h-screen flex flex-col items-center justify-center bg-cover bg-center bg-no-repeat relative overflow-hidden" style="background-image: url('/img/sections/bildung.jpg');">
       <div class="absolute inset-0 bg-black/40" />
-      <div class="relative z-10 text-center text-white max-w-3xl px-6">
-        <h2 class="text-4xl font-bold mb-4">Bildung</h2>
+      <div class="relative z-10 text-center text-white max-w-3xl px-6 [text-shadow:_0_1px_4px_rgba(0,0,0,0.5)]">
+        <h2 class="text-4xl font-bold mb-4 [text-shadow:_0_2px_8px_rgba(0,0,0,0.5)]">Bildung</h2>
         <p class="text-lg mb-10 text-white/80">Sprache, Natur, Praktika und die Dorfuniversität &mdash; Lernen in Dürnau.</p>
         <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
           <div class="bg-white/10 backdrop-blur rounded-lg p-5">
@@ -132,7 +132,7 @@
           <div class="bg-white/10 backdrop-blur rounded-lg p-5">
             <span class="block text-xl font-semibold mb-1">Praktika</span>
           </div>
-          <a href="https://www.dorf-uni.de/" target="_blank" rel="noopener" class="bg-white/10 hover:bg-white/20 backdrop-blur rounded-lg p-5 transition">
+          <a href="https://www.dorf-uni.de/" target="_blank" rel="noopener" class="bg-black/30 hover:bg-black/40 backdrop-blur-sm rounded-lg p-5 transition">
             <span class="block text-xl font-semibold mb-1">Dorfuniversität</span>
             <span class="text-sm text-white/70">dorf-uni.de &rarr;</span>
           </a>
@@ -143,8 +143,8 @@
     <!-- Gäste -->
     <section id="gaeste" class="h-screen flex flex-col items-center justify-center bg-cover bg-center bg-no-repeat relative overflow-hidden" style="background-image: url('/img/sections/gaeste.jpg');">
       <div class="absolute inset-0 bg-black/40" />
-      <div class="relative z-10 text-center text-white max-w-3xl px-6">
-        <h2 class="text-4xl font-bold mb-4">Gäste</h2>
+      <div class="relative z-10 text-center text-white max-w-3xl px-6 [text-shadow:_0_1px_4px_rgba(0,0,0,0.5)]">
+        <h2 class="text-4xl font-bold mb-4 [text-shadow:_0_2px_8px_rgba(0,0,0,0.5)]">Gäste</h2>
         <p class="text-lg mb-10 text-white/80">Willkommen in Dürnau &mdash; Orientierung, Lernen und Hilfe für Besuchende.</p>
         <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
           <div class="bg-white/10 backdrop-blur rounded-lg p-5">
