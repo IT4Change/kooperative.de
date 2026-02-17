@@ -17,7 +17,7 @@
 
         <nav class="main-nav">
           <NuxtLink to="/#bestellung">Bestellung</NuxtLink>
-          <NuxtLink to="/arbeit">Arbeit</NuxtLink>
+          <NuxtLink to="/#arbeit">Arbeit</NuxtLink>
           <NuxtLink to="/kultur">Kultur</NuxtLink>
           <NuxtLink to="/bildung">Bildung</NuxtLink>
           <NuxtLink to="/gaeste">Gäste</NuxtLink>

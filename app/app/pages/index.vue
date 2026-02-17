@@ -58,6 +58,32 @@
       </div>
     </section>
 
+    <!-- Arbeit -->
+    <section id="arbeit" class="h-screen flex flex-col items-center justify-center bg-[#d4a843] relative overflow-hidden">
+      <div class="relative z-10 text-center text-white max-w-3xl px-6">
+        <h2 class="text-4xl font-bold mb-4">Arbeitsbereiche</h2>
+        <p class="text-lg mb-10 text-white/80">Handwerk, Bau und Gartenbau &mdash; die Betriebe der Kooperative.</p>
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div class="bg-white/10 backdrop-blur rounded-lg p-5">
+            <span class="block text-xl font-semibold mb-1">Bau</span>
+          </div>
+          <div class="bg-white/10 backdrop-blur rounded-lg p-5">
+            <span class="block text-xl font-semibold mb-1">Druckerei</span>
+          </div>
+          <div class="bg-white/10 backdrop-blur rounded-lg p-5">
+            <span class="block text-xl font-semibold mb-1">Schreinerei</span>
+          </div>
+          <a href="https://www.gaertnerei-morgengrauen.de/" target="_blank" rel="noopener" class="bg-white/10 hover:bg-white/20 backdrop-blur rounded-lg p-5 transition">
+            <span class="block text-xl font-semibold mb-1">Gärtnerei Morgengrauen</span>
+            <span class="text-sm text-white/70">Externe Website &rarr;</span>
+          </a>
+          <div class="bg-white/10 backdrop-blur rounded-lg p-5">
+            <span class="block text-xl font-semibold mb-1">Allround Dienst Reisiger</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- Hauptbereiche -->
     <div class="home">
     <section class="bereiche">
