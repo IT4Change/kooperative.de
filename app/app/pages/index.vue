@@ -316,6 +316,88 @@ useHead({
     },
   ],
 })
+
+const sectionIds = ['', 'bestellung', 'arbeit', 'kultur', 'bildung', 'gaeste']
+let isScrolling = false
+
+function getSections(): HTMLElement[] {
+  return sectionIds
+    .map((id) => id ? document.getElementById(id) : document.querySelector('section'))
+    .filter((el): el is HTMLElement => el !== null)
+}
+
+function getNextSection(direction: 'down'): HTMLElement | null {
+  const sections = getSections()
+  const scrollY = window.scrollY
+  const threshold = 20
+
+  for (const section of sections) {
+    if (section.offsetTop > scrollY + threshold) {
+      return section
+    }
+  }
+  return null
+}
+
+function onWheel(e: WheelEvent) {
+  if (isScrolling || e.deltaY <= 0) return
+
+  const next = getNextSection('down')
+  if (!next) return
+
+  const scrollY = window.scrollY
+  const lastSection = getSections().at(-1)
+  if (lastSection && scrollY >= lastSection.offsetTop + lastSection.offsetHeight - window.innerHeight) return
+
+  e.preventDefault()
+  isScrolling = true
+
+  next.scrollIntoView({ behavior: 'smooth' })
+
+  setTimeout(() => {
+    isScrolling = false
+  }, 800)
+}
+
+let touchStartY = 0
+
+function onTouchStart(e: TouchEvent) {
+  touchStartY = e.touches[0].clientY
+}
+
+function onTouchMove(e: TouchEvent) {
+  if (isScrolling) return
+  const deltaY = touchStartY - e.touches[0].clientY
+  if (deltaY <= 30) return
+
+  const next = getNextSection('down')
+  if (!next) return
+
+  const scrollY = window.scrollY
+  const lastSection = getSections().at(-1)
+  if (lastSection && scrollY >= lastSection.offsetTop + lastSection.offsetHeight - window.innerHeight) return
+
+  e.preventDefault()
+  isScrolling = true
+
+  next.scrollIntoView({ behavior: 'smooth' })
+
+  setTimeout(() => {
+    isScrolling = false
+  }, 800)
+}
+
+onMounted(() => {
+  window.addEventListener('wheel', onWheel, { passive: false })
+  window.addEventListener('touchstart', onTouchStart, { passive: true })
+  window.addEventListener('touchmove', onTouchMove, { passive: false })
+})
+
+onUnmounted(() => {
+  window.removeEventListener('wheel', onWheel)
+  window.removeEventListener('touchstart', onTouchStart)
+  window.removeEventListener('touchmove', onTouchMove)
+})
 </script>
 
 <style scoped>
