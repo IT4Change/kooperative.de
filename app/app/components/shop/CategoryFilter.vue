@@ -14,10 +14,13 @@
       v-for="cat in categories"
       :key="cat.slug"
       class="px-4 py-2 rounded-full text-sm font-medium transition-colors"
-      :class="selected === cat.slug
-        ? 'bg-[#4a7c59] text-white'
-        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
-      @click="$emit('select', cat.slug)"
+      :disabled="!counts[cat.slug]"
+      :class="!counts[cat.slug]
+        ? 'bg-gray-50 text-gray-300 cursor-default'
+        : selected === cat.slug
+          ? 'bg-[#4a7c59] text-white'
+          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
+      @click="counts[cat.slug] && $emit('select', cat.slug)"
     >
       {{ cat.name }}
       <span class="ml-1 opacity-70">{{ counts[cat.slug] || 0 }}</span>
