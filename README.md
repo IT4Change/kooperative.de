@@ -24,7 +24,10 @@ kooperative.de/
 │   │   ├── layouts/
 │   │   │   └── default.vue      # Layout: Header, Footer, Mobile-Menü
 │   │   ├── pages/
-│   │   │   └── index.vue        # Startseite (alle Sektionen)
+│   │   │   ├── index.vue        # Startseite (alle Sektionen)
+│   │   │   └── shop/
+│   │   │       ├── index.vue    # Shop-Übersicht (Suche, Filter, Grid)
+│   │   │       └── [id].vue     # Produktdetailseite
 │   │   └── assets/css/
 │   │       └── main.css         # Globale Styles (scroll-behavior)
 │   ├── public/
@@ -68,7 +71,21 @@ Die Startseite ist als vertikale Fullscreen-Abfolge aufgebaut:
 - **Active-Section-Highlighting**: Menüeinträge werden hervorgehoben wenn Sektion sichtbar (IntersectionObserver)
 - **Logo-Highlight**: Logo wird größer + Glow wenn Hero sichtbar
 - **Mobile**: Hamburger-Menü, responsive Grids, angepasste Schriftgrößen
-- **Externe Links**: Shop-Kategorien → shop.kooperative.de, Betriebe/Kultur/Bildung → eigene Websites
+- **Externe Links**: Betriebe/Kultur/Bildung → eigene Websites
+
+## Shop
+
+Der integrierte Shop (`/shop`) mit Warenkorb-Bestellfunktion per E-Mail (kein Online-Payment).
+
+### Features
+
+- **Produktübersicht**: Grid mit Produktkarten, Mini-Bildergalerie pro Karte
+- **Produktdetailseite**: `/shop/:id` mit großer Galerie, Beschreibung, Warenkorb-Button
+- **Volltextsuche**: Client-seitige Suche über Name, Beschreibung und Kategoriename
+- **Kategoriefilter**: Filter-Buttons mit Live-Anzahl der Treffer pro Kategorie (passt sich bei Suche an, leere Kategorien ausgegraut)
+- **URL-State**: Suche und Filter in Query-Parametern (`?q=...&kategorie=...`) -- jeder Zustand ist verlinkbar
+- **Warenkorb**: Sidebar-Overlay, localStorage-Persistenz, öffnet sich automatisch beim Hinzufügen
+- **Bestellung**: Warenkorb → Bestellformular → Bestätigung → mailto-Link
 
 ## Deployment
 
@@ -196,3 +213,12 @@ Bau, Druckerei, Schreinerei, Allround Dienst Reisiger
 20. **Active-Section-Highlighting**: IntersectionObserver markiert aktiven Menüeintrag
 21. **Logo-Highlight**: Logo wird größer + Glow wenn Hero sichtbar
 22. **GitHub Pages Deployment**: GitHub Actions Workflow, baseURL-Fix für Bild-Pfade
+
+### 2026-02-18 -- Shop-Ausbau
+
+1. **Produktdetailseite**: Dynamische Route `/shop/:id` mit Galerie, Produktinfo, Warenkorb-Integration
+2. **Volltextsuche**: Suchfeld durchsucht Name, Beschreibung und Kategoriename
+3. **URL-State**: Kategorie und Suche als Query-Parameter synchronisiert (verlinkbar, Back/Forward)
+4. **Kategorie-Counts**: Filter-Buttons zeigen Trefferanzahl, passt sich bei Suche an
+5. **Leere Kategorien ausgegraut**: Kategorien mit 0 Treffern sind disabled und visuell abgeschwächt
+6. **Warenkorb öffnet automatisch**: Sidebar öffnet sich beim Hinzufügen eines Produkts
