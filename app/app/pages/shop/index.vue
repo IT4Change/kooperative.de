@@ -22,7 +22,7 @@
     </section>
 
     <section class="mb-6">
-      <ShopCategoryFilter :selected="selectedCategory" @select="selectCategory" />
+      <ShopCategoryFilter :selected="selectedCategory" :counts="categoryCounts" @select="selectCategory" />
     </section>
 
     <section>
@@ -91,23 +91,29 @@ watch(() => route.query.q, (q) => {
   if (searchQuery.value !== val) searchQuery.value = val
 })
 
-const filteredProducts = computed(() => {
-  let result = products
-
-  if (selectedCategory.value) {
-    result = result.filter(p => p.category === selectedCategory.value)
-  }
-
+// Products filtered by search only (for category counts)
+const searchFilteredProducts = computed(() => {
   const q = searchQuery.value.trim().toLowerCase()
-  if (q) {
-    result = result.filter((p) => {
-      const catName = categoryNameMap.get(p.category) ?? ''
-      return p.name.toLowerCase().includes(q)
-        || p.description.toLowerCase().includes(q)
-        || catName.includes(q)
-    })
-  }
+  if (!q) return products
+  return products.filter((p) => {
+    const catName = categoryNameMap.get(p.category) ?? ''
+    return p.name.toLowerCase().includes(q)
+      || p.description.toLowerCase().includes(q)
+      || catName.includes(q)
+  })
+})
 
-  return result
+const categoryCounts = computed(() => {
+  const counts: Record<string, number> = {}
+  for (const p of searchFilteredProducts.value) {
+    counts[p.category] = (counts[p.category] || 0) + 1
+  }
+  return counts
+})
+
+const filteredProducts = computed(() => {
+  const result = searchFilteredProducts.value
+  if (!selectedCategory.value) return result
+  return result.filter(p => p.category === selectedCategory.value)
 })
 </script>

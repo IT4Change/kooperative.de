@@ -8,6 +8,7 @@
       @click="$emit('select', null)"
     >
       Alle
+      <span class="ml-1 opacity-70">{{ totalCount }}</span>
     </button>
     <button
       v-for="cat in categories"
@@ -19,6 +20,7 @@
       @click="$emit('select', cat.slug)"
     >
       {{ cat.name }}
+      <span class="ml-1 opacity-70">{{ counts[cat.slug] || 0 }}</span>
     </button>
   </div>
 </template>
@@ -27,11 +29,16 @@
 import type { CategorySlug } from '~/data/products'
 import { categories } from '~/data/products'
 
-defineProps<{
+const props = defineProps<{
   selected: CategorySlug | null
+  counts: Record<string, number>
 }>()
 
 defineEmits<{
   select: [value: CategorySlug | null]
 }>()
+
+const totalCount = computed(() =>
+  Object.values(props.counts).reduce((sum, n) => sum + n, 0),
+)
 </script>
