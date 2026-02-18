@@ -7,12 +7,29 @@
       </p>
     </section>
 
+    <section class="mb-4">
+      <div class="relative">
+        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+        <input
+          v-model="searchQuery"
+          type="search"
+          placeholder="Produkte durchsuchen..."
+          class="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#4a7c59]/40 focus:border-[#4a7c59]"
+        />
+      </div>
+    </section>
+
     <section class="mb-6">
-      <ShopCategoryFilter :selected="selectedCategory" @select="selectedCategory = $event" />
+      <ShopCategoryFilter :selected="selectedCategory" @select="selectCategory" />
     </section>
 
     <section>
-      <ShopProductGrid :products="filteredProducts" @add="addToCart" />
+      <p v-if="filteredProducts.length === 0" class="text-center text-gray-500 py-12">
+        Keine Produkte gefunden.
+      </p>
+      <ShopProductGrid v-else :products="filteredProducts" @add="addToCart" />
     </section>
 
     <ShopCartButton />
@@ -22,7 +39,7 @@
 
 <script setup lang="ts">
 import type { CategorySlug } from '~/data/products'
-import { products } from '~/data/products'
+import { categories, products } from '~/data/products'
 
 useHead({
   title: 'Shop – Kooperative Dürnau',
@@ -34,11 +51,50 @@ useHead({
   ],
 })
 
-const selectedCategory = ref<CategorySlug | null>(null)
+const route = useRoute()
+const router = useRouter()
 const { addToCart } = useCart()
 
+const categorySlugs = new Set<string>(categories.map(c => c.slug))
+const categoryNameMap = new Map(categories.map(c => [c.slug, c.name.toLowerCase()]))
+
+function parseCategory(value: unknown): CategorySlug | null {
+  if (typeof value === 'string' && categorySlugs.has(value)) return value as CategorySlug
+  return null
+}
+
+const selectedCategory = ref<CategorySlug | null>(parseCategory(route.query.kategorie))
+const searchQuery = ref(typeof route.query.q === 'string' ? route.query.q : '')
+
+function selectCategory(slug: CategorySlug | null) {
+  selectedCategory.value = slug
+}
+
+// Sync state → URL
+watch([searchQuery, selectedCategory], () => {
+  const query: Record<string, string> = {}
+  if (searchQuery.value) query.q = searchQuery.value
+  if (selectedCategory.value) query.kategorie = selectedCategory.value
+  router.replace({ query })
+})
+
 const filteredProducts = computed(() => {
-  if (!selectedCategory.value) return products
-  return products.filter(p => p.category === selectedCategory.value)
+  let result = products
+
+  if (selectedCategory.value) {
+    result = result.filter(p => p.category === selectedCategory.value)
+  }
+
+  const q = searchQuery.value.trim().toLowerCase()
+  if (q) {
+    result = result.filter((p) => {
+      const catName = categoryNameMap.get(p.category) ?? ''
+      return p.name.toLowerCase().includes(q)
+        || p.description.toLowerCase().includes(q)
+        || catName.includes(q)
+    })
+  }
+
+  return result
 })
 </script>
