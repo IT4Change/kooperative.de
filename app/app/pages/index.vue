@@ -9,6 +9,9 @@
         <p class="text-sm md:text-base text-white/80 max-w-xl mx-auto px-4 [text-shadow:_0_1px_4px_rgba(0,0,0,0.5)]">
           Genossenschaft in Dürnau &mdash; Handwerk, Bildung, Kultur und Vertrieb unter einem Dach.
         </p>
+        <NuxtLink to="/shop" class="inline-block mt-6 md:mt-8 px-6 md:px-8 py-2.5 md:py-3 bg-[#4a7c59] hover:bg-[#3d6a4a] text-white font-semibold rounded-lg text-base md:text-lg transition">
+          Zum Shop
+        </NuxtLink>
       </div>
     </section>
 
