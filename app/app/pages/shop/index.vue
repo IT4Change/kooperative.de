@@ -63,19 +63,32 @@ function parseCategory(value: unknown): CategorySlug | null {
   return null
 }
 
-const selectedCategory = ref<CategorySlug | null>(parseCategory(route.query.kategorie))
+// Category: URL is the single source of truth
+const selectedCategory = computed(() => parseCategory(route.query.kategorie))
+
+// Search: local ref for immediate input reactivity
 const searchQuery = ref(typeof route.query.q === 'string' ? route.query.q : '')
 
-function selectCategory(slug: CategorySlug | null) {
-  selectedCategory.value = slug
+function replaceQuery(params: { kategorie?: string | null, q?: string | null }) {
+  const query: Record<string, string> = {}
+  if (params.kategorie) query.kategorie = params.kategorie
+  if (params.q) query.q = params.q
+  router.replace({ path: route.path, query })
 }
 
-// Sync state → URL
-watch([searchQuery, selectedCategory], () => {
-  const query: Record<string, string> = {}
-  if (searchQuery.value) query.q = searchQuery.value
-  if (selectedCategory.value) query.kategorie = selectedCategory.value
-  router.replace({ query })
+function selectCategory(slug: CategorySlug | null) {
+  replaceQuery({ kategorie: slug, q: searchQuery.value || null })
+}
+
+// Sync search → URL
+watch(searchQuery, (q) => {
+  replaceQuery({ kategorie: selectedCategory.value, q: q || null })
+})
+
+// Sync URL → search (back/forward navigation)
+watch(() => route.query.q, (q) => {
+  const val = typeof q === 'string' ? q : ''
+  if (searchQuery.value !== val) searchQuery.value = val
 })
 
 const filteredProducts = computed(() => {
