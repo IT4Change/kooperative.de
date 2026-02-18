@@ -1,8 +1,12 @@
 <template>
   <div class="bg-white border border-gray-200 rounded-lg flex flex-col overflow-hidden">
-    <ShopProductGallery :images="product.images" />
+    <NuxtLink :to="`/shop/${product.id}`">
+      <ShopProductGallery :images="product.images" />
+    </NuxtLink>
     <div class="p-5 flex flex-col flex-1">
-      <h3 class="text-base font-semibold text-gray-900 mb-1">{{ product.name }}</h3>
+      <NuxtLink :to="`/shop/${product.id}`" class="hover:text-[#4a7c59] transition-colors">
+        <h3 class="text-base font-semibold text-gray-900 mb-1">{{ product.name }}</h3>
+      </NuxtLink>
       <p class="text-sm text-gray-500 mb-3 flex-1">{{ product.description }}</p>
       <div class="flex items-center justify-between">
         <span class="text-lg font-bold text-[#4a7c59]">
