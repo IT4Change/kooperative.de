@@ -60,6 +60,7 @@ function addToCart(product: Product) {
     items.value.push({ product, quantity: 1 })
   }
   persist()
+  openCart()
 }
 
 function removeFromCart(productId: string) {
