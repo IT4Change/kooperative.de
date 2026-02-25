@@ -20,7 +20,7 @@
         </button>
 
         <nav class="main-nav" :class="{ open: menuOpen }">
-          <NuxtLink to="/#bestellung" :class="{ active: activeSection === 'bestellung' }" @click="menuOpen = false">Bestellung</NuxtLink>
+          <NuxtLink to="/shop" @click="menuOpen = false">Bestellung</NuxtLink>
           <NuxtLink to="/#arbeit" :class="{ active: activeSection === 'arbeit' }" @click="menuOpen = false">Arbeit</NuxtLink>
           <NuxtLink to="/#kultur" :class="{ active: activeSection === 'kultur' }" @click="menuOpen = false">Kultur</NuxtLink>
           <NuxtLink to="/#bildung" :class="{ active: activeSection === 'bildung' }" @click="menuOpen = false">Bildung</NuxtLink>
@@ -78,7 +78,7 @@ onMounted(() => {
   window.addEventListener('scroll', onScroll, { passive: true })
   onUnmounted(() => window.removeEventListener('scroll', onScroll))
 
-  const sectionIds = ['hero', 'bestellung', 'arbeit', 'kultur', 'bildung', 'gaeste']
+  const sectionIds = ['hero', 'arbeit', 'kultur', 'bildung', 'gaeste']
   const observer = new IntersectionObserver(
     (entries) => {
       for (const entry of entries) {

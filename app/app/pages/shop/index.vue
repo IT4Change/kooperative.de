@@ -1,7 +1,10 @@
 <template>
-  <div class="max-w-[1100px] mx-auto px-4 pt-24 pb-12 sm:px-6">
+  <div class="max-w-[1100px] mx-auto px-4 pt-32 pb-12 sm:px-6">
     <section class="text-center mb-8">
-      <h1 class="text-2xl sm:text-3xl font-bold mb-2">Unser Sortiment</h1>
+      <h1 class="text-2xl sm:text-3xl font-bold mb-2 inline-flex items-center gap-2">
+        Unser Sortiment
+        <button @click="showWelcome = true" class="inline-flex items-center justify-center w-7 h-7 rounded-full border-2 border-gray-300 text-gray-400 hover:border-[#4a7c59] hover:text-[#4a7c59] transition text-sm font-bold leading-none" title="Hilfe">?</button>
+      </h1>
       <p class="text-gray-500">
         Bücher, Papeterie, Medien, Körperpflege, Holzwaren und mehr &mdash; direkt von der Kooperative.
       </p>
@@ -34,6 +37,55 @@
 
     <ShopCartButton />
     <ShopCartSidebar />
+
+    <!-- Willkommens-Popup (nur beim ersten Besuch) -->
+    <Teleport to="body">
+      <div v-if="showWelcome" class="fixed inset-0 z-[200] flex items-center justify-center p-4" @click.self="dismissWelcome">
+        <div class="absolute inset-0 bg-black/50" />
+        <div class="relative bg-white rounded-xl shadow-2xl max-w-md w-full p-6 sm:p-8">
+          <h2 class="text-xl font-bold mb-6">So funktioniert die Bestellung</h2>
+          <div class="space-y-5">
+            <div class="flex gap-4 items-start">
+              <div class="flex-shrink-0 w-12 h-12 rounded-full bg-[#4a7c59]/10 flex items-center justify-center">
+                <svg class="w-6 h-6 text-[#4a7c59]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              <div>
+                <p class="font-semibold text-gray-800">1. Produkte ausw&auml;hlen</p>
+                <p class="text-sm text-gray-500 mt-0.5">St&ouml;bern Sie im Sortiment und legen Sie Artikel in den Warenkorb.</p>
+              </div>
+            </div>
+            <div class="flex gap-4 items-start">
+              <div class="flex-shrink-0 w-12 h-12 rounded-full bg-[#4a7c59]/10 flex items-center justify-center">
+                <svg class="w-6 h-6 text-[#4a7c59]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z" />
+                </svg>
+              </div>
+              <div>
+                <p class="font-semibold text-gray-800">2. Warenkorb pr&uuml;fen</p>
+                <p class="text-sm text-gray-500 mt-0.5">&Ouml;ffnen Sie den Warenkorb und kontrollieren Sie Ihre Auswahl.</p>
+              </div>
+            </div>
+            <div class="flex gap-4 items-start">
+              <div class="flex-shrink-0 w-12 h-12 rounded-full bg-[#4a7c59]/10 flex items-center justify-center">
+                <svg class="w-6 h-6 text-[#4a7c59]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <div>
+                <p class="font-semibold text-gray-800">3. Bestellung absenden</p>
+                <p class="text-sm text-gray-500 mt-0.5">F&uuml;llen Sie das Formular aus. Die Bestellung wird per E-Mail an uns geschickt.</p>
+              </div>
+            </div>
+          </div>
+          <p class="mt-4 text-gray-500 text-xs sm:text-sm">Kein Online-Payment &mdash; die Bezahlung erfolgt bei Abholung oder auf Rechnung.</p>
+          <button class="mt-6 w-full py-2.5 bg-[#4a7c59] hover:bg-[#3d6a4a] text-white font-semibold rounded-lg transition" @click="dismissWelcome">
+            Verstanden
+          </button>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -50,6 +102,19 @@ useHead({
     },
   ],
 })
+
+const showWelcome = ref(false)
+
+onMounted(() => {
+  if (!localStorage.getItem('shop-welcome-seen')) {
+    showWelcome.value = true
+  }
+})
+
+function dismissWelcome() {
+  showWelcome.value = false
+  localStorage.setItem('shop-welcome-seen', '1')
+}
 
 const route = useRoute()
 const router = useRouter()
