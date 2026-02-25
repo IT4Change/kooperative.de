@@ -20,7 +20,7 @@
         </button>
 
         <nav class="main-nav" :class="{ open: menuOpen }">
-          <NuxtLink to="/shop" @click="menuOpen = false">Bestellung</NuxtLink>
+          <NuxtLink to="/shop" :class="{ active: isShopActive }" @click="menuOpen = false">Bestellung</NuxtLink>
           <NuxtLink to="/#arbeit" :class="{ active: activeSection === 'arbeit' }" @click="menuOpen = false">Arbeit</NuxtLink>
           <NuxtLink to="/#kultur" :class="{ active: activeSection === 'kultur' }" @click="menuOpen = false">Kultur</NuxtLink>
           <NuxtLink to="/#bildung" :class="{ active: activeSection === 'bildung' }" @click="menuOpen = false">Bildung</NuxtLink>
@@ -60,11 +60,43 @@
 
 <script setup lang="ts">
 const { baseURL } = useRuntimeConfig().app
+const route = useRoute()
 const scrolled = ref(false)
 const menuOpen = ref(false)
 const activeSection = ref('')
 const headerRef = ref<HTMLElement>()
 let lastScrollY = 0
+
+const isShopActive = computed(() => route.path.startsWith('/shop'))
+
+const sectionIds = ['hero', 'arbeit', 'kultur', 'bildung', 'gaeste']
+let observer: IntersectionObserver | null = null
+
+function observeSections() {
+  if (observer) observer.disconnect()
+  observer = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) {
+          activeSection.value = entry.target.id
+        }
+      }
+    },
+    { threshold: 0.4 },
+  )
+  for (const id of sectionIds) {
+    const el = document.getElementById(id)
+    if (el) observer.observe(el)
+  }
+}
+
+watch(() => route.fullPath, () => {
+  if (route.path === '/') {
+    nextTick(() => observeSections())
+  } else {
+    activeSection.value = ''
+  }
+})
 
 onMounted(() => {
   const onScroll = () => {
@@ -76,26 +108,12 @@ onMounted(() => {
     lastScrollY = currentY
   }
   window.addEventListener('scroll', onScroll, { passive: true })
-  onUnmounted(() => window.removeEventListener('scroll', onScroll))
+  onUnmounted(() => {
+    window.removeEventListener('scroll', onScroll)
+    observer?.disconnect()
+  })
 
-  const sectionIds = ['hero', 'arbeit', 'kultur', 'bildung', 'gaeste']
-  const observer = new IntersectionObserver(
-    (entries) => {
-      for (const entry of entries) {
-        if (entry.isIntersecting) {
-          activeSection.value = entry.target.id
-        }
-      }
-    },
-    { threshold: 0.4 },
-  )
-
-  for (const id of sectionIds) {
-    const el = document.getElementById(id)
-    if (el) observer.observe(el)
-  }
-
-  onUnmounted(() => observer.disconnect())
+  if (route.path === '/') observeSections()
 })
 </script>
 
