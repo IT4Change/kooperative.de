@@ -14,6 +14,14 @@ export interface Category {
   description: string
 }
 
+export interface ProductVariant {
+  size: string          // Anzeige: "250 ml", "1 kg"
+  price: number         // 5.90
+  amount: number        // 0.25 (in Bezugseinheit)
+  referenceUnit: string // "L" oder "kg"
+  image: string         // Bild dieser Gebindegröße
+}
+
 export interface Product {
   id: string
   name: string
@@ -21,12 +29,18 @@ export interface Product {
   description: string
   category: CategorySlug
   unit?: string
-  images: string[]
+  images: readonly string[]
+  variants?: readonly ProductVariant[]
 }
 
 export interface CartItem {
   product: Product
   quantity: number
+  variantIndex?: number
+}
+
+export function unitPrice(variant: ProductVariant): number {
+  return variant.price / variant.amount
 }
 
 export interface OrderFormData {
@@ -69,9 +83,31 @@ export const products: Product[] = [
   { id: 'm2', name: 'Hörbuch: Vorträge', price: 10.00, description: 'Ausgewählte Vorträge als Audio-CD', category: 'medien', images: productImages('m2') },
 
   // Sonett
-  { id: 's1', name: 'Waschmittel Lavendel', price: 8.90, description: 'Flüssiges Waschmittel, 1 Liter', category: 'sonett', unit: '1 L', images: productImages('s1') },
-  { id: 's2', name: 'Geschirrspülmittel', price: 4.50, description: 'Handspülmittel Calendula, 300 ml', category: 'sonett', unit: '300 ml', images: productImages('s2') },
-  { id: 's3', name: 'Allzweckreiniger', price: 5.20, description: 'Universalreiniger Citrus, 500 ml', category: 'sonett', unit: '500 ml', images: productImages('s3') },
+  {
+    id: 's1', name: 'Waschmittel Lavendel', price: 8.90, description: 'Flüssiges Waschmittel mit Bio-Lavendelöl', category: 'sonett', unit: '1 L', images: productImages('s1'),
+    variants: [
+      { size: '1 L', price: 8.90, amount: 1, referenceUnit: 'L', image: `https://picsum.photos/seed/s1-1L/400/300` },
+      { size: '2 L', price: 16.50, amount: 2, referenceUnit: 'L', image: `https://picsum.photos/seed/s1-2L/400/300` },
+      { size: '5 L', price: 35.00, amount: 5, referenceUnit: 'L', image: `https://picsum.photos/seed/s1-5L/400/300` },
+      { size: '10 L', price: 62.00, amount: 10, referenceUnit: 'L', image: `https://picsum.photos/seed/s1-10L/400/300` },
+    ],
+  },
+  {
+    id: 's2', name: 'Geschirrspülmittel', price: 4.50, description: 'Handspülmittel Calendula', category: 'sonett', unit: '300 ml', images: productImages('s2'),
+    variants: [
+      { size: '300 ml', price: 4.50, amount: 0.3, referenceUnit: 'L', image: `https://picsum.photos/seed/s2-300ml/400/300` },
+      { size: '1 L', price: 11.90, amount: 1, referenceUnit: 'L', image: `https://picsum.photos/seed/s2-1L/400/300` },
+      { size: '5 L', price: 46.00, amount: 5, referenceUnit: 'L', image: `https://picsum.photos/seed/s2-5L/400/300` },
+    ],
+  },
+  {
+    id: 's3', name: 'Allzweckreiniger', price: 5.20, description: 'Universalreiniger Citrus', category: 'sonett', unit: '500 ml', images: productImages('s3'),
+    variants: [
+      { size: '500 ml', price: 5.20, amount: 0.5, referenceUnit: 'L', image: `https://picsum.photos/seed/s3-500ml/400/300` },
+      { size: '1 L', price: 9.40, amount: 1, referenceUnit: 'L', image: `https://picsum.photos/seed/s3-1L/400/300` },
+      { size: '10 L', price: 72.00, amount: 10, referenceUnit: 'L', image: `https://picsum.photos/seed/s3-10L/400/300` },
+    ],
+  },
 
   // Körperpflege
   { id: 'k1', name: 'Handcreme Rose', price: 7.90, description: 'Pflegende Handcreme mit Rosenöl, 50 ml', category: 'koerperpflege', unit: '50 ml', images: productImages('k1') },

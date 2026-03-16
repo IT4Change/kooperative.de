@@ -16,9 +16,12 @@
     <div class="mb-4">
       <h4 class="text-sm font-semibold text-gray-700 mb-2">Artikel</h4>
       <div class="space-y-1">
-        <div v-for="item in items" :key="item.product.id" class="flex justify-between text-sm">
-          <span class="text-gray-600">{{ item.quantity }}x {{ item.product.name }}</span>
-          <span class="font-medium">{{ (item.product.price * item.quantity).toFixed(2) }} €</span>
+        <div v-for="item in items" :key="`${item.product.id}-${item.variantIndex ?? 'base'}`" class="flex justify-between text-sm">
+          <span class="text-gray-600">
+            {{ item.quantity }}x {{ item.product.name }}
+            <span v-if="getVariant(item)" class="text-gray-400">({{ getVariant(item)!.size }})</span>
+          </span>
+          <span class="font-medium">{{ (getItemPrice(item) * item.quantity).toFixed(2) }} €</span>
         </div>
       </div>
       <div class="flex justify-between text-sm font-bold mt-2 pt-2 border-t border-gray-200">
@@ -51,7 +54,7 @@
 </template>
 
 <script setup lang="ts">
-import type { CartItem, OrderFormData } from '~/data/products'
+import type { CartItem, OrderFormData, ProductVariant } from '~/data/products'
 
 defineProps<{
   items: readonly CartItem[]
@@ -64,4 +67,15 @@ defineEmits<{
   back: []
   send: []
 }>()
+
+function getVariant(item: CartItem): ProductVariant | null {
+  if (item.variantIndex !== undefined && item.product.variants) {
+    return item.product.variants[item.variantIndex] ?? null
+  }
+  return null
+}
+
+function getItemPrice(item: CartItem): number {
+  return getVariant(item)?.price ?? item.product.price
+}
 </script>

@@ -57,7 +57,7 @@
 import { ref } from 'vue'
 
 const props = withDefaults(defineProps<{
-  images: string[]
+  images: readonly string[]
   size?: 'sm' | 'lg'
 }>(), {
   size: 'sm',

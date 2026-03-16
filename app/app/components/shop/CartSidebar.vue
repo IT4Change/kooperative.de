@@ -33,10 +33,11 @@
                 <template v-else>
                   <ShopCartItem
                     v-for="item in items"
-                    :key="item.product.id"
+                    :key="`${item.product.id}-${item.variantIndex ?? 'base'}`"
                     :item="item"
                     @update="updateQuantity"
                     @remove="removeFromCart"
+                    @update-variant="updateVariant"
                   />
                 </template>
               </template>
@@ -95,6 +96,7 @@ const {
   goToCart,
   updateQuantity,
   removeFromCart,
+  updateVariant,
   generateMailtoLink,
   clearCart,
 } = useCart()

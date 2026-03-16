@@ -22,7 +22,11 @@ let initialized = false
 
 function persist() {
   if (import.meta.server) return
-  const data = items.value.map(i => ({ productId: i.product.id, quantity: i.quantity }))
+  const data = items.value.map(i => ({
+    productId: i.product.id,
+    quantity: i.quantity,
+    ...(i.variantIndex !== undefined && { variantIndex: i.variantIndex }),
+  }))
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
 }
 
@@ -32,12 +36,16 @@ function init() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (!raw) return
-    const stored: { productId: string; quantity: number }[] = JSON.parse(raw)
+    const stored: { productId: string; quantity: number; variantIndex?: number }[] = JSON.parse(raw)
     const restored: CartItem[] = []
     for (const entry of stored) {
       const product = products.find(p => p.id === entry.productId)
       if (product && entry.quantity > 0) {
-        restored.push({ product, quantity: entry.quantity })
+        restored.push({
+          product,
+          quantity: entry.quantity,
+          ...(entry.variantIndex !== undefined && { variantIndex: entry.variantIndex }),
+        })
       }
     }
     items.value = restored
@@ -47,37 +55,73 @@ function init() {
   }
 }
 
+function itemPrice(item: CartItem): number {
+  if (item.variantIndex !== undefined && item.product.variants) {
+    return item.product.variants[item.variantIndex]?.price ?? item.product.price
+  }
+  return item.product.price
+}
+
 const totalItems = computed(() => items.value.reduce((sum, i) => sum + i.quantity, 0))
-const totalPrice = computed(() => items.value.reduce((sum, i) => sum + i.product.price * i.quantity, 0))
+const totalPrice = computed(() => items.value.reduce((sum, i) => sum + itemPrice(i) * i.quantity, 0))
 const isEmpty = computed(() => items.value.length === 0)
 
-function addToCart(product: Product) {
-  const existing = items.value.find(i => i.product.id === product.id)
+function addToCart(product: Product, variantIndex?: number) {
+  const existing = items.value.find(i =>
+    i.product.id === product.id && i.variantIndex === variantIndex,
+  )
   if (existing) {
     existing.quantity++
   }
   else {
-    items.value.push({ product, quantity: 1 })
+    items.value.push({
+      product,
+      quantity: 1,
+      ...(variantIndex !== undefined && { variantIndex }),
+    })
   }
   persist()
   openCart()
 }
 
-function removeFromCart(productId: string) {
-  items.value = items.value.filter(i => i.product.id !== productId)
+function findItem(productId: string, variantIndex?: number): CartItem | undefined {
+  return items.value.find(i =>
+    i.product.id === productId && i.variantIndex === variantIndex,
+  )
+}
+
+function removeFromCart(productId: string, variantIndex?: number) {
+  items.value = items.value.filter(i =>
+    !(i.product.id === productId && i.variantIndex === variantIndex),
+  )
   persist()
 }
 
-function updateQuantity(productId: string, quantity: number) {
+function updateQuantity(productId: string, quantity: number, variantIndex?: number) {
   if (quantity <= 0) {
-    removeFromCart(productId)
+    removeFromCart(productId, variantIndex)
     return
   }
-  const item = items.value.find(i => i.product.id === productId)
+  const item = findItem(productId, variantIndex)
   if (item) {
     item.quantity = quantity
     persist()
   }
+}
+
+function updateVariant(productId: string, oldVariantIndex: number | undefined, newVariantIndex: number) {
+  const item = findItem(productId, oldVariantIndex)
+  if (!item) return
+  // Check if there's already an item with the new variant
+  const existing = findItem(productId, newVariantIndex)
+  if (existing) {
+    existing.quantity += item.quantity
+    items.value = items.value.filter(i => i !== item)
+  }
+  else {
+    item.variantIndex = newVariantIndex
+  }
+  persist()
 }
 
 function clearCart() {
@@ -122,8 +166,13 @@ function generateMailtoLink(): string {
   ]
 
   for (const item of items.value) {
-    const subtotal = (item.product.price * item.quantity).toFixed(2)
-    lines.push(`- ${item.quantity}x ${item.product.name} (${item.product.price.toFixed(2)} €) = ${subtotal} €`)
+    const price = itemPrice(item)
+    const subtotal = (price * item.quantity).toFixed(2)
+    const variant = item.variantIndex !== undefined && item.product.variants
+      ? item.product.variants[item.variantIndex]
+      : null
+    const sizeSuffix = variant ? ` (${variant.size})` : ''
+    lines.push(`- ${item.quantity}x ${item.product.name}${sizeSuffix} (${price.toFixed(2)} €) = ${subtotal} €`)
   }
 
   lines.push('')
@@ -153,6 +202,8 @@ export function useCart() {
     addToCart,
     removeFromCart,
     updateQuantity,
+    updateVariant,
+    itemPrice,
     clearCart,
     openCart,
     closeCart,

@@ -32,7 +32,7 @@
       <p v-if="filteredProducts.length === 0" class="text-center text-gray-500 py-12">
         Keine Produkte gefunden.
       </p>
-      <ShopProductGrid v-else :products="filteredProducts" @add="addToCart" />
+      <ShopProductGrid v-else :products="filteredProducts" @add="(p, vi) => addToCart(p, vi)" />
     </section>
 
     <ShopCartButton />
