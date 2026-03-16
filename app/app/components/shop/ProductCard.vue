@@ -16,7 +16,7 @@
           class="w-full text-sm border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#4a7c59] focus:border-[#4a7c59]"
         >
           <option v-for="(v, idx) in product.variants" :key="idx" :value="idx">
-            {{ v.size }} – {{ v.price.toFixed(2) }} €
+            {{ v.size }} · {{ unitPrice(v).toFixed(2) }} €/{{ v.referenceUnit }}
           </option>
         </select>
       </div>
