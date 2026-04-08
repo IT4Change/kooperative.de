@@ -4,19 +4,19 @@
     <section id="hero" class="h-screen flex flex-col items-center justify-center relative overflow-hidden">
       <NuxtImg src="/img/hero.jpg" alt="" sizes="sm:100vw md:100vw lg:100vw xl:100vw 2xl:100vw" format="webp" preload class="absolute inset-0 w-full h-full object-cover" />
       <div class="absolute inset-0 bg-black/30" />
-      <div class="relative z-10 text-center text-white drop-shadow-lg">
+      <div class="relative z-10 text-center text-white">
         <h1 class="text-3xl md:text-5xl font-bold mb-4 px-4 [text-shadow:_0_2px_8px_rgba(0,0,0,0.5)]">Kooperative Dürnau</h1>
         <p class="text-lg md:text-xl mb-2 px-4 [text-shadow:_0_1px_4px_rgba(0,0,0,0.5)]">Leben und Arbeiten in Gemeinschaft seit 1980</p>
         <p class="text-sm md:text-base text-white/80 max-w-xl mx-auto px-4 [text-shadow:_0_1px_4px_rgba(0,0,0,0.5)]">
           Genossenschaft in Dürnau &mdash; Handwerk, Bildung, Kultur und Vertrieb unter einem Dach.
         </p>
         <div class="flex items-center justify-center gap-3 md:gap-4 mt-6 md:mt-8">
-          <a href="#arbeit" @click.prevent="scrollToArbeit" class="px-6 md:px-8 py-2.5 md:py-3 border-2 border-white text-white hover:bg-white/20 font-semibold rounded-lg text-base md:text-lg transition cursor-pointer">
+          <KoopButton href="#arbeit" variant="ghost" @click.prevent="scrollToArbeit">
             Zur Kooperative
-          </a>
-          <NuxtLink to="/shop" class="px-6 md:px-8 py-2.5 md:py-3 bg-[#4a7c59] hover:bg-[#3d6a4a] text-white font-semibold rounded-lg text-base md:text-lg transition">
+          </KoopButton>
+          <KoopButton to="/shop">
             Bestellung
-          </NuxtLink>
+          </KoopButton>
         </div>
       </div>
     </section>

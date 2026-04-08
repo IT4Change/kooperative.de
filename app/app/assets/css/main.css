@@ -1,3 +1,73 @@
 html {
   scroll-behavior: smooth;
 }
+
+/* ----- Koop Button (border-image / 9-slice PNG) -------------------------- */
+
+.koop-btn {
+  --btn-h: 3rem;
+  --btn-slice: 36;
+  --btn-border: calc(var(--btn-h) / 3);  /* border-width entspricht slice/PNG-Höhe-Verhältnis: 36/108 = 1/3 */
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--btn-h);
+  min-width: 8rem;
+  padding: 0 1.75rem;
+  font-weight: 700;
+  color: #ffffff;
+  text-decoration: none;
+  background: transparent;
+  cursor: pointer;
+  border-style: solid;
+  border-width: var(--btn-border);
+  border-color: transparent;
+  border-image-source: url('/img/btn-shape.png');
+  border-image-slice: 36 fill;
+  border-image-repeat: stretch;
+  box-sizing: border-box;
+  transition: filter 0.12s ease, transform 0.12s ease;
+}
+
+.koop-btn__label {
+  position: relative;
+  margin: calc(0px - var(--btn-border) + 0.25rem) 0;
+  pointer-events: none;
+}
+
+.koop-btn:hover {
+  filter: brightness(1.08);
+}
+.koop-btn:active {
+  transform: translate(-1px, 1px);
+  filter: brightness(0.92);
+}
+
+/* ----- Variants ---------------------------------------------------------- */
+
+.koop-btn--ghost {
+  filter: hue-rotate(0deg) saturate(0.4);
+}
+.koop-btn--ghost:hover {
+  filter: hue-rotate(0deg) saturate(0.5) brightness(1.08);
+}
+
+.koop-btn--danger {
+  filter: hue-rotate(155deg);
+}
+.koop-btn--danger:hover {
+  filter: hue-rotate(155deg) brightness(1.08);
+}
+
+.koop-btn--sm {
+  --btn-h: 2.25rem;
+  min-width: 6rem;
+  padding: 0 1.25rem;
+  font-size: 0.875rem;
+}
+
+.koop-btn--disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
