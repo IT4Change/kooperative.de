@@ -1,7 +1,8 @@
 <template>
   <div>
     <!-- Hero -->
-    <section id="hero" class="h-screen flex flex-col items-center justify-center bg-cover bg-center bg-no-repeat relative" :style="{ backgroundImage: `url('${baseURL}img/hero.jpg')` }">
+    <section id="hero" class="h-screen flex flex-col items-center justify-center relative overflow-hidden">
+      <NuxtImg src="/img/hero.jpg" alt="" sizes="sm:100vw md:100vw lg:100vw xl:100vw 2xl:100vw" format="webp" preload class="absolute inset-0 w-full h-full object-cover" />
       <div class="absolute inset-0 bg-black/30" />
       <div class="relative z-10 text-center text-white drop-shadow-lg">
         <h1 class="text-3xl md:text-5xl font-bold mb-4 px-4 [text-shadow:_0_2px_8px_rgba(0,0,0,0.5)]">Kooperative Dürnau</h1>
@@ -21,7 +22,8 @@
     </section>
 
     <!-- Arbeit -->
-    <section id="arbeit" class="min-h-screen md:h-screen flex flex-col items-center justify-center bg-cover bg-center bg-no-repeat relative overflow-hidden py-20 md:py-0" :style="{ backgroundImage: `url('${baseURL}img/sections/arbeit.jpg')` }">
+    <section id="arbeit" class="min-h-screen md:h-screen flex flex-col items-center justify-center relative overflow-hidden py-20 md:py-0">
+      <NuxtImg src="/img/sections/arbeit.jpg" alt="" sizes="sm:100vw md:100vw lg:100vw xl:100vw 2xl:100vw" format="webp" loading="lazy" class="absolute inset-0 w-full h-full object-cover" />
       <div class="absolute inset-0 bg-black/40" />
       <div class="relative z-10 text-center text-white max-w-3xl px-4 md:px-6 [text-shadow:_0_1px_4px_rgba(0,0,0,0.5)]">
         <h2 class="text-2xl md:text-4xl font-bold mb-4 [text-shadow:_0_2px_8px_rgba(0,0,0,0.5)]">Arbeitsbereiche</h2>
@@ -48,7 +50,8 @@
     </section>
 
     <!-- Kultur -->
-    <section id="kultur" class="min-h-screen md:h-screen flex flex-col items-center justify-center bg-cover bg-center bg-no-repeat relative overflow-hidden py-20 md:py-0" :style="{ backgroundImage: `url('${baseURL}img/sections/kultur.jpg')` }">
+    <section id="kultur" class="min-h-screen md:h-screen flex flex-col items-center justify-center relative overflow-hidden py-20 md:py-0">
+      <NuxtImg src="/img/sections/kultur.jpg" alt="" sizes="sm:100vw md:100vw lg:100vw xl:100vw 2xl:100vw" format="webp" loading="lazy" class="absolute inset-0 w-full h-full object-cover" />
       <div class="absolute inset-0 bg-black/40" />
       <div class="relative z-10 text-center text-white max-w-3xl px-4 md:px-6 [text-shadow:_0_1px_4px_rgba(0,0,0,0.5)]">
         <h2 class="text-2xl md:text-4xl font-bold mb-4 [text-shadow:_0_2px_8px_rgba(0,0,0,0.5)]">Kultur</h2>
@@ -75,7 +78,8 @@
     </section>
 
     <!-- Bildung -->
-    <section id="bildung" class="min-h-screen md:h-screen flex flex-col items-center justify-center bg-cover bg-center bg-no-repeat relative overflow-hidden py-20 md:py-0" :style="{ backgroundImage: `url('${baseURL}img/sections/bildung.jpg')` }">
+    <section id="bildung" class="min-h-screen md:h-screen flex flex-col items-center justify-center relative overflow-hidden py-20 md:py-0">
+      <NuxtImg src="/img/sections/bildung.jpg" alt="" sizes="sm:100vw md:100vw lg:100vw xl:100vw 2xl:100vw" format="webp" loading="lazy" class="absolute inset-0 w-full h-full object-cover" />
       <div class="absolute inset-0 bg-black/40" />
       <div class="relative z-10 text-center text-white max-w-3xl px-4 md:px-6 [text-shadow:_0_1px_4px_rgba(0,0,0,0.5)]">
         <h2 class="text-2xl md:text-4xl font-bold mb-4 [text-shadow:_0_2px_8px_rgba(0,0,0,0.5)]">Bildung</h2>
@@ -102,7 +106,8 @@
     </section>
 
     <!-- Gäste -->
-    <section id="gaeste" class="min-h-screen md:h-screen flex flex-col items-center justify-center bg-cover bg-center bg-no-repeat relative overflow-hidden py-20 md:py-0" :style="{ backgroundImage: `url('${baseURL}img/sections/gaeste.jpg')` }">
+    <section id="gaeste" class="min-h-screen md:h-screen flex flex-col items-center justify-center relative overflow-hidden py-20 md:py-0">
+      <NuxtImg src="/img/sections/gaeste.jpg" alt="" sizes="sm:100vw md:100vw lg:100vw xl:100vw 2xl:100vw" format="webp" loading="lazy" class="absolute inset-0 w-full h-full object-cover" />
       <div class="absolute inset-0 bg-black/40" />
       <div class="relative z-10 text-center text-white max-w-3xl px-4 md:px-6 [text-shadow:_0_1px_4px_rgba(0,0,0,0.5)]">
         <h2 class="text-2xl md:text-4xl font-bold mb-4 [text-shadow:_0_2px_8px_rgba(0,0,0,0.5)]">Gäste</h2>
@@ -131,8 +136,6 @@
 </template>
 
 <script setup lang="ts">
-const { baseURL } = useRuntimeConfig().app
-
 useHead({
   title: 'Kooperative Dürnau',
   meta: [
