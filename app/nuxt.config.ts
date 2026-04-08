@@ -15,7 +15,13 @@ export default defineNuxtConfig({
     },
   },
   css: ['~/assets/css/main.css'],
-  ssr: false,
+  ssr: true,
+  nitro: {
+    prerender: {
+      failOnError: false,
+      crawlLinks: true,
+    },
+  },
   app: {
     baseURL: '/kooperative.de/',
   },
