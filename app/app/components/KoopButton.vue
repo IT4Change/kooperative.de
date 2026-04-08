@@ -1,6 +1,6 @@
 <script setup lang="ts">
 interface Props {
-  variant?: 'primary' | 'ghost' | 'danger'
+  variant?: 'teal' | 'orange' | 'lila'
   size?: 'md' | 'sm'
   to?: string
   href?: string
@@ -9,15 +9,15 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  variant: 'primary',
+  variant: 'teal',
   size: 'md',
   type: 'button',
   disabled: false,
 })
 
 const classes = computed(() => [
-  props.variant === 'ghost' ? 'koop-btn--ghost' : '',
-  props.variant === 'danger' ? 'koop-btn--danger' : '',
+  props.variant === 'orange' ? 'koop-btn--orange' : '',
+  props.variant === 'lila' ? 'koop-btn--lila' : '',
   props.size === 'sm' ? 'koop-btn--sm' : '',
   props.disabled ? 'koop-btn--disabled' : '',
 ])

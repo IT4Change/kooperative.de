@@ -41,14 +41,14 @@
     <div v-if="item.product.variants && item.product.variants.length > 1" class="mt-2 ml-0">
       <select
         :value="item.variantIndex ?? 0"
-        class="text-xs border border-gray-200 rounded px-1.5 py-1 focus:outline-none focus:ring-1 focus:ring-[#4a7c59] focus:border-[#4a7c59]"
+        class="text-xs border border-gray-200 rounded px-1.5 py-1 focus:outline-none focus:ring-1 focus:ring-[#00af8c] focus:border-[#00af8c]"
         @change="onVariantChange(($event.target as HTMLSelectElement).value)"
       >
         <option v-for="(v, idx) in item.product.variants" :key="idx" :value="idx">
           {{ v.size }} – {{ v.price.toFixed(2) }} € · {{ unitPrice(v).toFixed(2) }} €/{{ v.referenceUnit }}
         </option>
       </select>
-      <p v-if="savingsHint" class="text-xs text-[#4a7c59] mt-1">
+      <p v-if="savingsHint" class="text-xs text-[#00af8c] mt-1">
         {{ savingsHint }}
       </p>
     </div>

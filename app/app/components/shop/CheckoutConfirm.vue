@@ -42,13 +42,9 @@
       >
         Zurück
       </button>
-      <a
-        :href="mailtoLink"
-        class="flex-1 py-2 text-sm bg-[#4a7c59] text-white rounded hover:bg-[#3d6a4a] transition-colors font-medium text-center"
-        @click="$emit('send')"
-      >
+      <KoopButton :href="mailtoLink" size="sm" @click="$emit('send')">
         Per E-Mail senden
-      </a>
+      </KoopButton>
     </div>
   </div>
 </template>

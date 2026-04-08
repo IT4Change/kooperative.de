@@ -68,12 +68,9 @@
                 <span>Gesamt</span>
                 <span>{{ totalPrice.toFixed(2) }} €</span>
               </div>
-              <button
-                class="w-full py-2.5 bg-[#4a7c59] text-white rounded hover:bg-[#3d6a4a] transition-colors font-medium"
-                @click="goToForm"
-              >
-                Zur Bestellung
-              </button>
+              <div class="flex justify-center">
+                <KoopButton @click="goToForm">Zur Bestellung</KoopButton>
+              </div>
             </div>
           </div>
         </Transition>

@@ -3,7 +3,7 @@
     <button
       class="px-4 py-2 rounded-full text-sm font-medium transition-colors"
       :class="selected === null
-        ? 'bg-[#4a7c59] text-white'
+        ? 'bg-[#00af8c] text-white'
         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
       @click="$emit('select', null)"
     >
@@ -18,7 +18,7 @@
       :class="!counts[cat.slug]
         ? 'bg-gray-50 text-gray-300 cursor-default'
         : selected === cat.slug
-          ? 'bg-[#4a7c59] text-white'
+          ? 'bg-[#00af8c] text-white'
           : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
       @click="counts[cat.slug] && $emit('select', cat.slug)"
     >

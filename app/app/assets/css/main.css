@@ -1,3 +1,18 @@
+:root {
+  /* Marken-Farbpalette (aus den PSD-Vorlagen) */
+  --koop-teal: #00af8c;
+  --koop-teal-hover: #1bc6a3;
+  --koop-teal-active: #008c70;
+
+  --koop-orange: #fb9957;
+  --koop-orange-hover: #ffae73;
+  --koop-orange-active: #e2823f;
+
+  --koop-lila: #9750a1;
+  --koop-lila-hover: #ad65b8;
+  --koop-lila-active: #7d3e87;
+}
+
 html {
   scroll-behavior: smooth;
 }
@@ -46,18 +61,11 @@ html {
 
 /* ----- Variants ---------------------------------------------------------- */
 
-.koop-btn--ghost {
-  filter: hue-rotate(0deg) saturate(0.4);
+.koop-btn--orange {
+  border-image-source: url('/img/btn-shape-orange.png');
 }
-.koop-btn--ghost:hover {
-  filter: hue-rotate(0deg) saturate(0.5) brightness(1.08);
-}
-
-.koop-btn--danger {
-  filter: hue-rotate(155deg);
-}
-.koop-btn--danger:hover {
-  filter: hue-rotate(155deg) brightness(1.08);
+.koop-btn--lila {
+  border-image-source: url('/img/btn-shape-lila.png');
 }
 
 .koop-btn--sm {

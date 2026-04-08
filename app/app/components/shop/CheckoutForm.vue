@@ -8,7 +8,7 @@
           v-model="formData.name"
           type="text"
           required
-          class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-[#4a7c59]"
+          class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-[#00af8c]"
         />
       </div>
       <div>
@@ -17,7 +17,7 @@
           v-model="formData.street"
           type="text"
           required
-          class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-[#4a7c59]"
+          class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-[#00af8c]"
         />
       </div>
       <div class="flex gap-3">
@@ -27,7 +27,7 @@
             v-model="formData.zip"
             type="text"
             required
-            class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-[#4a7c59]"
+            class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-[#00af8c]"
           />
         </div>
         <div class="flex-1">
@@ -36,7 +36,7 @@
             v-model="formData.city"
             type="text"
             required
-            class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-[#4a7c59]"
+            class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-[#00af8c]"
           />
         </div>
       </div>
@@ -46,7 +46,7 @@
           v-model="formData.email"
           type="email"
           required
-          class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-[#4a7c59]"
+          class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-[#00af8c]"
         />
       </div>
       <div>
@@ -54,7 +54,7 @@
         <input
           v-model="formData.phone"
           type="tel"
-          class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-[#4a7c59]"
+          class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-[#00af8c]"
         />
       </div>
       <div>
@@ -62,7 +62,7 @@
         <textarea
           v-model="formData.notes"
           rows="3"
-          class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-[#4a7c59] resize-none"
+          class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-[#00af8c] resize-none"
         />
       </div>
       <div class="flex gap-3 pt-2">
@@ -73,12 +73,7 @@
         >
           Zurück
         </button>
-        <button
-          type="submit"
-          class="flex-1 py-2 text-sm bg-[#4a7c59] text-white rounded hover:bg-[#3d6a4a] transition-colors font-medium"
-        >
-          Weiter zur Übersicht
-        </button>
+        <KoopButton type="submit" size="sm">Weiter zur Übersicht</KoopButton>
       </div>
     </form>
   </div>

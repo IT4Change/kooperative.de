@@ -258,12 +258,12 @@ onMounted(() => {
 }
 
 .main-nav a:hover {
-  color: #4a7c59;
+  color: #00af8c;
 }
 
 .main-nav a.active {
-  border-bottom-color: #4a7c59;
-  color: #4a7c59;
+  border-bottom-color: #00af8c;
+  color: #00af8c;
 }
 
 .mobile-info-links {
@@ -358,7 +358,7 @@ onMounted(() => {
     gap: 0;
     margin-top: 0.75rem;
     padding-top: 0.75rem;
-    border-top: 2px solid #4a7c59;
+    border-top: 2px solid #00af8c;
   }
 
   .mobile-info-links a {

@@ -11,7 +11,7 @@
           Genossenschaft in Dürnau &mdash; Handwerk, Bildung, Kultur und Vertrieb unter einem Dach.
         </p>
         <div class="flex items-center justify-center gap-3 md:gap-4 mt-6 md:mt-8">
-          <KoopButton href="#arbeit" variant="ghost" @click.prevent="scrollToArbeit">
+          <KoopButton href="#arbeit" variant="lila" @click.prevent="scrollToArbeit">
             Zur Kooperative
           </KoopButton>
           <KoopButton to="/shop">
