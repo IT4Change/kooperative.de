@@ -2,7 +2,7 @@
   <div>
     <!-- Hero -->
     <section id="hero" class="h-screen flex flex-col items-center justify-center bg-cover bg-center bg-no-repeat relative" :style="{ backgroundImage: `url('${baseURL}img/hero.jpg')` }">
-      <div class="absolute inset-0 bg-black/50" />
+      <div class="absolute inset-0 bg-black/30" />
       <div class="relative z-10 text-center text-white drop-shadow-lg">
         <h1 class="text-3xl md:text-5xl font-bold mb-4 px-4 [text-shadow:_0_2px_8px_rgba(0,0,0,0.5)]">Kooperative Dürnau</h1>
         <p class="text-lg md:text-xl mb-2 px-4 [text-shadow:_0_1px_4px_rgba(0,0,0,0.5)]">Leben und Arbeiten in Gemeinschaft seit 1980</p>
