@@ -7,7 +7,7 @@
       v-if="images.length > 0"
       :src="images[currentIndex]"
       :alt="`Bild ${currentIndex + 1} von ${images.length}`"
-      class="w-full h-full object-cover"
+      class="w-full h-full object-contain"
       loading="lazy"
     />
     <div v-else class="w-full h-full flex items-center justify-center text-gray-300">
