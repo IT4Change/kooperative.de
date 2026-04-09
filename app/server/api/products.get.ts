@@ -39,5 +39,8 @@ export default defineEventHandler(async () => {
 
   const products = prodRows.map(row => convertProduct(row as any))
 
-  return { products, categories }
+  const usedSlugs = new Set(products.map(p => p.category))
+  const activeCategories = categories.filter(c => usedSlugs.has(c.slug))
+
+  return { products, categories: activeCategories }
 })
