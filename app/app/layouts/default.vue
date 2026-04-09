@@ -257,10 +257,6 @@ onMounted(() => {
   color: #00af8c;
 }
 
-.mobile-info-links {
-  display: none;
-}
-
 /* Main */
 .main {
   flex: 1;
