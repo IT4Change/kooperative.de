@@ -3,6 +3,15 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
   modules: ['@nuxt/eslint', '@nuxtjs/tailwindcss', '@nuxt/image'],
+  runtimeConfig: {
+    db: {
+      host: process.env.DB_HOST || 'localhost',
+      port: Number(process.env.DB_PORT) || 3306,
+      user: process.env.DB_USER || 'koop',
+      password: process.env.DB_PASSWORD || 'koop',
+      database: process.env.DB_DATABASE || 'kooperative',
+    },
+  },
   image: {
     format: ['avif', 'webp', 'jpg'],
     screens: {
