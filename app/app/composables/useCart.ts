@@ -1,4 +1,5 @@
 import type { CartItem, OrderFormData, Product } from '~/data/products'
+import { findTierIndex } from '~/data/products'
 
 type CheckoutStep = 'cart' | 'form' | 'confirm'
 
@@ -56,6 +57,10 @@ async function init() {
 }
 
 function itemPrice(item: CartItem): number {
+  if (item.product.variantType === 'quantity' && item.product.variants) {
+    const tierIdx = findTierIndex(item.product.variants, item.quantity)
+    return item.product.variants[tierIdx].price
+  }
   if (item.variantIndex !== undefined && item.product.variants) {
     return item.product.variants[item.variantIndex]?.price ?? item.product.price
   }
@@ -66,19 +71,28 @@ const totalItems = computed(() => items.value.reduce((sum, i) => sum + i.quantit
 const totalPrice = computed(() => items.value.reduce((sum, i) => sum + itemPrice(i) * i.quantity, 0))
 const isEmpty = computed(() => items.value.length === 0)
 
-function addToCart(product: Product, variantIndex?: number) {
-  const existing = items.value.find(i =>
-    i.product.id === product.id && i.variantIndex === variantIndex,
-  )
-  if (existing) {
-    existing.quantity++
-  }
-  else {
-    items.value.push({
-      product,
-      quantity: 1,
-      ...(variantIndex !== undefined && { variantIndex }),
-    })
+function addToCart(product: Product, variantIndex?: number, quantity?: number) {
+  if (product.variantType === 'quantity') {
+    // Quantity-tier products: merge into single cart entry
+    const existing = items.value.find(i => i.product.id === product.id)
+    if (existing) {
+      existing.quantity += (quantity ?? 1)
+    } else {
+      items.value.push({ product, quantity: quantity ?? 1 })
+    }
+  } else {
+    const existing = items.value.find(i =>
+      i.product.id === product.id && i.variantIndex === variantIndex,
+    )
+    if (existing) {
+      existing.quantity++
+    } else {
+      items.value.push({
+        product,
+        quantity: 1,
+        ...(variantIndex !== undefined && { variantIndex }),
+      })
+    }
   }
   persist()
   openCart()

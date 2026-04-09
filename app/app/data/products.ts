@@ -12,6 +12,7 @@ export interface ProductVariant {
   amount: number
   referenceUnit: string
   image: string
+  minQty?: number // For quantity tiers: minimum order quantity for this tier
 }
 
 export interface Product {
@@ -23,6 +24,7 @@ export interface Product {
   unit?: string
   images: readonly string[]
   variants?: readonly ProductVariant[]
+  variantType?: 'size' | 'quantity'
 }
 
 export interface CartItem {
@@ -33,6 +35,23 @@ export interface CartItem {
 
 export function unitPrice(variant: ProductVariant): number {
   return variant.price / variant.amount
+}
+
+/** For quantity-tier products: find the best tier for a given quantity */
+export function findTierIndex(variants: readonly ProductVariant[], quantity: number): number {
+  let best = 0
+  for (let i = 1; i < variants.length; i++) {
+    if (variants[i].minQty && quantity >= variants[i].minQty) {
+      best = i
+    }
+  }
+  return best
+}
+
+/** For quantity-tier products: calculate total price for a quantity */
+export function tierTotalPrice(variants: readonly ProductVariant[], quantity: number): number {
+  const idx = findTierIndex(variants, quantity)
+  return variants[idx].price * quantity
 }
 
 export interface OrderFormData {

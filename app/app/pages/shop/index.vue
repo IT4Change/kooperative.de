@@ -32,7 +32,7 @@
       <p v-if="filteredProducts.length === 0" class="text-center text-gray-500 py-12">
         Keine Produkte gefunden.
       </p>
-      <ShopProductGrid v-else :products="filteredProducts" @add="(p, vi) => addToCart(p, vi)" />
+      <ShopProductGrid v-else :products="filteredProducts" @add="(p, vi, qty) => addToCart(p, vi, qty)" />
       <div v-if="hasMore" class="flex justify-center mt-8">
         <KoopButton @click="loadMore">Mehr anzeigen</KoopButton>
       </div>

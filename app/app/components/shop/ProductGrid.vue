@@ -4,7 +4,7 @@
       v-for="product in products"
       :key="product.id"
       :product="product"
-      @add="(p, vi) => $emit('add', p, vi)"
+      @add="(p, vi, qty) => $emit('add', p, vi, qty)"
     />
   </div>
   <p v-else class="text-center text-gray-400 py-12">
@@ -20,6 +20,6 @@ defineProps<{
 }>()
 
 defineEmits<{
-  add: [product: Product, variantIndex?: number]
+  add: [product: Product, variantIndex?: number, quantity?: number]
 }>()
 </script>

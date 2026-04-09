@@ -4,9 +4,10 @@
       <div class="flex-1 min-w-0">
         <h4 class="text-sm font-medium text-gray-900 truncate">
           {{ item.product.name }}
-          <span v-if="activeVariant" class="font-normal text-gray-500">&middot; {{ activeVariant.size }}</span>
+          <span v-if="activeVariant && !isQuantityTier" class="font-normal text-gray-500">&middot; {{ activeVariant.size }}</span>
         </h4>
-        <p class="text-sm text-gray-500">{{ price.toFixed(2) }} €</p>
+        <p class="text-sm text-gray-500">{{ price.toFixed(2) }} €<span v-if="isQuantityTier"> / Stk</span></p>
+        <p v-if="isQuantityTier && activeTier" class="text-xs text-gray-400">Staffel: {{ activeTier.size }}</p>
       </div>
       <div class="flex items-center gap-1">
         <button
@@ -15,7 +16,15 @@
         >
           −
         </button>
-        <span class="w-8 text-center text-sm font-medium">{{ item.quantity }}</span>
+        <input
+          v-if="isQuantityTier"
+          :value="item.quantity"
+          type="number"
+          min="1"
+          class="w-14 text-center text-sm font-medium border border-gray-200 rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-[#00af8c]"
+          @change="onQuantityInput(($event.target as HTMLInputElement).value)"
+        />
+        <span v-else class="w-8 text-center text-sm font-medium">{{ item.quantity }}</span>
         <button
           class="w-7 h-7 rounded bg-gray-100 hover:bg-gray-200 text-gray-700 flex items-center justify-center text-sm font-bold transition-colors"
           @click="$emit('update', item.product.id, item.quantity + 1, item.variantIndex)"
@@ -37,8 +46,8 @@
       </button>
     </div>
 
-    <!-- Varianten-Wechsel + Spar-Hinweis -->
-    <div v-if="item.product.variants && item.product.variants.length > 1" class="mt-2 ml-0">
+    <!-- Size variants: dropdown + savings hint -->
+    <div v-if="item.product.variants && item.product.variants.length > 1 && !isQuantityTier" class="mt-2 ml-0">
       <select
         :value="item.variantIndex ?? 0"
         class="text-xs border border-gray-200 rounded px-1.5 py-1 focus:outline-none focus:ring-1 focus:ring-[#00af8c] focus:border-[#00af8c]"
@@ -52,12 +61,17 @@
         {{ savingsHint }}
       </p>
     </div>
+
+    <!-- Quantity tiers: next tier hint -->
+    <div v-if="isQuantityTier && nextTierHint" class="mt-1">
+      <p class="text-xs text-[#00af8c]">{{ nextTierHint }}</p>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import type { CartItem } from '~/data/products'
-import { unitPrice } from '~/data/products'
+import { unitPrice, findTierIndex } from '~/data/products'
 
 const props = defineProps<{
   item: CartItem
@@ -69,25 +83,35 @@ const emit = defineEmits<{
   'update-variant': [productId: string, oldVariantIndex: number | undefined, newVariantIndex: number]
 }>()
 
+const isQuantityTier = computed(() => props.item.product.variantType === 'quantity')
+
+const activeTier = computed(() => {
+  if (!isQuantityTier.value || !props.item.product.variants) return null
+  const idx = findTierIndex(props.item.product.variants, props.item.quantity)
+  return props.item.product.variants[idx]
+})
+
 const activeVariant = computed(() =>
   props.item.variantIndex !== undefined && props.item.product.variants
     ? props.item.product.variants[props.item.variantIndex]
     : null,
 )
 
-const price = computed(() =>
-  activeVariant.value?.price ?? props.item.product.price,
-)
+const price = computed(() => {
+  if (isQuantityTier.value && activeTier.value) {
+    return activeTier.value.price
+  }
+  return activeVariant.value?.price ?? props.item.product.price
+})
 
 const savingsHint = computed(() => {
   const variants = props.item.product.variants
-  if (!variants || props.item.variantIndex === undefined) return null
+  if (!variants || props.item.variantIndex === undefined || isQuantityTier.value) return null
 
   const current = variants[props.item.variantIndex]
   if (!current) return null
   const currentUP = unitPrice(current)
 
-  // Find cheapest unit price
   let cheapest = current
   let cheapestUP = currentUP
   for (const v of variants) {
@@ -99,12 +123,26 @@ const savingsHint = computed(() => {
   }
 
   if (cheapest === current) return null
-
   const savings = (currentUP - cheapestUP).toFixed(2)
   return `Tipp: Im ${cheapest.size}-Gebinde sparst du ${savings} €/${current.referenceUnit}!`
 })
 
+const nextTierHint = computed(() => {
+  if (!isQuantityTier.value || !props.item.product.variants) return null
+  const currentIdx = findTierIndex(props.item.product.variants, props.item.quantity)
+  const nextTier = props.item.product.variants[currentIdx + 1]
+  if (!nextTier || !nextTier.minQty) return null
+  const diff = nextTier.minQty - props.item.quantity
+  if (diff <= 0) return null
+  return `Noch ${diff} mehr für ${nextTier.price.toFixed(2)} €/Stk (${nextTier.size})`
+})
+
 function onVariantChange(value: string) {
   emit('update-variant', props.item.product.id, props.item.variantIndex, Number(value))
+}
+
+function onQuantityInput(value: string) {
+  const qty = Math.max(1, parseInt(value) || 1)
+  emit('update', props.item.product.id, qty, props.item.variantIndex)
 }
 </script>
