@@ -1,0 +1,6 @@
+FROM mariadb:latest
+
+ENV MARIADB_ROOT_PASSWORD=koop-root
+ENV MARIADB_DATABASE=kooperative
+ENV MARIADB_USER=koop
+ENV MARIADB_PASSWORD=koop
