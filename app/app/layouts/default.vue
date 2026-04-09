@@ -184,13 +184,6 @@ onMounted(() => {
   transition: max-width 0.4s ease, opacity 0.3s ease;
 }
 
-@media (min-width: 769px) {
-  .header.scrolled .logo-text {
-    max-width: 0;
-    opacity: 0;
-  }
-}
-
 .logo-img {
   height: 40px;
   width: auto;
