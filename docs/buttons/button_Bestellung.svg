@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+    xmlns="http://www.w3.org/2000/svg"
+    version="1.1"
+    width="600"
+    height="180"
+    viewBox="0 0 600 180">
+
+    <defs>
+        <!-- 3D Bevel Effekt -->
+        <filter id="bevel" x="-20%" y="-20%" width="140%" height="140%">
+            <!-- Licht -->
+            <feSpecularLighting result="specOut" specularExponent="20" lighting-color="#ffffff">
+                <fePointLight x="-200" y="-200" z="300"/>
+            </feSpecularLighting>
+
+            <!-- Maske -->
+            <feComposite in="specOut" in2="SourceAlpha" operator="in" result="specMasked"/>
+
+            <!-- Schatten -->
+            <feDropShadow dx="2" dy="2" stdDeviation="2" flood-color="#004d3d" flood-opacity="0.6"/>
+            
+            <!-- Kombination -->
+            <feComposite in="SourceGraphic" in2="specMasked" operator="arithmetic" k1="0" k2="1" k3="1" k4="0"/>
+        </filter>
+
+        <!-- Kanten-Gradient -->
+        <linearGradient id="edgeLight" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#ffffff" stop-opacity="0.4"/>
+            <stop offset="50%" stop-color="#ffffff" stop-opacity="0"/>
+            <stop offset="100%" stop-color="#000000" stop-opacity="0.4"/>
+        </linearGradient>
+    </defs>
+
+    <!-- Button -->
+    <polygon
+        points="
+            40,20
+            560,20
+            580,40
+            580,140
+            560,160
+            40,160
+            20,140
+            20,40
+        "
+        fill="#00af8c"
+        filter="url(#bevel)"
+    />
+
+    <!-- Relief-Kante Overlay -->
+    <polygon
+        points="
+            40,20
+            560,20
+            580,40
+            580,140
+            560,160
+            40,160
+            20,140
+            20,40
+        "
+        fill="url(#edgeLight)"
+        pointer-events="none"
+    />
+
+    <!-- Text -->
+    <text
+        x="300"
+        y="90"
+        font-family="Myriad Pro, Arial, Helvetica, sans-serif"
+        font-size="48"
+        fill="#ffffff"
+        text-anchor="middle"
+        dominant-baseline="middle">
+        Bestellung
+    </text>
+
+</svg>
