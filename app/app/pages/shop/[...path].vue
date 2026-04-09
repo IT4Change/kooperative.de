@@ -16,9 +16,11 @@
         </span>
 
         <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">{{ product.name }}</h1>
-        <p v-if="product.model" class="text-xs text-gray-400 mb-3">Art.-Nr. {{ product.model }}</p>
+        <p v-if="product.model" class="text-xs text-gray-400 mb-2">Art.-Nr. {{ product.model }}</p>
+        <p v-if="product.content" class="text-sm text-gray-500 mb-1">{{ product.content }}</p>
+        <p v-if="product.details" class="text-sm text-gray-500 mb-1">{{ product.details }}</p>
 
-        <p class="text-gray-600 mb-6">{{ product.description }}</p>
+        <p class="text-gray-600 mb-6 mt-3">{{ product.description }}</p>
 
         <!-- Size variants: dropdown -->
         <div v-if="product.variants && product.variantType !== 'quantity'" class="mb-4">
@@ -69,18 +71,6 @@
         <KoopButton @click="handleAdd">
           In den Warenkorb
         </KoopButton>
-      </div>
-    </div>
-
-    <!-- Zusätzliche Informationen -->
-    <div v-if="product.content || product.details" class="mt-12 grid grid-cols-1 md:grid-cols-2 gap-8">
-      <div v-if="product.content">
-        <h2 class="text-lg font-semibold text-gray-900 mb-3">Anwendung</h2>
-        <p class="text-sm text-gray-600 leading-relaxed">{{ product.content }}</p>
-      </div>
-      <div v-if="product.details">
-        <h2 class="text-lg font-semibold text-gray-900 mb-3">Details &amp; Inhaltsstoffe</h2>
-        <p class="text-sm text-gray-600 leading-relaxed">{{ product.details }}</p>
       </div>
     </div>
 
