@@ -3,9 +3,8 @@
     <!-- Hero -->
     <section id="hero" class="h-screen flex flex-col items-center justify-center relative overflow-hidden" style="background-color: var(--koop-orange);">
       <div class="relative z-10 flex flex-col items-center px-4">
-        <img src="/img/logo-schrift.svg" alt="Kooperative Dürnau" class="w-[280px] md:w-[400px] lg:w-[500px]" />
-        <p class="text-base md:text-lg mt-4 text-black/70 text-center">Leben und Arbeiten in Gemeinschaft seit 1980</p>
-        <div class="flex items-center justify-center gap-3 md:gap-4 mt-6 md:mt-8">
+        <img src="/img/logo-schrift.svg" alt="Kooperative Dürnau" class="w-[340px] md:w-[480px] lg:w-[600px]" />
+        <div class="flex items-center justify-center gap-3 md:gap-4 mt-10 md:mt-14">
           <KoopButton to="/shop">
             Bestellung
           </KoopButton>
@@ -13,10 +12,11 @@
       </div>
       <!-- Scroll-Hinweis -->
       <button
-        class="absolute bottom-1 left-1/2 -translate-x-1/2 z-10 text-white/80 hover:text-white transition-colors focus:outline-none"
+        class="absolute bottom-1 left-1/2 -translate-x-1/2 z-10 text-white/80 hover:text-white transition-colors focus:outline-none flex flex-col items-center"
         aria-label="Nach unten scrollen"
         @click="scrollToArbeit"
       >
+        <span class="text-sm font-medium mb-1">Mehr</span>
         <svg class="w-10 h-10 animate-bounce [animation-duration:2s]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
         </svg>
@@ -28,7 +28,8 @@
       <NuxtImg src="/img/hero.jpg" alt="" sizes="sm:100vw md:100vw lg:100vw xl:100vw 2xl:100vw" format="webp" loading="lazy" class="absolute inset-0 w-full h-full object-cover" />
       <div class="absolute inset-0 bg-black/40" />
       <div class="relative z-10 text-center text-white max-w-3xl px-4 md:px-6 [text-shadow:_0_1px_4px_rgba(0,0,0,0.5)]">
-        <h2 class="text-2xl md:text-4xl font-bold mb-4 [text-shadow:_0_2px_8px_rgba(0,0,0,0.5)]">Arbeitsbereiche</h2>
+        <h2 class="text-2xl md:text-4xl font-bold mb-2 [text-shadow:_0_2px_8px_rgba(0,0,0,0.5)]">Arbeitsbereiche</h2>
+        <p class="text-base md:text-lg mb-2 text-white/80">Leben und Arbeiten in Gemeinschaft seit 1980</p>
         <p class="text-base md:text-lg mb-6 md:mb-10 text-white/80">Handwerk, Bau und Gartenbau &mdash; die Betriebe der Kooperative.</p>
         <div class="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-4">
           <div class="bg-white/10 backdrop-blur rounded-lg p-5">
