@@ -70,12 +70,7 @@ html {
   position: absolute;
   inset: 0;
   bottom: var(--btn-depth);
-  background: linear-gradient(
-    160deg,
-    var(--btn-color-light) 0%,
-    var(--btn-color) 40%,
-    var(--btn-color-dark) 100%
-  );
+  background: var(--btn-color);
   clip-path: polygon(
     0% var(--btn-notch),
     var(--btn-notch) 0%,
@@ -87,6 +82,7 @@ html {
     0% calc(100% - var(--btn-notch))
   );
   z-index: 1;
+  transition: inset 0.08s ease, background 0.08s ease;
 }
 
 .koop-btn__label {
@@ -94,35 +90,23 @@ html {
   z-index: 2;
   pointer-events: none;
   transform: translateY(calc(var(--btn-depth) / -2));
-  transition: transform 0.1s ease;
+  transition: transform 0.08s ease;
 }
 
 /* Hover */
 .koop-btn:hover::after {
-  background: linear-gradient(
-    160deg,
-    var(--btn-color-light) 0%,
-    var(--btn-color-light) 30%,
-    var(--btn-color) 100%
-  );
+  background: var(--btn-color-light);
 }
 
-/* Active/pressed: face moves down, depth shrinks */
+/* Active/pressed: face drops fully onto shadow, depth disappears */
 .koop-btn:active::after {
-  bottom: 1px;
-  background: linear-gradient(
-    160deg,
-    var(--btn-color) 0%,
-    var(--btn-color-dark) 100%
-  );
-}
-
-.koop-btn:active::before {
-  top: 1px;
+  top: var(--btn-depth);
+  bottom: 0;
+  background: var(--btn-color);
 }
 
 .koop-btn:active .koop-btn__label {
-  transform: translateY(calc(var(--btn-depth) / 2 - 1px));
+  transform: translateY(calc(var(--btn-depth) / 2));
 }
 
 /* ----- Variants ---------------------------------------------------------- */
