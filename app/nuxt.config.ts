@@ -32,6 +32,6 @@ export default defineNuxtConfig({
     },
   },
   app: {
-    baseURL: '/kooperative.de/',
+    baseURL: '/',
   },
 })
