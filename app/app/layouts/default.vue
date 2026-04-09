@@ -11,8 +11,9 @@
       </div>
 
       <div class="header-main">
-        <NuxtLink to="/" class="logo" :class="{ active: activeSection === 'hero' }">
-          <img :src="`${baseURL}img/logo.gif`" alt="Kooperative Dürnau" class="logo-img" />
+        <NuxtLink to="/" class="logo" :class="{ active: activeSection === 'hero' }" @click.prevent="scrollToTop">
+          <img :src="`${baseURL}img/logo.svg`" alt="Kooperative Dürnau" class="logo-img" />
+          <span class="logo-text">Kooperative Dürnau</span>
         </NuxtLink>
 
         <button class="burger" :class="{ open: menuOpen }" aria-label="Menü" @click="menuOpen = !menuOpen">
@@ -67,7 +68,16 @@ const activeSection = ref('')
 const headerRef = ref<HTMLElement>()
 let lastScrollY = 0
 
+const router = useRouter()
 const isShopActive = computed(() => route.path.startsWith('/shop'))
+
+function scrollToTop() {
+  if (route.path === '/') {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  } else {
+    router.push('/')
+  }
+}
 
 const sectionIds = ['hero', 'arbeit', 'kultur', 'bildung', 'gaeste']
 let observer: IntersectionObserver | null = null
@@ -175,6 +185,7 @@ onMounted(() => {
 }
 
 .header.scrolled .header-main {
+  gap: 1rem;
   padding: 0.3rem 1.5rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
@@ -182,6 +193,25 @@ onMounted(() => {
 .logo {
   text-decoration: none;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.logo-text {
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: #333;
+  white-space: nowrap;
+  display: inline-block;
+  max-width: 200px;
+  overflow: hidden;
+  transition: max-width 0.4s ease, opacity 0.3s ease;
+}
+
+.header.scrolled .logo-text {
+  max-width: 0;
+  opacity: 0;
 }
 
 .logo-img {
@@ -322,6 +352,10 @@ onMounted(() => {
 
   .burger {
     display: flex;
+  }
+
+  .logo-text {
+    display: none;
   }
 
   .main-nav {

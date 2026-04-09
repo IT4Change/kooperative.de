@@ -9,14 +9,21 @@
           Genossenschaft in Dürnau &mdash; Handwerk, Bildung, Kultur und Vertrieb unter einem Dach.
         </p>
         <div class="flex items-center justify-center gap-3 md:gap-4 mt-6 md:mt-8">
-          <KoopButton href="#arbeit" variant="lila" @click.prevent="scrollToArbeit">
-            Zur Kooperative
-          </KoopButton>
           <KoopButton to="/shop">
             Bestellung
           </KoopButton>
         </div>
       </div>
+      <!-- Scroll-Hinweis -->
+      <button
+        class="absolute bottom-1 left-1/2 -translate-x-1/2 z-10 text-white/80 hover:text-white transition-colors focus:outline-none"
+        aria-label="Nach unten scrollen"
+        @click="scrollToArbeit"
+      >
+        <svg class="w-10 h-10 animate-bounce [animation-duration:2s]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
     </section>
 
     <!-- Arbeit -->
