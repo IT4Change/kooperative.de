@@ -3,7 +3,7 @@
     <!-- Hero -->
     <section id="hero" class="h-screen flex flex-col items-center justify-center relative overflow-hidden" style="background-color: var(--koop-orange);">
       <div class="relative z-10 flex flex-col items-center px-4">
-        <img src="/img/logo-schrift.svg" alt="Kooperative Dürnau" class="w-[340px] md:w-[480px] lg:w-[600px]" />
+        <img src="/img/logo-schrift-braun.svg" alt="Kooperative Dürnau" class="w-[340px] md:w-[480px] lg:w-[600px]" />
         <div class="flex items-center justify-center gap-3 md:gap-4 mt-10 md:mt-14">
           <KoopButton to="/shop">
             Bestellung
