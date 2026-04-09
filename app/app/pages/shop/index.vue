@@ -25,7 +25,7 @@
     </section>
 
     <section class="mb-6">
-      <ShopCategoryFilter :selected="selectedCategory" :counts="categoryCounts" @select="selectCategory" />
+      <ShopCategoryFilter :selected="selectedCategory" :counts="categoryCounts" :categories="categories" @select="selectCategory" />
     </section>
 
     <section>
@@ -90,8 +90,11 @@
 </template>
 
 <script setup lang="ts">
-import type { CategorySlug } from '~/data/products'
-import { categories, products } from '~/data/products'
+import type { CategorySlug, Product, Category } from '~/data/products'
+
+const { data } = await useFetch<{ products: Product[], categories: Category[] }>('/api/products')
+const products = computed(() => data.value?.products ?? [])
+const categories = computed(() => data.value?.categories ?? [])
 
 useHead({
   title: 'Shop – Kooperative Dürnau',
@@ -120,11 +123,11 @@ const route = useRoute()
 const router = useRouter()
 const { addToCart } = useCart()
 
-const categorySlugs = new Set<string>(categories.map(c => c.slug))
-const categoryNameMap = new Map(categories.map(c => [c.slug, c.name.toLowerCase()]))
+const categorySlugs = computed(() => new Set<string>(categories.value.map(c => c.slug)))
+const categoryNameMap = computed(() => new Map(categories.value.map(c => [c.slug, c.name.toLowerCase()])))
 
 function parseCategory(value: unknown): CategorySlug | null {
-  if (typeof value === 'string' && categorySlugs.has(value)) return value as CategorySlug
+  if (typeof value === 'string' && categorySlugs.value.has(value)) return value as CategorySlug
   return null
 }
 
@@ -159,9 +162,9 @@ watch(() => route.query.q, (q) => {
 // Products filtered by search only (for category counts)
 const searchFilteredProducts = computed(() => {
   const q = searchQuery.value.trim().toLowerCase()
-  if (!q) return products
-  return products.filter((p) => {
-    const catName = categoryNameMap.get(p.category) ?? ''
+  if (!q) return products.value
+  return products.value.filter((p) => {
+    const catName = categoryNameMap.value.get(p.category) ?? ''
     return p.name.toLowerCase().includes(q)
       || p.description.toLowerCase().includes(q)
       || catName.includes(q)

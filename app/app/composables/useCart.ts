@@ -1,5 +1,4 @@
 import type { CartItem, OrderFormData, Product } from '~/data/products'
-import { products } from '~/data/products'
 
 type CheckoutStep = 'cart' | 'form' | 'confirm'
 
@@ -30,13 +29,14 @@ function persist() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
 }
 
-function init() {
+async function init() {
   if (initialized || import.meta.server) return
   initialized = true
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (!raw) return
     const stored: { productId: string; quantity: number; variantIndex?: number }[] = JSON.parse(raw)
+    const { products } = await $fetch<{ products: Product[] }>('/api/products')
     const restored: CartItem[] = []
     for (const entry of stored) {
       const product = products.find(p => p.id === entry.productId)

@@ -29,12 +29,12 @@
 </template>
 
 <script setup lang="ts">
-import type { CategorySlug } from '~/data/products'
-import { categories } from '~/data/products'
+import type { CategorySlug, Category } from '~/data/products'
 
 const props = defineProps<{
   selected: CategorySlug | null
   counts: Record<string, number>
+  categories: Category[]
 }>()
 
 defineEmits<{

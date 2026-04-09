@@ -56,17 +56,20 @@
 </template>
 
 <script setup lang="ts">
-import { products, categories, unitPrice } from '~/data/products'
+import type { Product, Category } from '~/data/products'
+import { unitPrice } from '~/data/products'
 
 const route = useRoute()
-const product = products.find(p => p.id === route.params.id)
+const { data } = await useFetch<{ products: Product[], categories: Category[] }>('/api/products')
+
+const product = data.value?.products.find(p => p.id === route.params.id)
 
 if (!product) {
   navigateTo('/shop')
   throw new Error('Product not found')
 }
 
-const categoryName = categories.find(c => c.slug === product.category)?.name ?? product.category
+const categoryName = data.value?.categories.find(c => c.slug === product.category)?.name ?? product.category
 
 useHead({
   title: `${product.name} – Kooperative Dürnau`,
