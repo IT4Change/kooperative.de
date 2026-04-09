@@ -1,6 +1,6 @@
 import mysql from 'mysql2/promise'
 
-let pool: mysql.Pool | null = null
+export let pool: mysql.Pool | null = null
 
 export function useDB() {
   if (!pool) {
