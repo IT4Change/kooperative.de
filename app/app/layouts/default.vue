@@ -197,17 +197,8 @@ onMounted(() => {
   transition: height 0.3s ease;
 }
 
-.logo.active .logo-img {
-  height: 48px;
-  filter: drop-shadow(0 0 6px rgba(74, 124, 89, 0.6));
-}
-
 .header.scrolled .logo-img {
   height: 28px;
-}
-
-.header.scrolled .logo.active .logo-img {
-  height: 32px;
 }
 
 /* Burger Button */
