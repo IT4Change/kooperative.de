@@ -314,9 +314,7 @@ onMounted(() => {
   }
 
   .nav-spacer {
-    border-top: 2px solid #00af8c;
-    margin-top: 0.5rem;
-    padding-top: 0.25rem;
+    display: none;
   }
 
   .main-nav {
