@@ -2,12 +2,9 @@
   <div>
     <!-- Hero -->
     <section id="hero" class="h-screen flex flex-col items-center justify-center relative overflow-hidden" style="background-color: var(--koop-orange);">
-      <div class="relative z-10 text-center text-white">
-        <h1 class="text-3xl md:text-5xl font-bold mb-4 px-4 [text-shadow:_0_2px_8px_rgba(0,0,0,0.5)]">Kooperative Dürnau</h1>
-        <p class="text-lg md:text-xl mb-2 px-4 [text-shadow:_0_1px_4px_rgba(0,0,0,0.5)]">Leben und Arbeiten in Gemeinschaft seit 1980</p>
-        <p class="text-sm md:text-base text-white/80 max-w-xl mx-auto px-4 [text-shadow:_0_1px_4px_rgba(0,0,0,0.5)]">
-          Genossenschaft in Dürnau &mdash; Handwerk, Bildung, Kultur und Vertrieb unter einem Dach.
-        </p>
+      <div class="relative z-10 flex flex-col items-center px-4">
+        <img src="/img/logo-schrift.svg" alt="Kooperative Dürnau" class="w-[280px] md:w-[400px] lg:w-[500px]" />
+        <p class="text-base md:text-lg mt-4 text-black/70 text-center">Leben und Arbeiten in Gemeinschaft seit 1980</p>
         <div class="flex items-center justify-center gap-3 md:gap-4 mt-6 md:mt-8">
           <KoopButton to="/shop">
             Bestellung
