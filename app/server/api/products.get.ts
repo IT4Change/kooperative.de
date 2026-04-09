@@ -1,5 +1,5 @@
 import type { RowDataPacket } from 'mysql2'
-import { convertProduct, convertCategory } from '../utils/converter'
+import { groupProducts, convertCategory } from '../utils/converter'
 
 export default defineEventHandler(async () => {
   const db = useDB()
@@ -37,7 +37,7 @@ export default defineEventHandler(async () => {
     ORDER BY pd.products_name
   `)
 
-  const products = prodRows.map(row => convertProduct(row as any))
+  const products = groupProducts(prodRows as any[])
 
   const usedSlugs = new Set(products.map(p => p.category))
   const activeCategories = categories.filter(c => usedSlugs.has(c.slug))
