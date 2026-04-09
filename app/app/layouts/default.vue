@@ -1,15 +1,6 @@
 <template>
   <div class="layout">
     <header ref="headerRef" class="header" :class="{ scrolled }">
-      <div class="header-top">
-        <nav class="info-nav">
-          <NuxtLink to="/historie">Historie</NuxtLink>
-          <NuxtLink to="/kontakt">Kontakt</NuxtLink>
-          <NuxtLink to="/impressum">Impressum</NuxtLink>
-          <NuxtLink to="/datenschutz">Datenschutz</NuxtLink>
-        </nav>
-      </div>
-
       <div class="header-main">
         <NuxtLink to="/" class="logo" :class="{ active: activeSection === 'hero' }" @click.prevent="scrollToTop">
           <img :src="`${baseURL}img/logo.svg`" alt="Kooperative Dürnau" class="logo-img" />
@@ -26,12 +17,11 @@
           <NuxtLink to="/#kultur" :class="{ active: activeSection === 'kultur' }" @click="menuOpen = false">Kultur</NuxtLink>
           <NuxtLink to="/#bildung" :class="{ active: activeSection === 'bildung' }" @click="menuOpen = false">Bildung</NuxtLink>
           <NuxtLink to="/#gaeste" :class="{ active: activeSection === 'gaeste' }" @click="menuOpen = false">Gäste</NuxtLink>
-          <div class="mobile-info-links">
-            <NuxtLink to="/historie" @click="menuOpen = false">Historie</NuxtLink>
-            <NuxtLink to="/kontakt" @click="menuOpen = false">Kontakt</NuxtLink>
-            <NuxtLink to="/impressum" @click="menuOpen = false">Impressum</NuxtLink>
-            <NuxtLink to="/datenschutz" @click="menuOpen = false">Datenschutz</NuxtLink>
-          </div>
+          <span class="nav-spacer" />
+          <NuxtLink to="/historie" class="info-link" @click="menuOpen = false">Historie</NuxtLink>
+          <NuxtLink to="/kontakt" class="info-link" @click="menuOpen = false">Kontakt</NuxtLink>
+          <NuxtLink to="/impressum" class="info-link" @click="menuOpen = false">Impressum</NuxtLink>
+          <NuxtLink to="/datenschutz" class="info-link" @click="menuOpen = false">Datenschutz</NuxtLink>
         </nav>
       </div>
     </header>
@@ -145,33 +135,18 @@ onMounted(() => {
   transition: all 0.3s ease;
 }
 
-.header-top {
-  background: rgba(74, 124, 89, 0.9);
-  padding: 0.25rem 1.5rem;
-  transition: all 0.3s ease;
+.nav-spacer {
+  flex: 1;
 }
 
-.header.scrolled .header-top {
-  max-height: 0;
-  padding: 0 1.5rem;
-  overflow: hidden;
-  opacity: 0;
+.info-link {
+  font-size: 0.8rem !important;
+  color: #888 !important;
+  font-weight: 400 !important;
 }
 
-.info-nav {
-  display: flex;
-  gap: 1.5rem;
-  justify-content: flex-end;
-}
-
-.info-nav a {
-  color: #fff;
-  text-decoration: none;
-  font-size: 0.8rem;
-}
-
-.info-nav a:hover {
-  text-decoration: underline;
+.info-link:hover {
+  color: #00af8c !important;
 }
 
 .header-main {
@@ -209,9 +184,11 @@ onMounted(() => {
   transition: max-width 0.4s ease, opacity 0.3s ease;
 }
 
-.header.scrolled .logo-text {
-  max-width: 0;
-  opacity: 0;
+@media (min-width: 769px) {
+  .header.scrolled .logo-text {
+    max-width: 0;
+    opacity: 0;
+  }
 }
 
 .logo-img {
@@ -346,16 +323,20 @@ onMounted(() => {
 
 /* Mobile */
 @media (max-width: 768px) {
-  .header-top {
-    display: none;
-  }
-
   .burger {
     display: flex;
   }
 
   .logo-text {
-    display: none;
+    display: inline-block;
+    max-width: 200px;
+    opacity: 1;
+  }
+
+  .nav-spacer {
+    border-top: 2px solid #00af8c;
+    margin-top: 0.5rem;
+    padding-top: 0.25rem;
   }
 
   .main-nav {
@@ -386,20 +367,11 @@ onMounted(() => {
     border-bottom: none;
   }
 
-  .mobile-info-links {
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-    margin-top: 0.75rem;
-    padding-top: 0.75rem;
-    border-top: 2px solid #00af8c;
-  }
-
-  .mobile-info-links a {
-    padding: 0.5rem 0;
-    font-size: 0.9rem;
-    color: #666;
-    border-bottom: none;
+  .info-link {
+    font-size: 0.9rem !important;
+    color: #666 !important;
+    border-bottom: none !important;
+    padding: 0.5rem 0 !important;
   }
 
   .footer-content {
