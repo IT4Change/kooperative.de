@@ -27,8 +27,8 @@ export default defineNuxtConfig({
   ssr: true,
   nitro: {
     prerender: {
-      failOnError: false,
-      crawlLinks: true,
+      routes: [],
+      crawlLinks: false,
     },
   },
   app: {
