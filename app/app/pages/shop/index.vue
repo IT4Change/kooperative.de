@@ -33,6 +33,9 @@
         Keine Produkte gefunden.
       </p>
       <ShopProductGrid v-else :products="filteredProducts" @add="(p, vi) => addToCart(p, vi)" />
+      <div v-if="hasMore" class="flex justify-center mt-8">
+        <KoopButton @click="loadMore">Mehr anzeigen</KoopButton>
+      </div>
     </section>
 
     <ShopCartButton />
@@ -179,9 +182,24 @@ const categoryCounts = computed(() => {
   return counts
 })
 
-const filteredProducts = computed(() => {
+const PAGE_SIZE = 24
+const visibleCount = ref(PAGE_SIZE)
+
+const allFilteredProducts = computed(() => {
   const result = searchFilteredProducts.value
   if (!selectedCategory.value) return result
   return result.filter(p => p.category === selectedCategory.value)
+})
+
+const filteredProducts = computed(() => allFilteredProducts.value.slice(0, visibleCount.value))
+const hasMore = computed(() => visibleCount.value < allFilteredProducts.value.length)
+
+function loadMore() {
+  visibleCount.value += PAGE_SIZE
+}
+
+// Reset beim Filtern/Suchen
+watch([selectedCategory, searchQuery], () => {
+  visibleCount.value = PAGE_SIZE
 })
 </script>
