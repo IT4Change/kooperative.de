@@ -3,6 +3,7 @@ import type { Product, ProductVariant, Category, CategorySlug } from '~/data/pro
 export interface DbProduct {
   products_id: number
   products_price: number
+  products_model: string | null
   products_image: string | null
   products_image_detail_1: string
   products_image_detail_2: string
@@ -14,7 +15,13 @@ export interface DbProduct {
   tax_rate: number
   products_name: string
   products_description: string | null
+  products_description2: string | null
+  products_content: string | null
   products_sizes: string | null
+  products_viewed: number
+  products_head_title_tag: string | null
+  products_head_desc_tag: string | null
+  products_head_keywords_tag: string | null
   category_id: number
   category_name: string
 }
@@ -126,6 +133,19 @@ function collectImages(row: DbProduct): string[] {
   return images
 }
 
+function extraFields(row: DbProduct, name: string) {
+  return {
+    slug: slugify(name),
+    model: row.products_model || undefined,
+    content: stripHtml(row.products_content) || undefined,
+    details: stripHtml(row.products_description2) || undefined,
+    metaTitle: row.products_head_title_tag || undefined,
+    metaDescription: stripHtml(row.products_head_desc_tag) || undefined,
+    metaKeywords: row.products_head_keywords_tag || undefined,
+    viewCount: row.products_viewed || undefined,
+  }
+}
+
 export function convertCategory(row: DbCategory): Category {
   return {
     slug: slugify(row.categories_name) as CategorySlug,
@@ -173,14 +193,16 @@ export function groupProducts(rows: DbProduct[]): Product[] {
       // Single product (no variants)
       const row = group[0]
       const parsed = parseVariant(row.products_name)
+      const name = parsed ? parsed.baseName : row.products_name
       products.push({
         id: String(row.products_id),
-        name: parsed ? parsed.baseName : row.products_name,
+        name,
         price: grossPrice(Number(row.products_price), row.tax_rate),
         description: stripHtml(row.products_description),
         category: slugify(row.category_name) as CategorySlug,
         unit: parsed ? parsed.size : (row.products_sizes ? stripHtml(row.products_sizes) : undefined),
         images: collectImages(row),
+        ...extraFields(row, name),
       })
     } else {
       // Multiple variants — find the base (the one with images)
@@ -256,12 +278,25 @@ export function groupProducts(rows: DbProduct[]): Product[] {
         images,
         variants,
         ...(variantType === 'quantity' ? { variantType: 'quantity' as const } : {}),
+        ...extraFields(base, baseName),
       })
     }
   }
 
-  // Sort by name
-  products.sort((a, b) => a.name.localeCompare(b.name, 'de'))
+  // Sort by viewCount (popularity) descending, then name
+  products.sort((a, b) => (b.viewCount ?? 0) - (a.viewCount ?? 0) || a.name.localeCompare(b.name, 'de'))
+
+  // Ensure unique slugs
+  const usedSlugs = new Set<string>()
+  for (const p of products) {
+    let slug = p.slug
+    let i = 2
+    while (usedSlugs.has(slug)) {
+      slug = `${p.slug}-${i++}`
+    }
+    p.slug = slug
+    usedSlugs.add(slug)
+  }
 
   return products
 }

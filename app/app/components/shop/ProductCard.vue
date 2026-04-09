@@ -1,13 +1,13 @@
 <template>
   <div class="bg-white border border-gray-200 rounded-lg flex flex-col overflow-hidden">
-    <NuxtLink :to="`/shop/${product.id}`">
+    <NuxtLink :to="`/shop/${product.id}/${product.slug}`">
       <ShopProductGallery :images="displayImages" />
     </NuxtLink>
     <div class="p-5 flex flex-col flex-1">
-      <NuxtLink :to="`/shop/${product.id}`" class="hover:text-[#00af8c] transition-colors">
+      <NuxtLink :to="`/shop/${product.id}/${product.slug}`" class="hover:text-[#00af8c] transition-colors">
         <h3 class="text-base font-semibold text-gray-900 mb-1">{{ product.name }}</h3>
       </NuxtLink>
-      <NuxtLink :to="`/shop/${product.id}`" class="block mb-3 flex-1">
+      <NuxtLink :to="`/shop/${product.id}/${product.slug}`" class="block mb-3 flex-1">
         <p class="text-sm text-gray-500 line-clamp-5">{{ product.description }}</p>
       </NuxtLink>
 

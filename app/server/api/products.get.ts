@@ -15,7 +15,7 @@ export default defineEventHandler(async () => {
   const categories = catRows.map(row => convertCategory(row as any))
 
   const [prodRows] = await db.query<RowDataPacket[]>(`
-    SELECT p.products_id, p.products_price,
+    SELECT p.products_id, p.products_price, p.products_model,
            p.products_image,
            p.products_image_detail_1,
            p.products_image_detail_2,
@@ -27,7 +27,13 @@ export default defineEventHandler(async () => {
            COALESCE(tr.tax_rate, 0) AS tax_rate,
            pd.products_name,
            pd.products_description,
+           pd.products_description2,
+           pd.products_content,
            pd.products_sizes,
+           pd.products_viewed,
+           pd.products_head_title_tag,
+           pd.products_head_desc_tag,
+           pd.products_head_keywords_tag,
            ptc.categories_id AS category_id,
            cd.categories_name AS category_name
     FROM products p

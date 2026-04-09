@@ -17,6 +17,7 @@ export interface ProductVariant {
 
 export interface Product {
   id: string
+  slug: string
   name: string
   price: number
   description: string
@@ -25,6 +26,13 @@ export interface Product {
   images: readonly string[]
   variants?: readonly ProductVariant[]
   variantType?: 'size' | 'quantity'
+  model?: string
+  content?: string
+  details?: string
+  metaTitle?: string
+  metaDescription?: string
+  metaKeywords?: string
+  viewCount?: number
 }
 
 export interface CartItem {
