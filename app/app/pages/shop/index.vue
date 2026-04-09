@@ -112,14 +112,16 @@ useHead({
 const showWelcome = ref(false)
 
 onMounted(() => {
-  if (!localStorage.getItem('shop-welcome-seen')) {
-    showWelcome.value = true
-  }
+  try {
+    if (!localStorage.getItem('shop-welcome-seen')) {
+      showWelcome.value = true
+    }
+  } catch { showWelcome.value = true }
 })
 
 function dismissWelcome() {
   showWelcome.value = false
-  localStorage.setItem('shop-welcome-seen', '1')
+  try { localStorage.setItem('shop-welcome-seen', '1') } catch {}
 }
 
 const route = useRoute()
