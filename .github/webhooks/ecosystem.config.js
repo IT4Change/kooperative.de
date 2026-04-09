@@ -1,8 +1,9 @@
 module.exports = {
   apps: [{
     name: "kooperative-frontend",
-    script: "app/.output/server/index.mjs",
+    cwd: "./app",
+    script: ".output/server/index.mjs",
     node_args: "-r dotenv/config",
-    env_file: ".env" 
+    env_file: ".env"
   }]
 }
