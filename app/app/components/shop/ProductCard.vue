@@ -7,7 +7,9 @@
       <NuxtLink :to="`/shop/${product.id}`" class="hover:text-[#00af8c] transition-colors">
         <h3 class="text-base font-semibold text-gray-900 mb-1">{{ product.name }}</h3>
       </NuxtLink>
-      <p class="text-sm text-gray-500 mb-3 flex-1">{{ product.description }}</p>
+      <NuxtLink :to="`/shop/${product.id}`" class="block mb-3 flex-1">
+        <p class="text-sm text-gray-500 line-clamp-5">{{ product.description }}</p>
+      </NuxtLink>
 
       <!-- Varianten-Dropdown -->
       <div v-if="product.variants" class="mb-3">
