@@ -79,11 +79,6 @@ export function convertProduct(row: DbProduct): Product {
     if (img) images.push(img)
   }
 
-  // Fallback if no images
-  if (images.length === 0) {
-    images.push(`https://picsum.photos/seed/${row.products_id}/400/300`)
-  }
-
   return {
     id: String(row.products_id),
     name: row.products_name,
