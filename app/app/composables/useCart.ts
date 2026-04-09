@@ -5,54 +5,39 @@ type CheckoutStep = 'cart' | 'form' | 'confirm'
 
 const STORAGE_KEY = 'kooperative-cart'
 
-function canUseStorage(): boolean {
-  try {
-    const key = '__test__'
-    localStorage.setItem(key, '1')
-    localStorage.removeItem(key)
-    return true
-  } catch {
-    return false
-  }
-}
+const items = ref<CartItem[]>([])
+const isOpen = ref(false)
+const checkoutStep = ref<CheckoutStep>('cart')
+const orderFormData = ref<OrderFormData>({
+  name: '',
+  street: '',
+  zip: '',
+  city: '',
+  email: '',
+  phone: '',
+  notes: '',
+})
+
+let initialized = false
 
 export function useCart() {
-  const items = useState<CartItem[]>('cart-items', () => [])
-  const isOpen = useState('cart-open', () => false)
-  const checkoutStep = useState<CheckoutStep>('cart-step', () => 'cart')
-  const orderFormData = useState<OrderFormData>('cart-form', () => ({
-    name: '',
-    street: '',
-    zip: '',
-    city: '',
-    email: '',
-    phone: '',
-    notes: '',
-  }))
-
-  const storageAvailable = useState('cart-storage', () => false)
-  const initialized = useState('cart-init', () => false)
+  const storage = useStorage()
 
   function persist() {
-    if (import.meta.server || !storageAvailable.value) return
-    try {
-      const data = items.value.map(i => ({
-        productId: i.product.id,
-        quantity: i.quantity,
-        ...(i.variantIndex !== undefined && { variantIndex: i.variantIndex }),
-      }))
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
-    } catch {}
+    const data = items.value.map(i => ({
+      productId: i.product.id,
+      quantity: i.quantity,
+      ...(i.variantIndex !== undefined && { variantIndex: i.variantIndex }),
+    }))
+    storage.set(STORAGE_KEY, JSON.stringify(data))
   }
 
   async function init() {
-    if (initialized.value || import.meta.server) return
-    initialized.value = true
-    storageAvailable.value = canUseStorage()
-    if (!storageAvailable.value) return
+    if (initialized || import.meta.server) return
+    initialized = true
+    const raw = storage.get(STORAGE_KEY)
+    if (!raw) return
     try {
-      const raw = localStorage.getItem(STORAGE_KEY)
-      if (!raw) return
       const stored: { productId: string; quantity: number; variantIndex?: number }[] = JSON.parse(raw)
       const { products } = await $fetch<{ products: Product[] }>('/api/products')
       const restored: CartItem[] = []
@@ -67,8 +52,7 @@ export function useCart() {
         }
       }
       items.value = restored
-    }
-    catch {}
+    } catch {}
   }
 
   function itemPrice(item: CartItem): number {
@@ -87,6 +71,8 @@ export function useCart() {
   const isEmpty = computed(() => items.value.length === 0)
 
   function addToCart(product: Product, variantIndex?: number, quantity?: number) {
+    if (!storage.require()) return
+
     if (product.variantType === 'quantity') {
       const existing = items.value.find(i => i.product.id === product.id)
       if (existing) {
@@ -144,8 +130,7 @@ export function useCart() {
     if (existing) {
       existing.quantity += item.quantity
       items.value = items.value.filter(i => i !== item)
-    }
-    else {
+    } else {
       item.variantIndex = newVariantIndex
     }
     persist()

@@ -30,6 +30,27 @@
       <slot />
     </main>
 
+    <!-- Storage-Warnung -->
+    <ClientOnly>
+      <Teleport to="body">
+        <div v-if="showStorageWarning" class="fixed inset-0 z-[200] flex items-center justify-center p-4" @click.self="dismissStorageWarning">
+          <div class="absolute inset-0 bg-black/50" />
+          <div class="relative bg-white rounded-xl shadow-2xl max-w-sm w-full p-6">
+            <h2 class="text-lg font-bold mb-3">Cookies erforderlich</h2>
+            <p class="text-sm text-gray-600 mb-4">
+              Um Artikel in den Warenkorb legen zu können, muss der lokale Speicher (Cookies/localStorage) in deinem Browser aktiviert sein.
+            </p>
+            <p class="text-sm text-gray-500 mb-5">
+              Bitte erlaube Cookies für diese Seite und versuche es erneut.
+            </p>
+            <div class="flex justify-end">
+              <KoopButton size="sm" @click="dismissStorageWarning">Verstanden</KoopButton>
+            </div>
+          </div>
+        </div>
+      </Teleport>
+    </ClientOnly>
+
     <footer class="footer">
       <div class="footer-content">
         <div class="footer-section">
@@ -51,6 +72,7 @@
 
 <script setup lang="ts">
 const { baseURL } = useRuntimeConfig().app
+const { showWarning: showStorageWarning, dismissWarning: dismissStorageWarning } = useStorage()
 const route = useRoute()
 const scrolled = ref(false)
 const menuOpen = ref(false)

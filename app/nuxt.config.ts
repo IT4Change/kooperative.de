@@ -33,5 +33,13 @@ export default defineNuxtConfig({
   },
   app: {
     baseURL: '/',
+    head: {
+      script: [
+        {
+          innerHTML: `(function(){try{window.localStorage.getItem('_')}catch(e){var s={};var f={get length(){return Object.keys(s).length},key:function(i){return Object.keys(s)[i]||null},getItem:function(k){return s[k]===undefined?null:s[k]},setItem:function(k,v){s[k]=String(v)},removeItem:function(k){delete s[k]},clear:function(){s={}}};Object.defineProperty(window,'localStorage',{value:f,configurable:true,writable:true});window.__storageBlocked=true}})()`,
+          type: 'text/javascript',
+        },
+      ],
+    },
   },
 })
