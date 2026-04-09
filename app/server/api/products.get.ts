@@ -23,6 +23,8 @@ export default defineEventHandler(async () => {
            p.products_image_detail_4,
            p.products_image_detail_5,
            p.products_status,
+           p.products_tax_class_id,
+           COALESCE(tr.tax_rate, 0) AS tax_rate,
            pd.products_name,
            pd.products_description,
            pd.products_sizes,
@@ -32,6 +34,7 @@ export default defineEventHandler(async () => {
     JOIN products_description pd ON p.products_id = pd.products_id AND pd.language_id = 2
     LEFT JOIN products_to_categories ptc ON p.products_id = ptc.products_id
     LEFT JOIN categories_description cd ON ptc.categories_id = cd.categories_id AND cd.language_id = 2
+    LEFT JOIN tax_rates tr ON p.products_tax_class_id = tr.tax_class_id
     WHERE p.products_status = 1
     GROUP BY p.products_id
     ORDER BY pd.products_name

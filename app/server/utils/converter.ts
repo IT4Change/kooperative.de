@@ -10,11 +10,17 @@ export interface DbProduct {
   products_image_detail_4: string
   products_image_detail_5: string
   products_status: number
+  products_tax_class_id: number
+  tax_rate: number
   products_name: string
   products_description: string | null
   products_sizes: string | null
   category_id: number
   category_name: string
+}
+
+function grossPrice(netPrice: number, taxRate: number): number {
+  return Math.round(netPrice * (1 + taxRate / 100) * 100) / 100
 }
 
 interface DbCategory {
@@ -27,31 +33,49 @@ interface DbCategory {
 // Matches size suffixes like "0,5 Liter", "10 Liter", "1 kg", "450 g"
 const SIZE_REGEX = /^(.+?)\s+(\d+(?:[,\.]\d+)?)\s*(Liter|l|L|ml|kg|g)\s*$/
 
-function parseSize(name: string): { baseName: string, size: string, amount: number, unit: string } | null {
-  const match = name.match(SIZE_REGEX)
-  if (!match) return null
+// Matches quantity tier suffixes like "10+", "50+", "800+"
+const QUANTITY_REGEX = /^(.+?)\s+(\d+)\+\s*$/
 
-  const baseName = match[1].trim()
-  const numStr = match[2].replace(',', '.')
-  const amount = parseFloat(numStr)
-  let unit = match[3]
+interface ParsedVariant {
+  baseName: string
+  size: string
+  amount: number
+  unit: string
+  type: 'size' | 'quantity'
+}
 
-  // Normalize unit
-  const unitLower = unit.toLowerCase()
-  if (unitLower === 'liter' || unitLower === 'l') unit = 'L'
-  if (unitLower === 'ml') unit = 'ml'
-  if (unitLower === 'kg') unit = 'kg'
-  if (unitLower === 'g') unit = 'g'
+function parseVariant(name: string): ParsedVariant | null {
+  // Try size first
+  const sizeMatch = name.match(SIZE_REGEX)
+  if (sizeMatch) {
+    const baseName = sizeMatch[1].trim()
+    const numStr = sizeMatch[2].replace(',', '.')
+    const amount = parseFloat(numStr)
+    let unit = sizeMatch[3]
 
-  // Build display size
-  const size = `${match[2]} ${unit}`
+    const unitLower = unit.toLowerCase()
+    if (unitLower === 'liter' || unitLower === 'l') unit = 'L'
+    if (unitLower === 'ml') unit = 'ml'
+    if (unitLower === 'kg') unit = 'kg'
+    if (unitLower === 'g') unit = 'g'
 
-  // Convert to reference unit amount
-  let refAmount = amount
-  if (unit === 'ml') { refAmount = amount / 1000; unit = 'L' }
-  if (unit === 'g') { refAmount = amount / 1000; unit = 'kg' }
+    const size = `${sizeMatch[2]} ${unit}`
+    let refAmount = amount
+    if (unit === 'ml') { refAmount = amount / 1000; unit = 'L' }
+    if (unit === 'g') { refAmount = amount / 1000; unit = 'kg' }
 
-  return { baseName, size, amount: refAmount, unit }
+    return { baseName, size, amount: refAmount, unit, type: 'size' }
+  }
+
+  // Try quantity tier
+  const qtyMatch = name.match(QUANTITY_REGEX)
+  if (qtyMatch) {
+    const baseName = qtyMatch[1].trim()
+    const amount = parseInt(qtyMatch[2])
+    return { baseName, size: `ab ${amount} Stk.`, amount, unit: 'Stk', type: 'quantity' }
+  }
+
+  return null
 }
 
 function slugify(name: string): string {
@@ -116,17 +140,28 @@ export function convertCategory(row: DbCategory): Category {
  * and same category, where variant rows typically have no images.
  */
 export function groupProducts(rows: DbProduct[]): Product[] {
-  // First pass: identify which rows are variants
+  // First pass: group variant rows by base name
   const groups = new Map<string, DbProduct[]>()
+  const solos: DbProduct[] = []
 
   for (const row of rows) {
-    const parsed = parseSize(row.products_name)
+    const parsed = parseVariant(row.products_name)
     if (parsed) {
       const key = `${parsed.baseName}__${row.category_id}`
       if (!groups.has(key)) groups.set(key, [])
       groups.get(key)!.push(row)
     } else {
-      // Standalone product (no size in name)
+      solos.push(row)
+    }
+  }
+
+  // Second pass: check if any solo product is actually the base of a variant group
+  for (const row of solos) {
+    const key = `${row.products_name.trim()}__${row.category_id}`
+    if (groups.has(key)) {
+      // This solo is the base product for an existing variant group
+      groups.get(key)!.unshift(row)
+    } else {
       groups.set(`__solo__${row.products_id}`, [row])
     }
   }
@@ -137,11 +172,11 @@ export function groupProducts(rows: DbProduct[]): Product[] {
     if (group.length === 1) {
       // Single product (no variants)
       const row = group[0]
-      const parsed = parseSize(row.products_name)
+      const parsed = parseVariant(row.products_name)
       products.push({
         id: String(row.products_id),
         name: parsed ? parsed.baseName : row.products_name,
-        price: Number(row.products_price),
+        price: grossPrice(Number(row.products_price), row.tax_rate),
         description: stripHtml(row.products_description),
         category: slugify(row.category_name) as CategorySlug,
         unit: parsed ? parsed.size : (row.products_sizes ? stripHtml(row.products_sizes) : undefined),
@@ -156,7 +191,7 @@ export function groupProducts(rows: DbProduct[]): Product[] {
       })
 
       const base = sorted[0]
-      const baseParsed = parseSize(base.products_name)
+      const baseParsed = parseVariant(base.products_name)
       const baseName = baseParsed?.baseName ?? base.products_name
 
       // Collect all available images from the group for fallback
@@ -167,13 +202,23 @@ export function groupProducts(rows: DbProduct[]): Product[] {
       const fallbackImage = allGroupImages[0] ?? ''
 
       const variants: ProductVariant[] = sorted.map((row) => {
-        const parsed = parseSize(row.products_name)!
+        const parsed = parseVariant(row.products_name)
         const rowImages = collectImages(row)
+        if (parsed) {
+          return {
+            size: parsed.size,
+            price: grossPrice(Number(row.products_price), row.tax_rate),
+            amount: parsed.amount,
+            referenceUnit: parsed.unit,
+            image: rowImages[0] ?? fallbackImage,
+          }
+        }
+        // Base product without suffix (e.g. single unit for quantity tiers)
         return {
-          size: parsed.size,
-          price: Number(row.products_price),
-          amount: parsed.amount,
-          referenceUnit: parsed.unit,
+          size: '1 Stk.',
+          price: grossPrice(Number(row.products_price), row.tax_rate),
+          amount: 1,
+          referenceUnit: 'Stk',
           image: rowImages[0] ?? fallbackImage,
         }
       })
