@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.3.0](https://github.com/IT4Change/kooperative.de/compare/v0.2.0...v0.3.0) (2026-04-14)
+
+
+### Features
+
+* **app:** shop category hirachy ([#7](https://github.com/IT4Change/kooperative.de/issues/7)) ([2f4aaee](https://github.com/IT4Change/kooperative.de/commit/2f4aaee8846ab79eeaa1427c3860a26cae0fd51f))
+* **frontend:** replace content with external links, design page two ([#3](https://github.com/IT4Change/kooperative.de/issues/3)) ([7b995b9](https://github.com/IT4Change/kooperative.de/commit/7b995b9beb1cb2bce203cb85c4a5449126872fef))
+* **other:** issue templates ([#5](https://github.com/IT4Change/kooperative.de/issues/5)) ([1daf3ef](https://github.com/IT4Change/kooperative.de/commit/1daf3eff8fbd5d0ec8ef441a57bb8029865aadeb))
+* **workflow:** lint pr workflow ([#6](https://github.com/IT4Change/kooperative.de/issues/6)) ([d96df95](https://github.com/IT4Change/kooperative.de/commit/d96df95a84025ae64fa80c253c61fb789bee3707))
+
 ## [0.2.0](https://github.com/IT4Change/kooperative.de/compare/v0.1.0...v0.2.0) (2026-04-14)
 
 
