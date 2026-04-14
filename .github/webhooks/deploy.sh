@@ -18,7 +18,7 @@ else
 fi
 
 ## Frontend
-FRONTEND_ROOT=$PROJECT_ROOT
+FRONTEND_ROOT=$PROJECT_ROOT/app
 FRONTEND_SERVICE=$PROJECT_ROOT/.github/webhooks/ecosystem.config.js
 
 cd $FRONTEND_ROOT
