@@ -1,5 +1,6 @@
 import type { RowDataPacket } from 'mysql2'
-import { groupProducts, convertCategory } from '../utils/converter'
+import { groupProducts, convertCategory, buildCategoryPaths } from '../utils/converter'
+import type { DbCategory } from '../utils/converter'
 
 export default defineEventHandler(async () => {
   const db = useDB()
@@ -9,10 +10,12 @@ export default defineEventHandler(async () => {
            cd.categories_name
     FROM categories c
     JOIN categories_description cd ON c.categories_id = cd.categories_id AND cd.language_id = 2
-    ORDER BY c.sort_order, cd.categories_name
+    ORDER BY c.parent_id, c.sort_order, cd.categories_name
   `)
 
-  const categories = catRows.map(row => convertCategory(row as any))
+  const dbCategories = catRows as unknown as DbCategory[]
+  const paths = buildCategoryPaths(dbCategories)
+  const categories = dbCategories.map(row => convertCategory(row, paths))
 
   const [prodRows] = await db.query<RowDataPacket[]>(`
     SELECT p.products_id, p.products_price, p.products_model,
@@ -46,10 +49,20 @@ export default defineEventHandler(async () => {
     ORDER BY pd.products_name
   `)
 
-  const products = groupProducts(prodRows as any[])
+  const products = groupProducts(prodRows as any[], paths)
 
+  // Keep categories that either host products directly or have a descendant with products
   const usedSlugs = new Set(products.map(p => p.category))
-  const activeCategories = categories.filter(c => usedSlugs.has(c.slug))
+  const keep = new Set<string>()
+  for (const used of usedSlugs) {
+    let slug: string | undefined = used
+    while (slug) {
+      keep.add(slug)
+      const idx = slug.lastIndexOf('/')
+      slug = idx === -1 ? undefined : slug.slice(0, idx)
+    }
+  }
+  const activeCategories = categories.filter(c => keep.has(c.slug))
 
   return { products, categories: activeCategories }
 })

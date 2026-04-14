@@ -4,6 +4,7 @@ export interface Category {
   slug: CategorySlug
   name: string
   description: string
+  parentSlug: CategorySlug | null
 }
 
 export interface ProductVariant {

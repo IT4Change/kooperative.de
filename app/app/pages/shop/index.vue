@@ -179,7 +179,12 @@ const searchFilteredProducts = computed(() => {
 const categoryCounts = computed(() => {
   const counts: Record<string, number> = {}
   for (const p of searchFilteredProducts.value) {
-    counts[p.category] = (counts[p.category] || 0) + 1
+    let slug: string | undefined = p.category
+    while (slug) {
+      counts[slug] = (counts[slug] || 0) + 1
+      const idx = slug.lastIndexOf('/')
+      slug = idx === -1 ? undefined : slug.slice(0, idx)
+    }
   }
   return counts
 })
@@ -189,8 +194,10 @@ const visibleCount = ref(PAGE_SIZE)
 
 const allFilteredProducts = computed(() => {
   const result = searchFilteredProducts.value
-  if (!selectedCategory.value) return result
-  return result.filter(p => p.category === selectedCategory.value)
+  const sel = selectedCategory.value
+  if (!sel) return result
+  const prefix = `${sel}/`
+  return result.filter(p => p.category === sel || p.category.startsWith(prefix))
 })
 
 const filteredProducts = computed(() => allFilteredProducts.value.slice(0, visibleCount.value))

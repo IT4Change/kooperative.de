@@ -30,11 +30,49 @@ function grossPrice(netPrice: number, taxRate: number): number {
   return Math.round(netPrice * (1 + taxRate / 100) * 100) / 100
 }
 
-interface DbCategory {
+export interface DbCategory {
   categories_id: number
   categories_name: string
   parent_id: number
   sort_order: number | null
+}
+
+export interface CategoryPath {
+  slug: CategorySlug
+  parentSlug: CategorySlug | null
+}
+
+/**
+ * Build unique path-based slugs for categories, walking up the parent chain.
+ * Same-named categories (e.g. two "Bücher" entries) get disambiguated via their
+ * parent's path: top-level "Bücher" → "buecher", Papeterie → "Bücher" → "papeterie/buecher".
+ */
+export function buildCategoryPaths(rows: DbCategory[]): Map<number, CategoryPath> {
+  const byId = new Map<number, DbCategory>()
+  for (const row of rows) byId.set(row.categories_id, row)
+
+  const cache = new Map<number, CategoryPath>()
+
+  function resolve(id: number): CategoryPath | null {
+    if (cache.has(id)) return cache.get(id)!
+    const row = byId.get(id)
+    if (!row) return null
+    const self = slugify(row.categories_name)
+    if (row.parent_id === 0) {
+      const path: CategoryPath = { slug: self as CategorySlug, parentSlug: null }
+      cache.set(id, path)
+      return path
+    }
+    const parent = resolve(row.parent_id)
+    const parentSlug = parent?.slug ?? null
+    const slug = (parentSlug ? `${parentSlug}/${self}` : self) as CategorySlug
+    const path: CategoryPath = { slug, parentSlug }
+    cache.set(id, path)
+    return path
+  }
+
+  for (const row of rows) resolve(row.categories_id)
+  return cache
 }
 
 // Matches size suffixes like "0,5 Liter", "10 Liter", "1 kg", "450 g"
@@ -146,11 +184,13 @@ function extraFields(row: DbProduct, name: string) {
   }
 }
 
-export function convertCategory(row: DbCategory): Category {
+export function convertCategory(row: DbCategory, paths: Map<number, CategoryPath>): Category {
+  const path = paths.get(row.categories_id)
   return {
-    slug: slugify(row.categories_name) as CategorySlug,
+    slug: (path?.slug ?? slugify(row.categories_name)) as CategorySlug,
     name: row.categories_name,
     description: '',
+    parentSlug: path?.parentSlug ?? null,
   }
 }
 
@@ -159,7 +199,9 @@ export function convertCategory(row: DbCategory): Category {
  * Variant detection: products with matching base name (minus size suffix)
  * and same category, where variant rows typically have no images.
  */
-export function groupProducts(rows: DbProduct[]): Product[] {
+export function groupProducts(rows: DbProduct[], paths: Map<number, CategoryPath>): Product[] {
+  const categoryFor = (row: DbProduct): CategorySlug =>
+    (paths.get(row.category_id)?.slug ?? slugify(row.category_name)) as CategorySlug
   // First pass: group variant rows by base name
   const groups = new Map<string, DbProduct[]>()
   const solos: DbProduct[] = []
@@ -199,7 +241,7 @@ export function groupProducts(rows: DbProduct[]): Product[] {
         name,
         price: grossPrice(Number(row.products_price), row.tax_rate),
         description: stripHtml(row.products_description),
-        category: slugify(row.category_name) as CategorySlug,
+        category: categoryFor(row),
         unit: parsed ? parsed.size : (row.products_sizes ? stripHtml(row.products_sizes) : undefined),
         images: collectImages(row),
         ...extraFields(row, name),
@@ -274,7 +316,7 @@ export function groupProducts(rows: DbProduct[]): Product[] {
         name: baseName,
         price: variants[0].price,
         description: baseDescription,
-        category: slugify(base.category_name) as CategorySlug,
+        category: categoryFor(base),
         images,
         variants,
         ...(variantType === 'quantity' ? { variantType: 'quantity' as const } : {}),
