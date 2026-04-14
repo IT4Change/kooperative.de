@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.1](https://github.com/IT4Change/kooperative.de/compare/v0.3.0...v0.3.1) (2026-04-14)
+
+
+### Bug Fixes
+
+* **other:** fix deploy ([#8](https://github.com/IT4Change/kooperative.de/issues/8)) ([10d6d8d](https://github.com/IT4Change/kooperative.de/commit/10d6d8dec1d91829823c28bb27cb400fc9f1aef3))
+
 ## [0.3.0](https://github.com/IT4Change/kooperative.de/compare/v0.2.0...v0.3.0) (2026-04-14)
 
 
