@@ -16,11 +16,14 @@
         :key="cat.slug"
         class="px-4 py-2 rounded-full text-sm font-medium transition-colors"
         :disabled="!counts[cat.slug]"
-        :class="!counts[cat.slug]
-          ? 'bg-gray-50 text-gray-300 cursor-default'
-          : isSelected(cat.slug)
-            ? 'bg-[#00af8c] text-white'
-            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
+        :class="[
+          !counts[cat.slug]
+            ? 'bg-gray-50 text-gray-300 cursor-default'
+            : isSelected(cat.slug)
+              ? 'bg-[#00af8c] text-white'
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200',
+          cat.slug === 'lebensmittel' ? 'line-through' : '',
+        ]"
         @click="counts[cat.slug] && $emit('select', cat.slug)"
       >
         {{ cat.name }}
