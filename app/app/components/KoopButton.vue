@@ -1,6 +1,6 @@
 <script setup lang="ts">
 interface Props {
-  variant?: 'teal' | 'orange' | 'lila'
+  variant?: 'teal' | 'orange' | 'lila' | 'blue'
   size?: 'md' | 'sm'
   to?: string
   href?: string
@@ -136,6 +136,12 @@ const classes = computed(() => [
   --btn-color: var(--koop-lila);
   --btn-color-light: var(--koop-lila-hover);
   --btn-color-dark: var(--koop-lila-active);
+}
+
+.koop-btn--blue {
+  --btn-color: var(--koop-blue);
+  --btn-color-light: var(--koop-blue-hover);
+  --btn-color-dark: var(--koop-blue-active);
 }
 
 .koop-btn--sm {

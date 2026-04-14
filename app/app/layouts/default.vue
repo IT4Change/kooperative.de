@@ -13,13 +13,10 @@
 
         <nav class="main-nav" :class="{ open: menuOpen }">
           <NuxtLink to="/shop" :class="{ active: isShopActive }" @click="menuOpen = false">Bestellung</NuxtLink>
-          <NuxtLink to="/#arbeit" :class="{ active: activeSection === 'arbeit' }" @click="menuOpen = false">Arbeit</NuxtLink>
-          <NuxtLink to="/#kultur" :class="{ active: activeSection === 'kultur' }" @click="menuOpen = false">Kultur</NuxtLink>
-          <NuxtLink to="/#bildung" :class="{ active: activeSection === 'bildung' }" @click="menuOpen = false">Bildung</NuxtLink>
-          <NuxtLink to="/#gaeste" :class="{ active: activeSection === 'gaeste' }" @click="menuOpen = false">Gäste</NuxtLink>
+          <a v-for="link in sectionLinks" :key="link.id" :href="link.href" @click="menuOpen = false">{{ link.label }}</a>
           <span class="nav-spacer" />
-          <NuxtLink to="/historie" class="info-link" @click="menuOpen = false">Historie</NuxtLink>
-          <NuxtLink to="/kontakt" class="info-link" @click="menuOpen = false">Kontakt</NuxtLink>
+          <a :href="HISTORIE_URL" class="info-link" @click="menuOpen = false">Historie</a>
+          <a :href="KONTAKT_URL" class="info-link" @click="menuOpen = false">Kontakt</a>
           <NuxtLink to="/impressum" class="info-link" @click="menuOpen = false">Impressum</NuxtLink>
           <NuxtLink to="/datenschutz" class="info-link" @click="menuOpen = false">Datenschutz</NuxtLink>
         </nav>
@@ -60,7 +57,7 @@
         <div class="footer-section">
           <strong>Kontakt</strong>
           <nav>
-            <NuxtLink to="/kontakt">Kontakt aufnehmen</NuxtLink>
+            <a :href="KONTAKT_URL">Kontakt aufnehmen</a>
             <NuxtLink to="/impressum">Impressum</NuxtLink>
             <NuxtLink to="/datenschutz">Datenschutz</NuxtLink>
           </nav>
@@ -82,6 +79,7 @@ let lastScrollY = 0
 
 const router = useRouter()
 const isShopActive = computed(() => route.path.startsWith('/shop'))
+const sectionLinks = useSectionLinks()
 
 function scrollToTop() {
   if (route.path === '/') {
@@ -91,7 +89,7 @@ function scrollToTop() {
   }
 }
 
-const sectionIds = ['hero', 'arbeit', 'kultur', 'bildung', 'gaeste']
+const sectionIds = ['hero']
 let observer: IntersectionObserver | null = null
 
 function observeSections() {

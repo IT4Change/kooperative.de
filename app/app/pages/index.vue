@@ -14,7 +14,7 @@
       <button
         class="absolute bottom-1 left-1/2 -translate-x-1/2 z-10 text-white/80 hover:text-white transition-colors focus:outline-none flex flex-col items-center"
         aria-label="Nach unten scrollen"
-        @click="scrollToArbeit"
+        @click="scrollToNext"
       >
         <span class="text-sm font-medium mb-1">Mehr</span>
         <svg class="w-10 h-10 animate-bounce [animation-duration:2s]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -23,9 +23,25 @@
       </button>
     </section>
 
-    <!-- Arbeit -->
-    <section id="arbeit" class="min-h-screen md:h-screen flex flex-col items-center justify-center relative overflow-hidden py-20 md:py-0">
+    <!-- Übersicht -->
+    <section id="uebersicht" class="h-screen flex flex-col items-center justify-center relative overflow-hidden">
       <NuxtImg src="/img/hero.jpg" alt="" sizes="sm:100vw md:100vw lg:100vw xl:100vw 2xl:100vw" format="webp" loading="lazy" class="absolute inset-0 w-full h-full object-cover" />
+      <div class="absolute inset-0 bg-black/40" />
+      <div class="relative z-10 flex flex-col items-center px-4 text-center text-white max-w-3xl [text-shadow:_0_1px_4px_rgba(0,0,0,0.5)]">
+        <h1 class="text-4xl md:text-6xl font-bold mb-3 [text-shadow:_0_2px_8px_rgba(0,0,0,0.5)]">Kooperative Dürnau</h1>
+        <p class="text-lg md:text-2xl mb-2 text-white/90">Leben und Arbeiten in Gemeinschaft seit 1980</p>
+        <p class="text-base md:text-lg mb-10 md:mb-14 text-white/80">Genossenschaft in Dürnau &mdash; Handwerk, Bildung, Kultur und Vertrieb unter einem Dach.</p>
+        <div class="grid grid-cols-2 gap-4 md:gap-6">
+          <KoopButton v-for="link in sectionLinks" :key="link.id" variant="blue" :href="link.href">
+            {{ link.label }}
+          </KoopButton>
+        </div>
+      </div>
+    </section>
+
+    <!-- TODO Detail-Sektionen vorerst auskommentiert, werden später wieder aktiviert
+    <section id="arbeit" class="min-h-screen md:h-screen flex flex-col items-center justify-center relative overflow-hidden py-20 md:py-0">
+      <NuxtImg src="/img/sections/arbeit.jpg" alt="" sizes="sm:100vw md:100vw lg:100vw xl:100vw 2xl:100vw" format="webp" loading="lazy" class="absolute inset-0 w-full h-full object-cover" />
       <div class="absolute inset-0 bg-black/40" />
       <div class="relative z-10 text-center text-white max-w-3xl px-4 md:px-6 [text-shadow:_0_1px_4px_rgba(0,0,0,0.5)]">
         <h2 class="text-2xl md:text-4xl font-bold mb-2 [text-shadow:_0_2px_8px_rgba(0,0,0,0.5)]">Arbeitsbereiche</h2>
@@ -52,7 +68,6 @@
       </div>
     </section>
 
-    <!-- Kultur -->
     <section id="kultur" class="min-h-screen md:h-screen flex flex-col items-center justify-center relative overflow-hidden py-20 md:py-0">
       <NuxtImg src="/img/sections/kultur.jpg" alt="" sizes="sm:100vw md:100vw lg:100vw xl:100vw 2xl:100vw" format="webp" loading="lazy" class="absolute inset-0 w-full h-full object-cover" />
       <div class="absolute inset-0 bg-black/40" />
@@ -80,7 +95,6 @@
       </div>
     </section>
 
-    <!-- Bildung -->
     <section id="bildung" class="min-h-screen md:h-screen flex flex-col items-center justify-center relative overflow-hidden py-20 md:py-0">
       <NuxtImg src="/img/sections/bildung.jpg" alt="" sizes="sm:100vw md:100vw lg:100vw xl:100vw 2xl:100vw" format="webp" loading="lazy" class="absolute inset-0 w-full h-full object-cover" />
       <div class="absolute inset-0 bg-black/40" />
@@ -108,7 +122,6 @@
       </div>
     </section>
 
-    <!-- Gäste -->
     <section id="gaeste" class="min-h-screen md:h-screen flex flex-col items-center justify-center relative overflow-hidden py-20 md:py-0">
       <NuxtImg src="/img/sections/gaeste.jpg" alt="" sizes="sm:100vw md:100vw lg:100vw xl:100vw 2xl:100vw" format="webp" loading="lazy" class="absolute inset-0 w-full h-full object-cover" />
       <div class="absolute inset-0 bg-black/40" />
@@ -134,12 +147,14 @@
         </div>
       </div>
     </section>
+    -->
 
   </div>
 </template>
 
 <script setup lang="ts">
 const { baseURL } = useRuntimeConfig().app
+const sectionLinks = useSectionLinks()
 
 useHead({
   title: 'Kooperative Dürnau',
@@ -151,11 +166,15 @@ useHead({
   ],
 })
 
-function scrollToArbeit() {
-  document.getElementById('arbeit')?.scrollIntoView({ behavior: 'smooth' })
+function scrollTo(id: string) {
+  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
 }
 
-const sectionIds = ['', 'arbeit', 'kultur', 'bildung', 'gaeste']
+function scrollToNext() {
+  scrollTo('uebersicht')
+}
+
+const sectionIds = ['', 'uebersicht']
 let isScrolling = false
 
 function getSections(): HTMLElement[] {
