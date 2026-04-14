@@ -32,6 +32,16 @@
     </div>
     <div v-if="children.length" class="flex flex-wrap gap-2 pl-3 border-l-2 border-[#00af8c]/30">
       <button
+        class="px-3 py-1.5 rounded-full text-xs font-medium transition-colors"
+        :class="selected === selectedTopLevel
+          ? 'bg-[#00af8c] text-white'
+          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
+        @click="selectedTopLevel && $emit('select', selectedTopLevel)"
+      >
+        Alle
+        <span class="ml-1 opacity-70">{{ counts[selectedTopLevel ?? ''] || 0 }}</span>
+      </button>
+      <button
         v-for="cat in children"
         :key="cat.slug"
         class="px-3 py-1.5 rounded-full text-xs font-medium transition-colors"
