@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/IT4Change/kooperative.de/compare/v0.3.1...v0.4.0) (2026-04-14)
+
+
+### Features
+
+* **app:** favicon ([#10](https://github.com/IT4Change/kooperative.de/issues/10)) ([3ce84ff](https://github.com/IT4Change/kooperative.de/commit/3ce84ffaf64dfebd0db09792426944d14e48958b))
+
 ## [0.3.1](https://github.com/IT4Change/kooperative.de/compare/v0.3.0...v0.3.1) (2026-04-14)
 
 
