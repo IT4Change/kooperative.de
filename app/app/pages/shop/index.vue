@@ -25,7 +25,7 @@
     </section>
 
     <section class="mb-6">
-      <ShopCategoryFilter :selected="selectedCategory" :counts="categoryCounts" :categories="categories" @select="selectCategory" />
+      <ShopCategoryFilter :selected="selectedCategory" :counts="categoryCounts" :categories="categories" :total="searchFilteredProducts.length" @select="selectCategory" />
     </section>
 
     <section>

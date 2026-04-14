@@ -57,15 +57,14 @@ const props = defineProps<{
   selected: CategorySlug | null
   counts: Record<string, number>
   categories: Category[]
+  total: number
 }>()
 
 defineEmits<{
   select: [value: CategorySlug | null]
 }>()
 
-const totalCount = computed(() =>
-  Object.values(props.counts).reduce((sum, n) => sum + n, 0),
-)
+const totalCount = computed(() => props.total)
 
 const topLevel = computed(() => props.categories.filter(c => c.parentSlug === null))
 
