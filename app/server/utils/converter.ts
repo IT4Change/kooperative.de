@@ -12,6 +12,7 @@ export interface DbProduct {
   products_image_detail_5: string
   products_status: number
   products_tax_class_id: number
+  products_date_added: Date | string | null
   tax_rate: number
   products_name: string
   products_description: string | null
@@ -171,6 +172,13 @@ function collectImages(row: DbProduct): string[] {
   return images
 }
 
+function isoDate(value: Date | string | null): string | undefined {
+  if (!value) return undefined
+  const d = value instanceof Date ? value : new Date(value)
+  if (isNaN(d.getTime()) || d.getFullYear() < 2000) return undefined
+  return d.toISOString()
+}
+
 function extraFields(row: DbProduct, name: string) {
   return {
     slug: slugify(name),
@@ -181,6 +189,7 @@ function extraFields(row: DbProduct, name: string) {
     metaDescription: stripHtml(row.products_head_desc_tag) || undefined,
     metaKeywords: row.products_head_keywords_tag || undefined,
     viewCount: row.products_viewed || undefined,
+    dateAdded: isoDate(row.products_date_added),
   }
 }
 

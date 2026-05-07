@@ -27,6 +27,7 @@ export default defineEventHandler(async () => {
            p.products_image_detail_5,
            p.products_status,
            p.products_tax_class_id,
+           p.products_date_added,
            COALESCE(tr.tax_rate, 0) AS tax_rate,
            pd.products_name,
            pd.products_description,

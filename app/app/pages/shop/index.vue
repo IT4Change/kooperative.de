@@ -197,7 +197,15 @@ const allFilteredProducts = computed(() => {
   const sel = selectedCategory.value
   if (!sel) return result
   const prefix = `${sel}/`
-  return result.filter(p => p.category === sel || p.category.startsWith(prefix))
+  const filtered = result.filter(p => p.category === sel || p.category.startsWith(prefix))
+  // Bücher-Kategorie (inkl. Subkategorien): nach Aufnahmedatum absteigend sortieren
+  if (sel === 'buecher' || sel.startsWith('buecher/')) {
+    return [...filtered].sort((a, b) => {
+      const cmp = (b.dateAdded ?? '').localeCompare(a.dateAdded ?? '')
+      return cmp !== 0 ? cmp : a.name.localeCompare(b.name, 'de')
+    })
+  }
+  return filtered
 })
 
 const filteredProducts = computed(() => allFilteredProducts.value.slice(0, visibleCount.value))
