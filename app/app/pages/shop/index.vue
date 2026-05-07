@@ -84,10 +84,7 @@
               </div>
             </div>
           </div>
-          <div class="mt-5 rounded-lg bg-amber-50 border border-amber-200 p-3 text-xs sm:text-sm text-amber-900">
-            <strong>Hinweis f&uuml;r Neukund:innen:</strong> Bitte begleichen Sie die zugehende Rechnung vor der Auslieferung. Wir warten auf den Zahlungseingang und versenden dann. Alternativ k&ouml;nnen Sie uns eine Einzugserm&auml;chtigung erteilen.
-          </div>
-          <p class="mt-3 text-gray-500 text-xs sm:text-sm">Kein Online-Payment &mdash; alle Zahlungswege werden separat abgewickelt.</p>
+          <p class="mt-5 text-gray-500 text-xs sm:text-sm">Kein Online-Payment &mdash; alle Zahlungswege werden separat abgewickelt.</p>
           <div class="mt-6 flex justify-center">
             <KoopButton @click="dismissWelcome">Verstanden</KoopButton>
           </div>
