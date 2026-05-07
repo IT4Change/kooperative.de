@@ -129,6 +129,12 @@ useHead({
 
 const { addToCart } = useCart()
 
+// Increment products_viewed counter once per page mount, like the alt-shop does
+// (product_info.php:103). Best-effort — failure must not affect the page.
+onMounted(() => {
+  $fetch(`/api/products/${product.id}/view`, { method: 'POST' }).catch(() => {})
+})
+
 const selectedVariant = ref(0)
 const quantity = ref(1)
 
