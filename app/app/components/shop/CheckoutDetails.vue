@@ -66,8 +66,19 @@
               spellcheck="false"
               placeholder="DE12 3456 7890 1234 5678 90"
               class="w-full px-3 py-1.5 border border-gray-300 rounded text-sm font-mono focus:outline-none focus:border-[#00af8c]"
+              :class="{ 'border-red-300': ibanInfo && !ibanInfo.valid && ibanLong }"
             />
-            <p class="mt-1 text-xs text-gray-500">DE/AT/CH/LI. Wir buchen den Betrag nach der Bestellung ab.</p>
+            <p v-if="ibanInfo?.bankName" class="mt-1 text-xs text-[#00af8c] font-medium">
+              ✓ {{ ibanInfo.bankName }}
+              <span v-if="ibanInfo.blz" class="text-gray-400">· BLZ {{ ibanInfo.blz }}</span>
+            </p>
+            <p v-else-if="ibanInfo && ibanInfo.blz && !ibanInfo.bankName" class="mt-1 text-xs text-gray-500">
+              BLZ {{ ibanInfo.blz }} (Bank nicht in der Bundesbank-Liste)
+            </p>
+            <p v-else-if="ibanInfo && !ibanInfo.valid && ibanLong" class="mt-1 text-xs text-red-600">
+              IBAN ungültig — bitte prüfen
+            </p>
+            <p v-else class="mt-1 text-xs text-gray-500">DE/AT/CH/LI. Wir buchen den Betrag nach der Bestellung ab.</p>
           </div>
         </div>
       </template>
@@ -141,10 +152,35 @@ const ibanModel = computed({
   set: (v) => emit('update:iban', v),
 })
 
+// Live IBAN info (debounced): hits server when user has typed enough characters
+interface IbanInfoResponse { ok: boolean, country?: string, blz?: string, bankName?: string, valid?: boolean }
+const ibanInfo = ref<IbanInfoResponse | null>(null)
+const ibanCleaned = computed(() => ibanModel.value.replace(/\s+/g, '').toUpperCase())
+const ibanLong = computed(() => ibanCleaned.value.length >= 15)
+let ibanFetchSeq = 0
+let ibanTimer: ReturnType<typeof setTimeout> | null = null
+watch(ibanCleaned, (val) => {
+  if (ibanTimer) clearTimeout(ibanTimer)
+  if (val.length < 6) { ibanInfo.value = null; return }
+  const mySeq = ++ibanFetchSeq
+  ibanTimer = setTimeout(async () => {
+    try {
+      const res = await $fetch<IbanInfoResponse>('/api/iban/info', { query: { iban: val } })
+      if (mySeq === ibanFetchSeq) ibanInfo.value = res
+    } catch {
+      if (mySeq === ibanFetchSeq) ibanInfo.value = null
+    }
+  }, 250)
+})
+
 const canProceed = computed(() => {
   if (!shippingModel.value || !paymentModel.value) return false
   if (paymentModel.value === 'lastschrift') {
-    return accountHolderModel.value.trim().length > 0 && ibanModel.value.replace(/\s+/g, '').length >= 15
+    if (!accountHolderModel.value.trim()) return false
+    if (!ibanLong.value) return false
+    // If we have a server response, require validity. Otherwise let server validate on submit.
+    if (ibanInfo.value && !ibanInfo.value.valid) return false
+    return true
   }
   return true
 })
