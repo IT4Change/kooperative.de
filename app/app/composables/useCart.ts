@@ -22,8 +22,10 @@ let initialized = false
 
 export function useCart() {
   const storage = useStorage()
+  const consent = useConsent()
 
   function persist() {
+    if (!consent.consentGiven.value) return
     const data = items.value.map(i => ({
       productId: i.product.id,
       quantity: i.quantity,
@@ -35,6 +37,7 @@ export function useCart() {
   async function init() {
     if (initialized || import.meta.server) return
     initialized = true
+    if (!consent.consentGiven.value) return
     const raw = storage.get(STORAGE_KEY)
     if (!raw) return
     try {
@@ -70,9 +73,7 @@ export function useCart() {
   const totalPrice = computed(() => items.value.reduce((sum, i) => sum + itemPrice(i) * i.quantity, 0))
   const isEmpty = computed(() => items.value.length === 0)
 
-  function addToCart(product: Product, variantIndex?: number, quantity?: number) {
-    if (!storage.require()) return
-
+  function doAddToCart(product: Product, variantIndex?: number, quantity?: number) {
     if (product.variantType === 'quantity') {
       const existing = items.value.find(i => i.product.id === product.id)
       if (existing) {
@@ -96,6 +97,11 @@ export function useCart() {
     }
     persist()
     openCart()
+  }
+
+  function addToCart(product: Product, variantIndex?: number, quantity?: number) {
+    if (!storage.require()) return
+    consent.require(() => doAddToCart(product, variantIndex, quantity))
   }
 
   function findItem(productId: string, variantIndex?: number): CartItem | undefined {

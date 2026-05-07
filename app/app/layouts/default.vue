@@ -27,7 +27,7 @@
       <slot />
     </main>
 
-    <!-- Storage-Warnung -->
+    <!-- Storage-Warnung (Cookies blockiert) -->
     <ClientOnly>
       <Teleport to="body">
         <div v-if="showStorageWarning" class="fixed inset-0 z-[200] flex items-center justify-center p-4" @click.self="dismissStorageWarning">
@@ -38,10 +38,33 @@
               Um Artikel in den Warenkorb legen zu können, muss der lokale Speicher (Cookies/localStorage) in deinem Browser aktiviert sein.
             </p>
             <p class="text-sm text-gray-500 mb-5">
-              Bitte erlaube Cookies für diese Seite und versuche es erneut.
+              Bitte erlaube Cookies für diese Seite und versuche es erneut. Du wirst anschließend gebeten, der Verwendung technisch notwendiger Cookies zuzustimmen.
             </p>
             <div class="flex justify-end">
               <KoopButton size="sm" @click="dismissStorageWarning">Verstanden</KoopButton>
+            </div>
+          </div>
+        </div>
+      </Teleport>
+    </ClientOnly>
+
+    <!-- Cookie-Consent-Banner -->
+    <ClientOnly>
+      <Teleport to="body">
+        <div v-if="showConsentBanner" class="fixed inset-0 z-[200] flex items-end sm:items-center justify-center p-4">
+          <div class="absolute inset-0 bg-black/50" />
+          <div class="relative bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
+            <h2 class="text-lg font-bold mb-3">Cookie-Hinweis</h2>
+            <p class="text-sm text-gray-600 mb-3">
+              Für den Warenkorb verwenden wir technisch notwendige Cookies bzw. lokalen Speicher. Diese sind erforderlich, damit deine Auswahl erhalten bleibt. Es findet kein Tracking und keine Weitergabe an Dritte statt.
+            </p>
+            <p class="text-sm text-gray-600 mb-5">
+              Mehr Informationen findest du in unserer
+              <NuxtLink to="/datenschutz" class="text-[#00af8c] underline" @click="declineConsent">Datenschutzerklärung</NuxtLink>.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-2 sm:justify-end">
+              <KoopButton size="sm" variant="orange" @click="declineConsent">Ablehnen</KoopButton>
+              <KoopButton size="sm" @click="acceptConsent">Akzeptieren</KoopButton>
             </div>
           </div>
         </div>
@@ -70,6 +93,7 @@
 <script setup lang="ts">
 const { baseURL } = useRuntimeConfig().app
 const { showWarning: showStorageWarning, dismissWarning: dismissStorageWarning } = useStorage()
+const { showBanner: showConsentBanner, accept: acceptConsent, decline: declineConsent } = useConsent()
 const route = useRoute()
 const scrolled = ref(false)
 const menuOpen = ref(false)
