@@ -57,6 +57,12 @@
       <p class="text-sm text-gray-600 whitespace-pre-wrap">{{ notes }}</p>
     </div>
 
+    <p class="mb-3 text-xs text-gray-500 bg-amber-50 border border-amber-200 rounded px-3 py-2 leading-relaxed">
+      Mit "Bestellung absenden" wird Ihre Bestellung an uns übermittelt &mdash; sie ist
+      <strong>noch nicht rechtsverbindlich</strong>. Wir senden Ihnen eine Bestätigungs-E-Mail mit
+      den Zahlungskonditionen, die Sie zur Bestätigung des Kaufs zurücksenden.
+    </p>
+
     <p v-if="submitError" class="mb-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">
       {{ submitError }}
     </p>

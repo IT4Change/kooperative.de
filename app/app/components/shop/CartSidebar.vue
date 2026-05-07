@@ -84,16 +84,30 @@
               />
 
               <!-- Success Step -->
-              <div v-if="checkoutStep === 'success'" class="text-center py-8">
-                <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-[#00af8c]/10 flex items-center justify-center">
-                  <svg class="w-8 h-8 text-[#00af8c]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
+              <div v-if="checkoutStep === 'success'" class="py-6">
+                <div class="text-center mb-5">
+                  <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-[#00af8c]/10 flex items-center justify-center">
+                    <svg class="w-8 h-8 text-[#00af8c]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <h3 class="text-lg font-semibold mb-1">Vielen Dank!</h3>
+                  <p class="text-sm text-gray-600">Ihre Bestellung wurde an uns übermittelt<span v-if="lastOrderId"> (Nr. {{ lastOrderId }})</span>.</p>
                 </div>
-                <h3 class="text-lg font-semibold mb-2">Vielen Dank!</h3>
-                <p class="text-sm text-gray-600 mb-1">Deine Bestellung wurde erfasst<span v-if="lastOrderId"> (Nr. {{ lastOrderId }})</span>.</p>
-                <p class="text-sm text-gray-600 mb-6">Wir melden uns per E-Mail.</p>
-                <KoopButton size="sm" @click="closeCart">Schließen</KoopButton>
+                <div class="rounded-lg bg-amber-50 border border-amber-200 p-4 mb-5 text-sm text-amber-900">
+                  <p class="font-semibold mb-2">So geht es weiter:</p>
+                  <ol class="space-y-2 list-decimal list-inside">
+                    <li>Wir prüfen Ihre Bestellung und senden Ihnen eine <strong>Bestätigungs-E-Mail</strong> mit den Zahlungskonditionen.</li>
+                    <li>Bitte <strong>antworten Sie auf diese E-Mail</strong>, um den Kauf rechtsverbindlich zu bestätigen.</li>
+                    <li>Erst nach Ihrer Rück-Mail (und ggf. Zahlungseingang) versenden wir die Ware.</li>
+                  </ol>
+                </div>
+                <p class="text-xs text-gray-500 mb-5">
+                  Hintergrund: Aus rechtlichen Gründen kommt der Kaufvertrag nicht über die Webseite zustande, sondern erst durch Ihre E-Mail-Antwort. So funktioniert die Kooperative seit jeher.
+                </p>
+                <div class="flex justify-center">
+                  <KoopButton size="sm" @click="closeCart">Schließen</KoopButton>
+                </div>
               </div>
             </div>
 
