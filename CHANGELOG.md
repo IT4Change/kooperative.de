@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.5.0](https://github.com/IT4Change/kooperative.de/compare/v0.4.0...v0.5.0) (2026-05-07)
+
+
+### Features
+
+* **app:** login, register & checkout ([#16](https://github.com/IT4Change/kooperative.de/issues/16)) ([b2c6399](https://github.com/IT4Change/kooperative.de/commit/b2c639942cec0e067c143fdd69f5506ca666a9bf))
+* **app:** sort books by release(catalog) date ([#15](https://github.com/IT4Change/kooperative.de/issues/15)) ([d77e9f1](https://github.com/IT4Change/kooperative.de/commit/d77e9f19af2c2daeb1f00bda461c78a2b984ebc1))
+* **app:** write products viewed in database ([#17](https://github.com/IT4Change/kooperative.de/issues/17)) ([d561753](https://github.com/IT4Change/kooperative.de/commit/d5617530232db04f83a28bc5d5022134f2925fb7))
+* **frontend:** cookie consent ([#12](https://github.com/IT4Change/kooperative.de/issues/12)) ([ad9a94f](https://github.com/IT4Change/kooperative.de/commit/ad9a94fca58a63f17aa65140b7482b5d9e5a5aeb))
+
 ## [0.4.0](https://github.com/IT4Change/kooperative.de/compare/v0.3.1...v0.4.0) (2026-04-14)
 
 
