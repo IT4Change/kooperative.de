@@ -25,6 +25,8 @@ export interface LoginInput {
 export interface OrderInput {
   items: { productId: string, quantity: number, variantIndex?: number }[]
   notes?: string
+  shippingMethod: import('./checkoutOptions').ShippingMethod
+  paymentMethod: import('./checkoutOptions').PaymentMethod
 }
 
 function asTrimmedString(value: unknown, max: number, field: string): string {
@@ -115,5 +117,18 @@ export function parseOrder(body: unknown): OrderInput {
     return { productId: it.productId, quantity, ...(variantIndex !== undefined && { variantIndex }) }
   })
   const notes = typeof b.notes === 'string' ? b.notes.slice(0, 500) : undefined
-  return { items, ...(notes && { notes }) }
+  const allowedShipping = ['dpd', 'dhl', 'express', 'direkt', 'abholung'] as const
+  if (!allowedShipping.includes(b.shippingMethod as typeof allowedShipping[number])) {
+    throw createError({ statusCode: 400, statusMessage: 'Versandart: ungültig' })
+  }
+  const allowedPayment = ['vorkasse', 'rechnung'] as const
+  if (!allowedPayment.includes(b.paymentMethod as typeof allowedPayment[number])) {
+    throw createError({ statusCode: 400, statusMessage: 'Zahlungsart: ungültig' })
+  }
+  return {
+    items,
+    ...(notes && { notes }),
+    shippingMethod: b.shippingMethod as OrderInput['shippingMethod'],
+    paymentMethod: b.paymentMethod as OrderInput['paymentMethod'],
+  }
 }

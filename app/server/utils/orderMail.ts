@@ -24,6 +24,9 @@ export interface OrderMailContext {
     lineTotal: number
   }[]
   total: number
+  shippingMethod: string
+  shippingPrice: number
+  paymentMethod: string
   notes?: string
   adminBaseUrl?: string
 }
@@ -56,6 +59,9 @@ export function buildOrderMail(ctx: OrderMailContext): { subject: string, text: 
       `  ${i + 1}. ${it.quantity}× ${it.name}${it.variantSize ? ` (${it.variantSize})` : ''}` +
       `  ·  ${it.unitPrice.toFixed(2)} €/Stk  =  ${it.lineTotal.toFixed(2)} €`,
     ),
+    '',
+    `Versand: ${ctx.shippingMethod}${ctx.shippingPrice > 0 ? ` (${ctx.shippingPrice.toFixed(2)} €)` : ' (nach Aufwand)'}`,
+    `Zahlung: ${ctx.paymentMethod}`,
     '',
     `Gesamt: ${ctx.total.toFixed(2)} €`,
     ctx.notes ? `\nAnmerkungen:\n${ctx.notes}` : '',
@@ -99,11 +105,18 @@ export function buildOrderMail(ctx: OrderMailContext): { subject: string, text: 
             <td style="padding:6px;border-bottom:1px solid #eee;text-align:right">${it.lineTotal.toFixed(2)} €</td>
           </tr>`).join('')}
         </tbody>
-        <tfoot><tr>
-          <td colspan="4" style="padding:6px;text-align:right;font-weight:bold">Gesamt</td>
-          <td style="padding:6px;text-align:right;font-weight:bold">${ctx.total.toFixed(2)} €</td>
-        </tr></tfoot>
+        <tfoot>
+          <tr>
+            <td colspan="4" style="padding:6px;text-align:right">Versand (${escape(ctx.shippingMethod)})</td>
+            <td style="padding:6px;text-align:right">${ctx.shippingPrice > 0 ? `${ctx.shippingPrice.toFixed(2)} €` : 'nach Aufwand'}</td>
+          </tr>
+          <tr>
+            <td colspan="4" style="padding:6px;text-align:right;font-weight:bold">Gesamt</td>
+            <td style="padding:6px;text-align:right;font-weight:bold">${ctx.total.toFixed(2)} €</td>
+          </tr>
+        </tfoot>
       </table>
+      <p style="margin:8px 0 0;font-size:13px;color:#555">Zahlung: <strong>${escape(ctx.paymentMethod)}</strong></p>
       ${ctx.notes ? `<h3 style="margin:16px 0 4px">Anmerkungen</h3><p style="margin:0;white-space:pre-wrap">${escape(ctx.notes)}</p>` : ''}
     </div>
   </body></html>`

@@ -10,6 +10,7 @@
               <h2 class="text-lg font-semibold">
                 <template v-if="checkoutStep === 'cart'">Bestellliste</template>
                 <template v-else-if="checkoutStep === 'auth'">Anmelden</template>
+                <template v-else-if="checkoutStep === 'details'">Versand &amp; Zahlung</template>
                 <template v-else-if="checkoutStep === 'confirm'">Übersicht</template>
                 <template v-else>Bestellung gesendet</template>
               </h2>
@@ -47,7 +48,20 @@
               <ShopCheckoutLogin
                 v-if="checkoutStep === 'auth'"
                 @back="goToCart"
-                @success="goToConfirm"
+                @success="goToDetails"
+              />
+
+              <!-- Details Step (Versand + Zahlung + Anmerkungen) -->
+              <ShopCheckoutDetails
+                v-if="checkoutStep === 'details'"
+                :shipping="shippingMethod"
+                :payment="paymentMethod"
+                :notes="orderNotes"
+                @update:shipping="shippingMethod = $event"
+                @update:payment="paymentMethod = $event"
+                @update:notes="orderNotes = $event"
+                @back="goToCart"
+                @next="goToConfirm"
               />
 
               <!-- Confirm Step -->
@@ -55,11 +69,12 @@
                 v-if="checkoutStep === 'confirm'"
                 :items="items"
                 :total-price="totalPrice"
+                :shipping="shippingMethod"
+                :payment="paymentMethod"
                 :notes="orderNotes"
                 :submitting="submitting"
                 :submit-error="submitError"
-                @update:notes="orderNotes = $event"
-                @back="goToCart"
+                @back="goToDetails"
                 @send="submitOrder"
               />
 
@@ -100,6 +115,8 @@ const {
   isOpen,
   checkoutStep,
   orderNotes,
+  shippingMethod,
+  paymentMethod,
   totalPrice,
   isEmpty,
   submitting,
@@ -107,6 +124,7 @@ const {
   lastOrderId,
   closeCart,
   goToAuth,
+  goToDetails,
   goToConfirm,
   goToCart,
   updateQuantity,
@@ -119,7 +137,7 @@ const { user } = useAuth()
 
 function onProceed() {
   if (user.value) {
-    goToConfirm()
+    goToDetails()
   } else {
     goToAuth()
   }

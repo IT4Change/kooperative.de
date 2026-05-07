@@ -27,20 +27,30 @@
           <span class="font-medium">{{ (getItemPrice(item) * item.quantity).toFixed(2) }} €</span>
         </div>
       </div>
-      <div class="flex justify-between text-sm font-bold mt-2 pt-2 border-t border-gray-200">
-        <span>Gesamt</span>
+    </div>
+
+    <div class="mb-4 border-t border-gray-100 pt-3 text-sm space-y-1.5">
+      <div class="flex justify-between">
+        <span class="text-gray-500">Zwischensumme</span>
         <span>{{ totalPrice.toFixed(2) }} €</span>
+      </div>
+      <div class="flex justify-between">
+        <span class="text-gray-500">Versand: {{ shippingDisplay?.module ?? '–' }}</span>
+        <span>{{ shippingDisplay?.price ?? '–' }}</span>
+      </div>
+      <div class="flex justify-between">
+        <span class="text-gray-500">Zahlung</span>
+        <span>{{ paymentDisplay?.label ?? '–' }}</span>
+      </div>
+      <div class="flex justify-between font-bold pt-2 border-t border-gray-200">
+        <span>Gesamt</span>
+        <span>{{ totalPrice.toFixed(2) }}<span v-if="hasNoFixedShipping" class="text-xs font-normal text-gray-500"> + Versand n. A.</span> €</span>
       </div>
     </div>
 
-    <div class="mb-4">
-      <label class="block text-sm font-semibold text-gray-700 mb-1">Anmerkungen (optional)</label>
-      <textarea
-        v-model="notesModel"
-        rows="3"
-        maxlength="500"
-        class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-[#00af8c] resize-none"
-      />
+    <div v-if="notes" class="mb-4">
+      <h4 class="text-sm font-semibold text-gray-700 mb-1">Anmerkungen</h4>
+      <p class="text-sm text-gray-600 whitespace-pre-wrap">{{ notes }}</p>
     </div>
 
     <p v-if="submitError" class="mb-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">
@@ -65,24 +75,26 @@
 
 <script setup lang="ts">
 import type { CartItem, ProductVariant } from '~/data/products'
+import { SHIPPING_OPTIONS, PAYMENT_OPTIONS, type ShippingMethod, type PaymentMethod } from '~/data/checkoutOptions'
 
 const props = defineProps<{
   items: readonly CartItem[]
   totalPrice: number
+  shipping: ShippingMethod | null
+  payment: PaymentMethod | null
   notes: string
   submitting: boolean
   submitError: string
 }>()
 
-const emit = defineEmits<{ back: [], send: [], 'update:notes': [string] }>()
+defineEmits<{ back: [], send: [] }>()
 
 const { user } = useAuth()
 const accountUrl = 'https://shop.kooperative.de/account.php'
 
-const notesModel = computed({
-  get: () => props.notes,
-  set: (v: string) => emit('update:notes', v),
-})
+const shippingDisplay = computed(() => SHIPPING_OPTIONS.find(o => o.id === props.shipping))
+const paymentDisplay = computed(() => PAYMENT_OPTIONS.find(o => o.id === props.payment))
+const hasNoFixedShipping = computed(() => shippingDisplay.value?.price === 'nach Aufwand')
 
 function getVariant(item: CartItem): ProductVariant | null {
   if (item.variantIndex !== undefined && item.product.variants) {

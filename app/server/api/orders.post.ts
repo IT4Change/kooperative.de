@@ -4,6 +4,7 @@ import { parseOrder } from '../utils/validate'
 import { dbInsert, dbUpdateExpr } from '../utils/dbWrite'
 import { buildOrderMail, countryName } from '../utils/orderMail'
 import { getMailer, MAIL_FROM, MAIL_OPERATOR } from '../utils/mailer'
+import { SHIPPING_OPTIONS, PAYMENT_OPTIONS } from '../utils/checkoutOptions'
 
 interface CustomerRow extends RowDataPacket {
   customers_id: number
@@ -25,11 +26,53 @@ interface ProductRow extends RowDataPacket {
   products_model: string | null
   products_price: number
   products_name: string
+  products_tax_class_id: number
+  tax_rate: number | null
+  tax_description: string | null
+}
+
+interface TaxRateRow extends RowDataPacket {
+  tax_class_id: number
   tax_rate: number
+  tax_description: string
 }
 
 function gross(net: number, taxRate: number): number {
   return Math.round(net * (1 + taxRate / 100) * 100) / 100
+}
+
+function fmt(n: number): string {
+  return `${n.toFixed(2).replace('.', ',')}&nbsp;EURO`
+}
+
+/**
+ * For a given customer country, return the matching geo_zone_id used for tax rates.
+ * - DE → zone 2 (Inland)
+ * - AT → zone 3 (Ausland)
+ * - everything else → null (no zone match → no tax applied, like the alt-shop)
+ */
+async function resolveTaxZone(db: import('mysql2/promise').Pool, countryId: number): Promise<number | null> {
+  const [rows] = await db.execute<RowDataPacket[]>(
+    'SELECT geo_zone_id FROM zones_to_geo_zones WHERE zone_country_id = ? LIMIT 1',
+    [countryId],
+  )
+  if (rows.length === 0) return null
+  return Number(rows[0].geo_zone_id)
+}
+
+async function loadTaxRate(
+  db: import('mysql2/promise').Pool,
+  taxClassId: number,
+  taxZoneId: number | null,
+): Promise<{ rate: number, description: string } | null> {
+  if (!taxClassId || taxZoneId == null) return null
+  const [rows] = await db.execute<TaxRateRow[]>(
+    'SELECT tax_rate, tax_description FROM tax_rates WHERE tax_class_id = ? AND tax_zone_id = ? LIMIT 1',
+    [taxClassId, taxZoneId],
+  )
+  const row = rows[0]
+  if (!row) return null
+  return { rate: Number(row.tax_rate), description: String(row.tax_description || 'Mehrwertsteuer') }
 }
 
 export default defineEventHandler(async (event) => {
@@ -53,15 +96,21 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: 'Kundendaten unvollständig' })
   }
 
+  const taxZoneId = await resolveTaxZone(db, customer.entry_country_id)
+
+  // Resolve products with tax rate filtered by the customer's zone
+  // (the LEFT JOIN here will return NULL for tax_rate when zone doesn't match)
   const productIds = input.items.map(i => Number(i.productId))
   const placeholders = productIds.map(() => '?').join(',')
   const [prodRows] = await db.execute<ProductRow[]>(
-    `SELECT p.products_id, p.products_model, p.products_price, pd.products_name, COALESCE(tr.tax_rate, 0) AS tax_rate
+    `SELECT p.products_id, p.products_model, p.products_price, pd.products_name,
+            p.products_tax_class_id,
+            tr.tax_rate, tr.tax_description
      FROM products p
      JOIN products_description pd ON p.products_id = pd.products_id AND pd.language_id = 2
-     LEFT JOIN tax_rates tr ON p.products_tax_class_id = tr.tax_class_id
+     LEFT JOIN tax_rates tr ON tr.tax_class_id = p.products_tax_class_id AND tr.tax_zone_id ${taxZoneId == null ? 'IS NULL' : '= ?'}
      WHERE p.products_id IN (${placeholders}) AND p.products_status = 1`,
-    productIds,
+    taxZoneId == null ? productIds : [taxZoneId, ...productIds],
   )
   const productById = new Map(prodRows.map(r => [Number(r.products_id), r]))
   for (const item of input.items) {
@@ -72,16 +121,53 @@ export default defineEventHandler(async (event) => {
 
   const country = countryName(customer.entry_country_id)
 
-  // Compute totals (gross prices to match what the customer saw)
+  // Compute gross unit price + accumulate tax per rate (one ot_tax row per distinct rate)
+  const taxByDescription = new Map<string, { rate: number, total: number, sortOrder: number }>()
   let total = 0
-  const lines = input.items.map((item) => {
+  let subtotalGross = 0
+  const lines = input.items.map((item, idx) => {
     const p = productById.get(Number(item.productId))!
-    const unit = gross(Number(p.products_price), Number(p.tax_rate))
-    const lineTotal = Math.round(unit * item.quantity * 100) / 100
-    total += lineTotal
-    return { item, p, unit, lineTotal }
+    const rate = Number(p.tax_rate ?? 0)
+    const description = String(p.tax_description ?? '')
+    const unit = gross(Number(p.products_price), rate)
+    const lineGross = Math.round(unit * item.quantity * 100) / 100
+    subtotalGross += lineGross
+    total += lineGross
+    if (rate > 0 && description) {
+      const lineNet = lineGross / (1 + rate / 100)
+      const lineTax = lineGross - lineNet
+      const existing = taxByDescription.get(description)
+      taxByDescription.set(description, {
+        rate,
+        total: (existing?.total ?? 0) + lineTax,
+        sortOrder: existing?.sortOrder ?? idx,
+      })
+    }
+    return { item, p, rate, unit, lineGross }
   })
-  total = Math.round(total * 100) / 100
+
+  // Shipping
+  const shippingOpt = SHIPPING_OPTIONS[input.shippingMethod]
+  const shippingTax = shippingOpt.taxClassId > 0
+    ? await loadTaxRate(db, shippingOpt.taxClassId, taxZoneId)
+    : null
+  const shippingGross = shippingTax
+    ? gross(shippingOpt.net, shippingTax.rate)
+    : Math.round(shippingOpt.net * 100) / 100
+  if (shippingTax && shippingGross > 0) {
+    const shippingTaxAmount = shippingGross - shippingGross / (1 + shippingTax.rate / 100)
+    const existing = taxByDescription.get(shippingTax.description)
+    taxByDescription.set(shippingTax.description, {
+      rate: shippingTax.rate,
+      total: (existing?.total ?? 0) + shippingTaxAmount,
+      sortOrder: existing?.sortOrder ?? 99,
+    })
+  }
+  total = Math.round((total + shippingGross) * 100) / 100
+  subtotalGross = Math.round(subtotalGross * 100) / 100
+
+  // Payment
+  const paymentOpt = PAYMENT_OPTIONS[input.paymentMethod]
 
   const fullName = `${customer.customers_firstname} ${customer.customers_lastname}`.trim()
   const now = new Date()
@@ -117,8 +203,7 @@ export default defineEventHandler(async (event) => {
     billing_state: customer.entry_state ?? null,
     billing_country: country,
     billing_address_format_id: 5,
-    payment_method: 'vorkasse',
-    last_modified: now,
+    payment_method: paymentOpt.label,
     date_purchased: now,
     orders_status: 1,
     currency: 'EUR',
@@ -126,31 +211,52 @@ export default defineEventHandler(async (event) => {
   }, { customerId: customer.customers_id, remoteIp })
 
   // Order line items
-  for (const { item, p, unit, lineTotal } of lines) {
+  for (const { item, p, rate, unit, lineGross } of lines) {
     await dbInsert(db, 'orders_products', {
       orders_id: orderId,
       products_id: p.products_id,
       products_model: p.products_model ?? '',
       products_name: p.products_name,
       products_price: Number(p.products_price),
-      final_price: lineTotal / item.quantity,
-      products_tax: Number(p.tax_rate),
+      final_price: lineGross / item.quantity,
+      products_tax: rate,
       products_quantity: item.quantity,
     }, { customerId: customer.customers_id, orderId, remoteIp })
   }
 
-  // Totals (sub_total + total only — keine Versandberechnung in Phase 1).
-  // Format-Strings spiegeln das Alt-Shop-Schema (Komma-Dezimal, "EURO", &nbsp;).
-  const fmt = (n: number) => `${n.toFixed(2).replace('.', ',')}&nbsp;EURO`
-
+  // Totals: subtotal + (per-rate tax rows) + shipping + total — Format wie Alt-Shop
   await dbInsert(db, 'orders_total', {
     orders_id: orderId,
     title: 'Zwischensumme:',
-    text: fmt(total),
-    value: total,
+    text: fmt(subtotalGross),
+    value: subtotalGross,
     class: 'ot_subtotal',
     sort_order: 1,
   }, { customerId: customer.customers_id, orderId, remoteIp })
+
+  await dbInsert(db, 'orders_total', {
+    orders_id: orderId,
+    title: shippingOpt.totalTitle,
+    text: fmt(shippingGross),
+    value: shippingGross,
+    class: 'ot_shipping',
+    sort_order: 2,
+  }, { customerId: customer.customers_id, orderId, remoteIp })
+
+  // Tax rows: one per distinct description (e.g. "Mehrwertsteuer", "Mehrwertsteuer ermäszigt")
+  const sortedTax = [...taxByDescription.entries()].sort((a, b) => a[1].sortOrder - b[1].sortOrder)
+  for (const [description, info] of sortedTax) {
+    const value = Math.round(info.total * 100) / 100
+    if (value === 0) continue
+    await dbInsert(db, 'orders_total', {
+      orders_id: orderId,
+      title: `${description}:`,
+      text: fmt(value),
+      value: value,
+      class: 'ot_tax',
+      sort_order: 3,
+    }, { customerId: customer.customers_id, orderId, remoteIp })
+  }
 
   await dbInsert(db, 'orders_total', {
     orders_id: orderId,
@@ -201,15 +307,18 @@ export default defineEventHandler(async (event) => {
         city: customer.entry_city,
         country,
       },
-      items: lines.map(({ item, p, unit, lineTotal }) => ({
+      items: lines.map(({ item, p, unit, lineGross }) => ({
         productId: String(p.products_id),
         name: p.products_name,
         variantSize: item.variantIndex !== undefined ? `Variante #${item.variantIndex + 1}` : undefined,
         quantity: item.quantity,
         unitPrice: unit,
-        lineTotal,
+        lineTotal: lineGross,
       })),
       total,
+      shippingMethod: shippingOpt.module,
+      shippingPrice: shippingGross,
+      paymentMethod: paymentOpt.label,
       notes: input.notes,
       adminBaseUrl: process.env.ADMIN_BASE_URL,
     })

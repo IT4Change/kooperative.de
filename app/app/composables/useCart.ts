@@ -1,7 +1,8 @@
 import type { CartItem, Product } from '~/data/products'
 import { findTierIndex } from '~/data/products'
+import type { ShippingMethod, PaymentMethod } from '~/data/checkoutOptions'
 
-type CheckoutStep = 'cart' | 'auth' | 'confirm' | 'success'
+type CheckoutStep = 'cart' | 'auth' | 'details' | 'confirm' | 'success'
 
 const STORAGE_KEY = 'kooperative-cart'
 
@@ -9,6 +10,8 @@ const items = ref<CartItem[]>([])
 const isOpen = ref(false)
 const checkoutStep = ref<CheckoutStep>('cart')
 const orderNotes = ref('')
+const shippingMethod = ref<ShippingMethod | null>(null)
+const paymentMethod = ref<PaymentMethod | null>(null)
 const lastOrderId = ref<number | null>(null)
 const submitting = ref(false)
 const submitError = ref('')
@@ -156,6 +159,11 @@ export function useCart() {
     checkoutStep.value = 'auth'
   }
 
+  function goToDetails() {
+    submitError.value = ''
+    checkoutStep.value = 'details'
+  }
+
   function goToConfirm() {
     submitError.value = ''
     checkoutStep.value = 'confirm'
@@ -166,6 +174,10 @@ export function useCart() {
   }
 
   async function submitOrder(): Promise<boolean> {
+    if (!shippingMethod.value || !paymentMethod.value) {
+      submitError.value = 'Bitte Versand- und Zahlungsart auswählen'
+      return false
+    }
     submitting.value = true
     submitError.value = ''
     try {
@@ -176,6 +188,8 @@ export function useCart() {
           ...(i.variantIndex !== undefined && { variantIndex: i.variantIndex }),
         })),
         ...(orderNotes.value && { notes: orderNotes.value }),
+        shippingMethod: shippingMethod.value,
+        paymentMethod: paymentMethod.value,
       }
       const res = await $fetch<{ ok: boolean, orderId: number }>('/api/orders', {
         method: 'POST',
@@ -185,6 +199,8 @@ export function useCart() {
       checkoutStep.value = 'success'
       clearCart()
       orderNotes.value = ''
+      shippingMethod.value = null
+      paymentMethod.value = null
       return true
     } catch (e: unknown) {
       const obj = e as { statusMessage?: string, data?: { statusMessage?: string }, message?: string }
@@ -202,6 +218,8 @@ export function useCart() {
     isOpen: readonly(isOpen),
     checkoutStep: readonly(checkoutStep),
     orderNotes,
+    shippingMethod,
+    paymentMethod,
     lastOrderId: readonly(lastOrderId),
     submitting: readonly(submitting),
     submitError: readonly(submitError),
@@ -217,6 +235,7 @@ export function useCart() {
     openCart,
     closeCart,
     goToAuth,
+    goToDetails,
     goToConfirm,
     goToCart,
     submitOrder,

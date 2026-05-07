@@ -60,25 +60,47 @@ Dateipfad: `app/server/api/orders/create.post.ts`
 Erfordert eingeloggte Session. In Reihenfolge:
 
 **INSERT INTO `orders`** — Header inkl. Kunden-, Liefer- und Rechnungsadresse (in Phase 1
-identisch befüllt). Statische Werte: `payment_method = 'vorkasse'`, `currency = 'EUR'`,
-`currency_value = 1.0`, `orders_status = 1` (= "In Bearbeitung"),
-`*_address_format_id = 5`. Adresse stammt aus dem `address_book`-Eintrag des Kunden.
+identisch befüllt). Statische Werte: `currency = 'EUR'`, `currency_value = 1.0`,
+`orders_status = 1` (= "In Bearbeitung"), `*_address_format_id = 5`,
+`payment_method` aus der Auswahl des Kunden (`"Bezahlung mit Vorkasse"` oder
+`"Bezahlung mit Rechnung"`, identisch zum Alt-Shop). Adresse stammt aus dem
+`address_book`-Eintrag des Kunden.
 
 **INSERT INTO `orders_products`** (eine Zeile pro Position):
 `orders_id, products_id, products_model, products_name, products_price (Netto),
 final_price (Brutto pro Stk.), products_tax (%), products_quantity`.
 
-**INSERT INTO `orders_total`** (zwei Zeilen):
-1. Zwischensumme (`class = 'ot_subtotal'`, `sort_order = 1`,
-   `title = "Zwischensumme:"`, `text = "X,XX&nbsp;EURO"`)
-2. Gesamtsumme (`class = 'ot_total'`, `sort_order = 4`,
-   `title = "<b>Summe</b>:"`, `text = "<b>X,XX&nbsp;EURO</b>"`)
+**INSERT INTO `orders_total`** (vier Zeilen, exakt wie Alt-Shop-Modulkette
+`ot_subtotal.php; ot_shipping.php; ot_tax.php; ot_total.php`):
+1. **Zwischensumme** (`class='ot_subtotal'`, `sort_order=1`,
+   `title='Zwischensumme:'`, `text='X,XX&nbsp;EURO'`) — Brutto-Summe der Positionen
+2. **Versand** (`class='ot_shipping'`, `sort_order=2`,
+   `title=` z.B. `'Versand mit DPD:'`/`'Versand mit DHL:'`/`'Direktzustellung:'`,
+   `text='X,XX&nbsp;EURO'`, bei "nach Aufwand"-Optionen `value=0`)
+3. **Steuer** (`class='ot_tax'`, `sort_order=3`, eine Zeile pro distinct
+   `tax_description` aus `tax_rates`, gefiltert nach Kundenzone — z.B.
+   `title='Mehrwertsteuer:'`, oder `'Mehrwertsteuer ermäszigt:'`, oder
+   `'Mehrwertsteuer - Ausland:'`. Wert = bereits in Brutto enthaltener
+   Steueranteil aus Positionen + ggf. Versand)
+4. **Gesamtsumme** (`class='ot_total'`, `sort_order=4`,
+   `title='<b>Summe</b>:'`, `text='<b>X,XX&nbsp;EURO</b>'`)
 
-Format-Strings (Komma-Dezimal, `&nbsp;EURO`, `<b>`-Tags) entsprechen dem
-Alt-Shop, damit die Anzeige im Operator-Admin konsistent ist.
+Format-Strings (Komma-Dezimal, `&nbsp;EURO`, `<b>`-Tags) entsprechen dem Alt-Shop.
 
-Versand- und Steuerzeilen werden in Phase 1 **nicht** erzeugt — siehe Abweichung
-unten.
+**Versand-Optionen** (Werte fest; Mapping siehe `app/server/utils/checkoutOptions.ts`):
+
+| Code | Modul | Beschreibung | Netto € | Tax-Klasse |
+|---|---|---|---|---|
+| `dpd` | Versand mit DPD | innerhalb Deutschlands | 6,3025 | 2 (19%) |
+| `dhl` | Versand mit DHL | innerhalb Deutschlands (Standard) | 10,0840 | 2 (19%) |
+| `express` | Versand mit Express | nach Aufwand | 0 | 0 (kein) |
+| `direkt` | Direktzustellung | nach Vereinbarung | 0 | 0 (kein) |
+| `abholung` | Abholung | nur nach Absprache | 0 | 0 (kein) |
+
+**Steuerberechnung:** Pro Position wird nach Land (DE→geo_zone 2, AT→3,
+CH→ohne Zone) die zugehörige Tax-Rate aus `tax_rates` selektiert. Der ausgewiesene
+Steuerbetrag pro Tax-Description ist die **bereits im Bruttopreis enthaltene**
+Steuer (`value = gross − gross/(1+rate/100)`), summiert über Positionen + Versand.
 
 **INSERT INTO `orders_status_history`**:
 `orders_id, orders_status_id (=1), date_added (=NOW), customer_notified (=0),
