@@ -45,6 +45,20 @@ customers_info_id (= customers_id), customers_info_number_of_logons (=0),
 customers_info_date_account_created (=NOW), global_product_notifications (=0)
 ```
 
+### 1b. Produktdetail-Aufruf — `POST /api/products/:id/view`
+
+Dateipfad: `app/server/api/products/[id]/view.post.ts`
+
+Wird vom Frontend einmalig pro Detail-Seitenaufruf in `pages/shop/[...path].vue`
+gefeuert (best-effort, Fehler verschluckt).
+
+**UPDATE `products_description` SET `products_viewed` = `products_viewed` + 1
+WHERE `products_id` = :id AND `language_id` = 2** — exakt wie der Alt-Shop in
+`product_info.php:103`. Kein Bot-Filter, keine Sessions-Deduplizierung — wir
+spiegeln das Verhalten 1:1.
+
+Dieser Counter treibt die globale Beliebtheits-Sortierung der Produktliste.
+
 ### 2. Login — `POST /api/auth/login`
 
 Dateipfad: `app/server/api/auth/login.post.ts`
