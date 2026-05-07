@@ -45,44 +45,46 @@
     <Teleport to="body">
       <div v-if="showWelcome" class="fixed inset-0 z-[200] flex items-center justify-center p-4" @click.self="dismissWelcome">
         <div class="absolute inset-0 bg-black/50" />
-        <div class="relative bg-white rounded-xl shadow-2xl max-w-md w-full p-6 sm:p-8">
+        <div class="relative bg-white rounded-xl shadow-2xl max-w-lg w-full p-6 sm:p-8 max-h-[90vh] overflow-y-auto">
           <h2 class="text-xl font-bold mb-6">So funktioniert die Bestellung</h2>
           <div class="space-y-5">
             <div class="flex gap-4 items-start">
-              <div class="flex-shrink-0 w-12 h-12 rounded-full bg-[#00af8c]/10 flex items-center justify-center">
-                <svg class="w-6 h-6 text-[#00af8c]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </div>
+              <div class="flex-shrink-0 w-10 h-10 rounded-full bg-[#00af8c]/10 flex items-center justify-center text-[#00af8c] font-bold">1</div>
               <div>
-                <p class="font-semibold text-gray-800">1. Produkte ausw&auml;hlen</p>
-                <p class="text-sm text-gray-500 mt-0.5">St&ouml;bern Sie im Sortiment und setzen Sie Artikel auf die Bestellliste.</p>
+                <p class="font-semibold text-gray-800">Produkte ausw&auml;hlen</p>
+                <p class="text-sm text-gray-500 mt-0.5">St&ouml;bern Sie im Sortiment und setzen Sie die gew&uuml;nschten Artikel auf die Bestell-Liste.</p>
               </div>
             </div>
             <div class="flex gap-4 items-start">
-              <div class="flex-shrink-0 w-12 h-12 rounded-full bg-[#00af8c]/10 flex items-center justify-center">
-                <svg class="w-6 h-6 text-[#00af8c]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z" />
-                </svg>
-              </div>
+              <div class="flex-shrink-0 w-10 h-10 rounded-full bg-[#00af8c]/10 flex items-center justify-center text-[#00af8c] font-bold">2</div>
               <div>
-                <p class="font-semibold text-gray-800">2. Bestellliste pr&uuml;fen</p>
-                <p class="text-sm text-gray-500 mt-0.5">&Ouml;ffnen Sie die Bestellliste und kontrollieren Sie Ihre Auswahl.</p>
+                <p class="font-semibold text-gray-800">Bestell-Liste pr&uuml;fen</p>
+                <p class="text-sm text-gray-500 mt-0.5">Schauen Sie sich die Bestell-Liste an und kontrollieren Sie Ihre Auswahl.</p>
               </div>
             </div>
             <div class="flex gap-4 items-start">
-              <div class="flex-shrink-0 w-12 h-12 rounded-full bg-[#00af8c]/10 flex items-center justify-center">
-                <svg class="w-6 h-6 text-[#00af8c]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-              </div>
+              <div class="flex-shrink-0 w-10 h-10 rounded-full bg-[#00af8c]/10 flex items-center justify-center text-[#00af8c] font-bold">3</div>
               <div>
-                <p class="font-semibold text-gray-800">3. Bestellung absenden</p>
-                <p class="text-sm text-gray-500 mt-0.5">F&uuml;llen Sie das Formular aus. Die Bestellung wird per E-Mail an uns geschickt.</p>
+                <p class="font-semibold text-gray-800">Anmelden oder Konto anlegen</p>
+                <p class="text-sm text-gray-500 mt-0.5">Bestandskunden melden sich mit ihrer E-Mail-Adresse und Passwort an. Neukunden legen ein Konto an.</p>
+              </div>
+            </div>
+            <div class="flex gap-4 items-start">
+              <div class="flex-shrink-0 w-10 h-10 rounded-full bg-[#00af8c]/10 flex items-center justify-center text-[#00af8c] font-bold">4</div>
+              <div>
+                <p class="font-semibold text-gray-800">Versand und Zahlung w&auml;hlen, Bestellung absenden</p>
+                <p class="text-sm text-gray-500 mt-0.5">W&auml;hlen Sie Ihre Versand- und Zahlungsart. Die Bestellung wird per E-Mail an uns geschickt.</p>
+              </div>
+            </div>
+            <div class="flex gap-4 items-start">
+              <div class="flex-shrink-0 w-10 h-10 rounded-full bg-[#00af8c]/10 flex items-center justify-center text-[#00af8c] font-bold">5</div>
+              <div>
+                <p class="font-semibold text-gray-800">Best&auml;tigungs-E-Mail beantworten</p>
+                <p class="text-sm text-gray-500 mt-0.5">Wir pr&uuml;fen Ihre Bestellung und senden Ihnen eine E-Mail zur Best&auml;tigung der Bestellung und der Zahlungskonditionen. <strong>Sie senden uns als Best&auml;tigung des Kaufs die E-Mail zur&uuml;ck</strong> &ndash; erst damit kommt der Kaufvertrag zustande.</p>
               </div>
             </div>
           </div>
-          <p class="mt-4 text-gray-500 text-xs sm:text-sm">Kein Online-Payment &mdash; die Bezahlung erfolgt bei Abholung oder auf Rechnung.</p>
+          <p class="mt-5 text-gray-500 text-xs sm:text-sm">Kein Online-Payment &mdash; alle Zahlungswege werden separat abgewickelt.</p>
           <div class="mt-6 flex justify-center">
             <KoopButton @click="dismissWelcome">Verstanden</KoopButton>
           </div>

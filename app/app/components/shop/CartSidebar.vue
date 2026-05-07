@@ -9,8 +9,10 @@
             <div class="flex items-center justify-between px-5 py-4 border-b border-gray-200">
               <h2 class="text-lg font-semibold">
                 <template v-if="checkoutStep === 'cart'">Bestellliste</template>
-                <template v-else-if="checkoutStep === 'form'">Bestellung</template>
-                <template v-else>Übersicht</template>
+                <template v-else-if="checkoutStep === 'auth'">Anmelden</template>
+                <template v-else-if="checkoutStep === 'details'">Versand &amp; Zahlung</template>
+                <template v-else-if="checkoutStep === 'confirm'">Übersicht</template>
+                <template v-else>Bestellung gesendet</template>
               </h2>
               <button
                 class="text-gray-400 hover:text-gray-600 transition-colors"
@@ -42,12 +44,28 @@
                 </template>
               </template>
 
-              <!-- Form Step -->
-              <ShopCheckoutForm
-                v-if="checkoutStep === 'form'"
-                :form-data="orderFormData"
-                @submit="goToConfirm"
+              <!-- Auth Step -->
+              <ShopCheckoutLogin
+                v-if="checkoutStep === 'auth'"
                 @back="goToCart"
+                @success="goToDetails"
+              />
+
+              <!-- Details Step (Versand + Zahlung + Anmerkungen) -->
+              <ShopCheckoutDetails
+                v-if="checkoutStep === 'details'"
+                :shipping="shippingMethod"
+                :payment="paymentMethod"
+                :notes="orderNotes"
+                :account-holder="bankAccountHolder"
+                :iban="bankIban"
+                @update:shipping="shippingMethod = $event"
+                @update:payment="paymentMethod = $event"
+                @update:notes="orderNotes = $event"
+                @update:account-holder="bankAccountHolder = $event"
+                @update:iban="bankIban = $event"
+                @back="goToCart"
+                @next="goToConfirm"
               />
 
               <!-- Confirm Step -->
@@ -55,11 +73,42 @@
                 v-if="checkoutStep === 'confirm'"
                 :items="items"
                 :total-price="totalPrice"
-                :form-data="orderFormData"
-                :mailto-link="generateMailtoLink()"
-                @back="goToForm"
-                @send="onSend"
+                :shipping="shippingMethod"
+                :payment="paymentMethod"
+                :iban="bankIban"
+                :notes="orderNotes"
+                :submitting="submitting"
+                :submit-error="submitError"
+                @back="goToDetails"
+                @send="submitOrder"
               />
+
+              <!-- Success Step -->
+              <div v-if="checkoutStep === 'success'" class="py-6">
+                <div class="text-center mb-5">
+                  <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-[#00af8c]/10 flex items-center justify-center">
+                    <svg class="w-8 h-8 text-[#00af8c]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <h3 class="text-lg font-semibold mb-1">Vielen Dank!</h3>
+                  <p class="text-sm text-gray-600">Ihre Bestellung wurde an uns übermittelt<span v-if="lastOrderId"> (Nr. {{ lastOrderId }})</span>.</p>
+                </div>
+                <div class="rounded-lg bg-amber-50 border border-amber-200 p-4 mb-5 text-sm text-amber-900">
+                  <p class="font-semibold mb-2">So geht es weiter:</p>
+                  <ol class="space-y-2 list-decimal list-inside">
+                    <li>Wir prüfen Ihre Bestellung und senden Ihnen eine <strong>Bestätigungs-E-Mail</strong> mit den Zahlungskonditionen.</li>
+                    <li>Bitte <strong>antworten Sie auf diese E-Mail</strong>, um den Kauf rechtsverbindlich zu bestätigen.</li>
+                    <li>Erst nach Ihrer Rück-Mail (und ggf. Zahlungseingang) versenden wir die Ware.</li>
+                  </ol>
+                </div>
+                <p class="text-xs text-gray-500 mb-5">
+                  Hintergrund: Aus rechtlichen Gründen kommt der Kaufvertrag nicht über die Webseite zustande, sondern erst durch Ihre E-Mail-Antwort. So funktioniert die Kooperative seit jeher.
+                </p>
+                <div class="flex justify-center">
+                  <KoopButton size="sm" @click="closeCart">Schließen</KoopButton>
+                </div>
+              </div>
             </div>
 
             <!-- Footer (cart step only) -->
@@ -69,7 +118,7 @@
                 <span>{{ totalPrice.toFixed(2) }} €</span>
               </div>
               <div class="flex justify-center">
-                <KoopButton @click="goToForm">Zur Bestellung</KoopButton>
+                <KoopButton @click="onProceed">Zur Bestellung</KoopButton>
               </div>
             </div>
           </div>
@@ -84,23 +133,35 @@ const {
   items,
   isOpen,
   checkoutStep,
-  orderFormData,
+  orderNotes,
+  shippingMethod,
+  paymentMethod,
+  bankAccountHolder,
+  bankIban,
   totalPrice,
   isEmpty,
+  submitting,
+  submitError,
+  lastOrderId,
   closeCart,
-  goToForm,
+  goToAuth,
+  goToDetails,
   goToConfirm,
   goToCart,
   updateQuantity,
   removeFromCart,
   updateVariant,
-  generateMailtoLink,
-  clearCart,
+  submitOrder,
 } = useCart()
 
-function onSend() {
-  clearCart()
-  closeCart()
+const { user } = useAuth()
+
+function onProceed() {
+  if (user.value) {
+    goToDetails()
+  } else {
+    goToAuth()
+  }
 }
 </script>
 

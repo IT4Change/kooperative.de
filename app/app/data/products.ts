@@ -64,12 +64,3 @@ export function tierTotalPrice(variants: readonly ProductVariant[], quantity: nu
   return variants[idx].price * quantity
 }
 
-export interface OrderFormData {
-  name: string
-  street: string
-  zip: string
-  city: string
-  email: string
-  phone: string
-  notes: string
-}

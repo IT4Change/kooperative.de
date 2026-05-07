@@ -87,6 +87,20 @@ Der integrierte Shop (`/shop`) mit Warenkorb-Bestellfunktion per E-Mail (kein On
 - **Warenkorb**: Sidebar-Overlay, localStorage-Persistenz, öffnet sich automatisch beim Hinzufügen
 - **Bestellung**: Warenkorb → Bestellformular → Bestätigung → mailto-Link
 
+## Konfiguration
+
+### `SESSION_SECRET` erzeugen
+
+Der `SESSION_SECRET` signiert die Login-Cookies (HMAC-SHA256). Für Stage und Produktion **muss** ein zufälliger Wert mit mindestens 32 Bytes Entropie verwendet werden — der Default in `.env.template` ist absichtlich unbrauchbar.
+
+Generieren mit OpenSSL:
+
+```bash
+openssl rand -base64 48
+```
+
+Den Output unverändert als `SESSION_SECRET=…` in die jeweilige `.env` (lokal) bzw. ins Deployment-Secrets-System (Stage/Prod) eintragen. Bei jedem Wechsel des Secrets werden alle bestehenden Sessions invalidiert — Nutzer:innen müssen sich neu anmelden.
+
 ## Deployment
 
 Automatisch via GitHub Actions bei Push auf `master`:

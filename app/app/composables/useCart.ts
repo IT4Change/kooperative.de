@@ -1,22 +1,22 @@
-import type { CartItem, OrderFormData, Product } from '~/data/products'
+import type { CartItem, Product } from '~/data/products'
 import { findTierIndex } from '~/data/products'
+import type { ShippingMethod, PaymentMethod } from '~/data/checkoutOptions'
 
-type CheckoutStep = 'cart' | 'form' | 'confirm'
+type CheckoutStep = 'cart' | 'auth' | 'details' | 'confirm' | 'success'
 
 const STORAGE_KEY = 'kooperative-cart'
 
 const items = ref<CartItem[]>([])
 const isOpen = ref(false)
 const checkoutStep = ref<CheckoutStep>('cart')
-const orderFormData = ref<OrderFormData>({
-  name: '',
-  street: '',
-  zip: '',
-  city: '',
-  email: '',
-  phone: '',
-  notes: '',
-})
+const orderNotes = ref('')
+const shippingMethod = ref<ShippingMethod | null>(null)
+const paymentMethod = ref<PaymentMethod | null>(null)
+const bankAccountHolder = ref('')
+const bankIban = ref('')
+const lastOrderId = ref<number | null>(null)
+const submitting = ref(false)
+const submitError = ref('')
 
 let initialized = false
 
@@ -156,11 +156,18 @@ export function useCart() {
     isOpen.value = false
   }
 
-  function goToForm() {
-    checkoutStep.value = 'form'
+  function goToAuth() {
+    submitError.value = ''
+    checkoutStep.value = 'auth'
+  }
+
+  function goToDetails() {
+    submitError.value = ''
+    checkoutStep.value = 'details'
   }
 
   function goToConfirm() {
+    submitError.value = ''
     checkoutStep.value = 'confirm'
   }
 
@@ -168,42 +175,56 @@ export function useCart() {
     checkoutStep.value = 'cart'
   }
 
-  function generateMailtoLink(): string {
-    const fd = orderFormData.value
-    const lines: string[] = [
-      'Bestellung von der Kooperative Dürnau',
-      '',
-      'Kontaktdaten:',
-      `Name: ${fd.name}`,
-      `Straße: ${fd.street}`,
-      `PLZ/Ort: ${fd.zip} ${fd.city}`,
-      `E-Mail: ${fd.email}`,
-      `Telefon: ${fd.phone || '–'}`,
-      '',
-      'Bestellte Artikel:',
-    ]
-
-    for (const item of items.value) {
-      const price = itemPrice(item)
-      const subtotal = (price * item.quantity).toFixed(2)
-      const variant = item.variantIndex !== undefined && item.product.variants
-        ? item.product.variants[item.variantIndex]
-        : null
-      const sizeSuffix = variant ? ` (${variant.size})` : ''
-      lines.push(`- ${item.quantity}x ${item.product.name}${sizeSuffix} (${price.toFixed(2)} €) = ${subtotal} €`)
+  async function submitOrder(): Promise<boolean> {
+    if (!shippingMethod.value || !paymentMethod.value) {
+      submitError.value = 'Bitte Versand- und Zahlungsart auswählen'
+      return false
     }
-
-    lines.push('')
-    lines.push(`Gesamtsumme: ${totalPrice.value.toFixed(2)} €`)
-
-    if (fd.notes) {
-      lines.push('')
-      lines.push(`Anmerkungen: ${fd.notes}`)
+    if (paymentMethod.value === 'lastschrift') {
+      if (!bankAccountHolder.value.trim() || !bankIban.value.trim()) {
+        submitError.value = 'Bitte Kontoinhaber und IBAN angeben'
+        return false
+      }
     }
-
-    const subject = encodeURIComponent('Bestellung – Kooperative Dürnau')
-    const body = encodeURIComponent(lines.join('\n'))
-    return `mailto:shop@kooperative.de?subject=${subject}&body=${body}`
+    submitting.value = true
+    submitError.value = ''
+    try {
+      const payload: Record<string, unknown> = {
+        items: items.value.map(i => ({
+          productId: i.product.id,
+          quantity: i.quantity,
+          ...(i.variantIndex !== undefined && { variantIndex: i.variantIndex }),
+        })),
+        shippingMethod: shippingMethod.value,
+        paymentMethod: paymentMethod.value,
+        ...(orderNotes.value && { notes: orderNotes.value }),
+      }
+      if (paymentMethod.value === 'lastschrift') {
+        payload.bankDetails = {
+          accountHolder: bankAccountHolder.value.trim(),
+          iban: bankIban.value.replace(/\s+/g, '').toUpperCase(),
+        }
+      }
+      const res = await $fetch<{ ok: boolean, orderId: number }>('/api/orders', {
+        method: 'POST',
+        body: payload,
+      })
+      lastOrderId.value = res.orderId
+      checkoutStep.value = 'success'
+      clearCart()
+      orderNotes.value = ''
+      shippingMethod.value = null
+      paymentMethod.value = null
+      bankAccountHolder.value = ''
+      bankIban.value = ''
+      return true
+    } catch (e: unknown) {
+      const obj = e as { statusMessage?: string, data?: { statusMessage?: string }, message?: string }
+      submitError.value = obj.data?.statusMessage || obj.statusMessage || obj.message || 'Fehler beim Absenden'
+      return false
+    } finally {
+      submitting.value = false
+    }
   }
 
   init()
@@ -212,7 +233,14 @@ export function useCart() {
     items: readonly(items),
     isOpen: readonly(isOpen),
     checkoutStep: readonly(checkoutStep),
-    orderFormData,
+    orderNotes,
+    shippingMethod,
+    paymentMethod,
+    bankAccountHolder,
+    bankIban,
+    lastOrderId: readonly(lastOrderId),
+    submitting: readonly(submitting),
+    submitError: readonly(submitError),
     totalItems,
     totalPrice,
     isEmpty,
@@ -224,9 +252,10 @@ export function useCart() {
     clearCart,
     openCart,
     closeCart,
-    goToForm,
+    goToAuth,
+    goToDetails,
     goToConfirm,
     goToCart,
-    generateMailtoLink,
+    submitOrder,
   }
 }

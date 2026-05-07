@@ -2,15 +2,18 @@
   <div>
     <h3 class="text-lg font-semibold mb-4">Bestellung prüfen</h3>
 
-    <div class="mb-4">
-      <h4 class="text-sm font-semibold text-gray-700 mb-2">Kontaktdaten</h4>
+    <div v-if="user" class="mb-4">
+      <h4 class="text-sm font-semibold text-gray-700 mb-2">Lieferadresse</h4>
       <div class="text-sm text-gray-600 space-y-0.5">
-        <p>{{ formData.name }}</p>
-        <p>{{ formData.street }}</p>
-        <p>{{ formData.zip }} {{ formData.city }}</p>
-        <p>{{ formData.email }}</p>
-        <p v-if="formData.phone">{{ formData.phone }}</p>
+        <p>{{ user.firstname }} {{ user.lastname }}</p>
+        <p>{{ user.address.street }}</p>
+        <p>{{ user.address.postcode }} {{ user.address.city }}</p>
+        <p>{{ user.email }}<span v-if="user.telephone"> · {{ user.telephone }}</span></p>
       </div>
+      <p class="text-xs text-gray-400 mt-1">
+        Adresse falsch?
+        <a :href="accountUrl" target="_blank" rel="noopener" class="text-[#00af8c] underline">Im alten Shop bearbeiten</a>
+      </p>
     </div>
 
     <div class="mb-4">
@@ -24,45 +27,90 @@
           <span class="font-medium">{{ (getItemPrice(item) * item.quantity).toFixed(2) }} €</span>
         </div>
       </div>
-      <div class="flex justify-between text-sm font-bold mt-2 pt-2 border-t border-gray-200">
-        <span>Gesamt</span>
+    </div>
+
+    <div class="mb-4 border-t border-gray-100 pt-3 text-sm space-y-1.5">
+      <div class="flex justify-between">
+        <span class="text-gray-500">Zwischensumme</span>
         <span>{{ totalPrice.toFixed(2) }} €</span>
+      </div>
+      <div class="flex justify-between">
+        <span class="text-gray-500">Versand: {{ shippingDisplay?.module ?? '–' }}</span>
+        <span>{{ shippingDisplay?.price ?? '–' }}</span>
+      </div>
+      <div class="flex justify-between">
+        <span class="text-gray-500">Zahlung</span>
+        <span>{{ paymentDisplay?.label ?? '–' }}</span>
+      </div>
+      <div v-if="payment === 'lastschrift' && iban" class="flex justify-between text-xs text-gray-500">
+        <span>IBAN</span>
+        <span class="font-mono">{{ maskedIban }}</span>
+      </div>
+      <div class="flex justify-between font-bold pt-2 border-t border-gray-200">
+        <span>Gesamt</span>
+        <span>{{ totalPrice.toFixed(2) }}<span v-if="hasNoFixedShipping" class="text-xs font-normal text-gray-500"> + Versand n. A.</span> €</span>
       </div>
     </div>
 
-    <div v-if="formData.notes" class="mb-4">
+    <div v-if="notes" class="mb-4">
       <h4 class="text-sm font-semibold text-gray-700 mb-1">Anmerkungen</h4>
-      <p class="text-sm text-gray-600">{{ formData.notes }}</p>
+      <p class="text-sm text-gray-600 whitespace-pre-wrap">{{ notes }}</p>
     </div>
+
+    <p class="mb-3 text-xs text-gray-500 bg-amber-50 border border-amber-200 rounded px-3 py-2 leading-relaxed">
+      Mit "Bestellung absenden" wird Ihre Bestellung an uns übermittelt &mdash; sie ist
+      <strong>noch nicht rechtsverbindlich</strong>. Wir senden Ihnen eine Bestätigungs-E-Mail mit
+      den Zahlungskonditionen, die Sie zur Bestätigung des Kaufs zurücksenden.
+    </p>
+
+    <p v-if="submitError" class="mb-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">
+      {{ submitError }}
+    </p>
 
     <div class="flex gap-3 pt-2">
       <button
+        type="button"
         class="flex-1 py-2 text-sm border border-gray-300 rounded hover:bg-gray-50 transition-colors"
+        :disabled="submitting"
         @click="$emit('back')"
       >
         Zurück
       </button>
-      <KoopButton :href="mailtoLink" size="sm" @click="$emit('send')">
-        Per E-Mail senden
+      <KoopButton size="sm" :disabled="submitting" @click="$emit('send')">
+        {{ submitting ? 'Sende…' : 'Bestellung absenden' }}
       </KoopButton>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import type { CartItem, OrderFormData, ProductVariant } from '~/data/products'
+import type { CartItem, ProductVariant } from '~/data/products'
+import { SHIPPING_OPTIONS, PAYMENT_OPTIONS, type ShippingMethod, type PaymentMethod } from '~/data/checkoutOptions'
 
-defineProps<{
+const props = defineProps<{
   items: readonly CartItem[]
   totalPrice: number
-  formData: OrderFormData
-  mailtoLink: string
+  shipping: ShippingMethod | null
+  payment: PaymentMethod | null
+  iban: string
+  notes: string
+  submitting: boolean
+  submitError: string
 }>()
 
-defineEmits<{
-  back: []
-  send: []
-}>()
+defineEmits<{ back: [], send: [] }>()
+
+const { user } = useAuth()
+const accountUrl = 'https://shop.kooperative.de/account.php'
+
+const shippingDisplay = computed(() => SHIPPING_OPTIONS.find(o => o.id === props.shipping))
+const paymentDisplay = computed(() => PAYMENT_OPTIONS.find(o => o.id === props.payment))
+const hasNoFixedShipping = computed(() => shippingDisplay.value?.price === 'nach Aufwand')
+const maskedIban = computed(() => {
+  const i = props.iban.replace(/\s+/g, '').toUpperCase()
+  if (i.length < 8) return '••••'
+  return i.slice(0, 4) + ' •••• •••• ' + i.slice(-4)
+})
 
 function getVariant(item: CartItem): ProductVariant | null {
   if (item.variantIndex !== undefined && item.product.variants) {
