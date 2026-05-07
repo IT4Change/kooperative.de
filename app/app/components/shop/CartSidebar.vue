@@ -9,8 +9,9 @@
             <div class="flex items-center justify-between px-5 py-4 border-b border-gray-200">
               <h2 class="text-lg font-semibold">
                 <template v-if="checkoutStep === 'cart'">Bestellliste</template>
-                <template v-else-if="checkoutStep === 'form'">Bestellung</template>
-                <template v-else>Übersicht</template>
+                <template v-else-if="checkoutStep === 'auth'">Anmelden</template>
+                <template v-else-if="checkoutStep === 'confirm'">Übersicht</template>
+                <template v-else>Bestellung gesendet</template>
               </h2>
               <button
                 class="text-gray-400 hover:text-gray-600 transition-colors"
@@ -42,12 +43,11 @@
                 </template>
               </template>
 
-              <!-- Form Step -->
-              <ShopCheckoutForm
-                v-if="checkoutStep === 'form'"
-                :form-data="orderFormData"
-                @submit="goToConfirm"
+              <!-- Auth Step -->
+              <ShopCheckoutLogin
+                v-if="checkoutStep === 'auth'"
                 @back="goToCart"
+                @success="goToConfirm"
               />
 
               <!-- Confirm Step -->
@@ -55,11 +55,26 @@
                 v-if="checkoutStep === 'confirm'"
                 :items="items"
                 :total-price="totalPrice"
-                :form-data="orderFormData"
-                :mailto-link="generateMailtoLink()"
-                @back="goToForm"
-                @send="onSend"
+                :notes="orderNotes"
+                :submitting="submitting"
+                :submit-error="submitError"
+                @update:notes="orderNotes = $event"
+                @back="goToCart"
+                @send="submitOrder"
               />
+
+              <!-- Success Step -->
+              <div v-if="checkoutStep === 'success'" class="text-center py-8">
+                <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-[#00af8c]/10 flex items-center justify-center">
+                  <svg class="w-8 h-8 text-[#00af8c]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <h3 class="text-lg font-semibold mb-2">Vielen Dank!</h3>
+                <p class="text-sm text-gray-600 mb-1">Deine Bestellung wurde erfasst<span v-if="lastOrderId"> (Nr. {{ lastOrderId }})</span>.</p>
+                <p class="text-sm text-gray-600 mb-6">Wir melden uns per E-Mail.</p>
+                <KoopButton size="sm" @click="closeCart">Schließen</KoopButton>
+              </div>
             </div>
 
             <!-- Footer (cart step only) -->
@@ -69,7 +84,7 @@
                 <span>{{ totalPrice.toFixed(2) }} €</span>
               </div>
               <div class="flex justify-center">
-                <KoopButton @click="goToForm">Zur Bestellung</KoopButton>
+                <KoopButton @click="onProceed">Zur Bestellung</KoopButton>
               </div>
             </div>
           </div>
@@ -84,23 +99,30 @@ const {
   items,
   isOpen,
   checkoutStep,
-  orderFormData,
+  orderNotes,
   totalPrice,
   isEmpty,
+  submitting,
+  submitError,
+  lastOrderId,
   closeCart,
-  goToForm,
+  goToAuth,
   goToConfirm,
   goToCart,
   updateQuantity,
   removeFromCart,
   updateVariant,
-  generateMailtoLink,
-  clearCart,
+  submitOrder,
 } = useCart()
 
-function onSend() {
-  clearCart()
-  closeCart()
+const { user } = useAuth()
+
+function onProceed() {
+  if (user.value) {
+    goToConfirm()
+  } else {
+    goToAuth()
+  }
 }
 </script>
 
