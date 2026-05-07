@@ -34,6 +34,7 @@ export interface Product {
   metaDescription?: string
   metaKeywords?: string
   viewCount?: number
+  dateAdded?: string
 }
 
 export interface CartItem {
