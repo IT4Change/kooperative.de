@@ -27,24 +27,50 @@
 
     <h3 class="text-base font-semibold mb-3">Zahlungsart</h3>
     <div class="space-y-2 mb-5">
-      <label
-        v-for="opt in PAYMENT_OPTIONS"
-        :key="opt.id"
-        class="flex items-start gap-3 px-3 py-2 border border-gray-200 rounded cursor-pointer hover:border-[#00af8c]"
-        :class="{ 'border-[#00af8c] bg-[#00af8c]/5': paymentModel === opt.id }"
-      >
-        <input
-          v-model="paymentModel"
-          type="radio"
-          :value="opt.id"
-          name="payment"
-          class="mt-1 accent-[#00af8c]"
-        />
-        <div class="flex-1 min-w-0">
-          <strong class="text-sm">{{ opt.label }}</strong>
-          <p class="text-xs text-gray-500 mt-0.5">{{ opt.description }}</p>
+      <template v-for="opt in PAYMENT_OPTIONS" :key="opt.id">
+        <label
+          class="flex items-start gap-3 px-3 py-2 border border-gray-200 rounded cursor-pointer hover:border-[#00af8c]"
+          :class="{ 'border-[#00af8c] bg-[#00af8c]/5': paymentModel === opt.id }"
+        >
+          <input
+            v-model="paymentModel"
+            type="radio"
+            :value="opt.id"
+            name="payment"
+            class="mt-1 accent-[#00af8c]"
+          />
+          <div class="flex-1 min-w-0">
+            <strong class="text-sm">{{ opt.label }}</strong>
+            <p class="text-xs text-gray-500 mt-0.5">{{ opt.description }}</p>
+          </div>
+        </label>
+        <div v-if="opt.id === 'lastschrift' && paymentModel === 'lastschrift'" class="mt-2 mb-1 ml-6 pl-2 border-l-2 border-[#00af8c]/30 space-y-2">
+          <div>
+            <label class="block text-xs font-medium text-gray-700 mb-1">Kontoinhaber *</label>
+            <input
+              v-model="accountHolderModel"
+              type="text"
+              required
+              maxlength="64"
+              autocomplete="cc-name"
+              class="w-full px-3 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:border-[#00af8c]"
+            />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-700 mb-1">IBAN *</label>
+            <input
+              v-model="ibanModel"
+              type="text"
+              required
+              maxlength="34"
+              spellcheck="false"
+              placeholder="DE12 3456 7890 1234 5678 90"
+              class="w-full px-3 py-1.5 border border-gray-300 rounded text-sm font-mono focus:outline-none focus:border-[#00af8c]"
+            />
+            <p class="mt-1 text-xs text-gray-500">DE/AT/CH/LI. Wir buchen den Betrag nach der Bestellung ab.</p>
+          </div>
         </div>
-      </label>
+      </template>
     </div>
 
     <div class="mb-5">
@@ -66,7 +92,7 @@
       >
         Zurück
       </button>
-      <KoopButton size="sm" :disabled="!shippingModel || !paymentModel" @click="$emit('next')">
+      <KoopButton size="sm" :disabled="!canProceed" @click="$emit('next')">
         Weiter zur Übersicht
       </KoopButton>
     </div>
@@ -80,6 +106,8 @@ const props = defineProps<{
   shipping: ShippingMethod | null
   payment: PaymentMethod | null
   notes: string
+  accountHolder: string
+  iban: string
 }>()
 
 const emit = defineEmits<{
@@ -88,6 +116,8 @@ const emit = defineEmits<{
   'update:shipping': [ShippingMethod]
   'update:payment': [PaymentMethod]
   'update:notes': [string]
+  'update:accountHolder': [string]
+  'update:iban': [string]
 }>()
 
 const shippingModel = computed({
@@ -101,5 +131,21 @@ const paymentModel = computed({
 const notesModel = computed({
   get: () => props.notes,
   set: (v) => emit('update:notes', v),
+})
+const accountHolderModel = computed({
+  get: () => props.accountHolder,
+  set: (v) => emit('update:accountHolder', v),
+})
+const ibanModel = computed({
+  get: () => props.iban,
+  set: (v) => emit('update:iban', v),
+})
+
+const canProceed = computed(() => {
+  if (!shippingModel.value || !paymentModel.value) return false
+  if (paymentModel.value === 'lastschrift') {
+    return accountHolderModel.value.trim().length > 0 && ibanModel.value.replace(/\s+/g, '').length >= 15
+  }
+  return true
 })
 </script>

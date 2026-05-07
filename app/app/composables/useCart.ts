@@ -12,6 +12,8 @@ const checkoutStep = ref<CheckoutStep>('cart')
 const orderNotes = ref('')
 const shippingMethod = ref<ShippingMethod | null>(null)
 const paymentMethod = ref<PaymentMethod | null>(null)
+const bankAccountHolder = ref('')
+const bankIban = ref('')
 const lastOrderId = ref<number | null>(null)
 const submitting = ref(false)
 const submitError = ref('')
@@ -178,18 +180,30 @@ export function useCart() {
       submitError.value = 'Bitte Versand- und Zahlungsart auswählen'
       return false
     }
+    if (paymentMethod.value === 'lastschrift') {
+      if (!bankAccountHolder.value.trim() || !bankIban.value.trim()) {
+        submitError.value = 'Bitte Kontoinhaber und IBAN angeben'
+        return false
+      }
+    }
     submitting.value = true
     submitError.value = ''
     try {
-      const payload = {
+      const payload: Record<string, unknown> = {
         items: items.value.map(i => ({
           productId: i.product.id,
           quantity: i.quantity,
           ...(i.variantIndex !== undefined && { variantIndex: i.variantIndex }),
         })),
-        ...(orderNotes.value && { notes: orderNotes.value }),
         shippingMethod: shippingMethod.value,
         paymentMethod: paymentMethod.value,
+        ...(orderNotes.value && { notes: orderNotes.value }),
+      }
+      if (paymentMethod.value === 'lastschrift') {
+        payload.bankDetails = {
+          accountHolder: bankAccountHolder.value.trim(),
+          iban: bankIban.value.replace(/\s+/g, '').toUpperCase(),
+        }
       }
       const res = await $fetch<{ ok: boolean, orderId: number }>('/api/orders', {
         method: 'POST',
@@ -201,6 +215,8 @@ export function useCart() {
       orderNotes.value = ''
       shippingMethod.value = null
       paymentMethod.value = null
+      bankAccountHolder.value = ''
+      bankIban.value = ''
       return true
     } catch (e: unknown) {
       const obj = e as { statusMessage?: string, data?: { statusMessage?: string }, message?: string }
@@ -220,6 +236,8 @@ export function useCart() {
     orderNotes,
     shippingMethod,
     paymentMethod,
+    bankAccountHolder,
+    bankIban,
     lastOrderId: readonly(lastOrderId),
     submitting: readonly(submitting),
     submitError: readonly(submitError),

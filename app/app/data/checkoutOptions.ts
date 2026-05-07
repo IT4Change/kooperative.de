@@ -4,7 +4,7 @@
  */
 
 export type ShippingMethod = 'dpd' | 'dhl' | 'express' | 'direkt' | 'abholung'
-export type PaymentMethod = 'vorkasse' | 'rechnung'
+export type PaymentMethod = 'vorkasse' | 'rechnung' | 'lastschrift'
 
 export interface ShippingDisplay {
   id: ShippingMethod
@@ -28,6 +28,7 @@ export interface PaymentDisplay {
 }
 
 export const PAYMENT_OPTIONS: PaymentDisplay[] = [
-  { id: 'vorkasse', label: 'Bezahlung mit Vorkasse', description: 'Überweisung im Voraus auf das angegebene Konto.' },
-  { id: 'rechnung', label: 'Bezahlung mit Rechnung', description: 'Sie erhalten eine Rechnung mit der Lieferung.' },
+  { id: 'vorkasse',    label: 'Bezahlung mit Vorkasse',          description: 'Überweisung im Voraus auf das angegebene Konto.' },
+  { id: 'rechnung',    label: 'Bezahlung mit Rechnung',          description: 'Sie erhalten eine Rechnung mit der Lieferung.' },
+  { id: 'lastschrift', label: 'Lastschriftverfahren IBAN (DE)',  description: 'Wir buchen den Betrag von Ihrem Konto ab. Eingabe der IBAN erforderlich.' },
 ]

@@ -2,6 +2,7 @@
  * Lightweight runtime validators for the osCommerce-shaped customer/order data.
  * Length limits derived from the actual table schema (latin1 columns).
  */
+import { isValidIban, normalizeIban } from './iban'
 
 export interface RegisterInput {
   gender: 'm' | 'f' | 'd'
@@ -27,6 +28,8 @@ export interface OrderInput {
   notes?: string
   shippingMethod: import('./checkoutOptions').ShippingMethod
   paymentMethod: import('./checkoutOptions').PaymentMethod
+  /** Required when paymentMethod = 'lastschrift' */
+  bankDetails?: { accountHolder: string, iban: string }
 }
 
 function asTrimmedString(value: unknown, max: number, field: string): string {
@@ -121,14 +124,30 @@ export function parseOrder(body: unknown): OrderInput {
   if (!allowedShipping.includes(b.shippingMethod as typeof allowedShipping[number])) {
     throw createError({ statusCode: 400, statusMessage: 'Versandart: ungültig' })
   }
-  const allowedPayment = ['vorkasse', 'rechnung'] as const
+  const allowedPayment = ['vorkasse', 'rechnung', 'lastschrift'] as const
   if (!allowedPayment.includes(b.paymentMethod as typeof allowedPayment[number])) {
     throw createError({ statusCode: 400, statusMessage: 'Zahlungsart: ungültig' })
+  }
+  let bankDetails: OrderInput['bankDetails']
+  if (b.paymentMethod === 'lastschrift') {
+    const raw = b.bankDetails
+    if (!raw || typeof raw !== 'object') {
+      throw createError({ statusCode: 400, statusMessage: 'Bankverbindung erforderlich' })
+    }
+    const bd = raw as Record<string, unknown>
+    const accountHolder = asTrimmedString(bd.accountHolder, 64, 'Kontoinhaber')
+    const ibanRaw = asTrimmedString(bd.iban, 64, 'IBAN')
+    const iban = normalizeIban(ibanRaw)
+    if (!isValidIban(iban)) {
+      throw createError({ statusCode: 400, statusMessage: 'IBAN: ungültig oder nicht unterstütztes Land (DE/AT/CH/LI)' })
+    }
+    bankDetails = { accountHolder, iban }
   }
   return {
     items,
     ...(notes && { notes }),
     shippingMethod: b.shippingMethod as OrderInput['shippingMethod'],
     paymentMethod: b.paymentMethod as OrderInput['paymentMethod'],
+    ...(bankDetails && { bankDetails }),
   }
 }

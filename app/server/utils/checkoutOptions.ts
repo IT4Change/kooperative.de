@@ -5,7 +5,7 @@
  */
 
 export type ShippingMethod = 'dpd' | 'dhl' | 'express' | 'direkt' | 'abholung'
-export type PaymentMethod = 'vorkasse' | 'rechnung'
+export type PaymentMethod = 'vorkasse' | 'rechnung' | 'lastschrift'
 
 export interface ShippingOption {
   /** Module heading (orders_total `text` prefix is taken from `title`) */
@@ -72,8 +72,9 @@ export interface PaymentOption {
 }
 
 export const PAYMENT_OPTIONS: Record<PaymentMethod, PaymentOption> = {
-  vorkasse: { label: 'Bezahlung mit Vorkasse' },
-  rechnung: { label: 'Bezahlung mit Rechnung' },
+  vorkasse:    { label: 'Bezahlung mit Vorkasse' },
+  rechnung:    { label: 'Bezahlung mit Rechnung' },
+  lastschrift: { label: 'Lastschriftverfahren IBAN (DE)' },
 }
 
-export const PAYMENT_ORDER: PaymentMethod[] = ['vorkasse', 'rechnung']
+export const PAYMENT_ORDER: PaymentMethod[] = ['vorkasse', 'rechnung', 'lastschrift']

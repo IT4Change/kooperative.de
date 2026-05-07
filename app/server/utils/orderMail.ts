@@ -27,6 +27,7 @@ export interface OrderMailContext {
   shippingMethod: string
   shippingPrice: number
   paymentMethod: string
+  bankDetails?: { accountHolder: string, iban: string }
   notes?: string
   adminBaseUrl?: string
 }
@@ -62,6 +63,9 @@ export function buildOrderMail(ctx: OrderMailContext): { subject: string, text: 
     '',
     `Versand: ${ctx.shippingMethod}${ctx.shippingPrice > 0 ? ` (${ctx.shippingPrice.toFixed(2)} €)` : ' (nach Aufwand)'}`,
     `Zahlung: ${ctx.paymentMethod}`,
+    ...(ctx.bankDetails
+      ? [`  Kontoinhaber: ${ctx.bankDetails.accountHolder}`, `  IBAN:         ${ctx.bankDetails.iban}`]
+      : []),
     '',
     `Gesamt: ${ctx.total.toFixed(2)} €`,
     ctx.notes ? `\nAnmerkungen:\n${ctx.notes}` : '',
@@ -117,6 +121,7 @@ export function buildOrderMail(ctx: OrderMailContext): { subject: string, text: 
         </tfoot>
       </table>
       <p style="margin:8px 0 0;font-size:13px;color:#555">Zahlung: <strong>${escape(ctx.paymentMethod)}</strong></p>
+      ${ctx.bankDetails ? `<p style="margin:4px 0 0;font-size:13px;color:#555">Kontoinhaber: ${escape(ctx.bankDetails.accountHolder)}<br>IBAN: <code>${escape(ctx.bankDetails.iban)}</code></p>` : ''}
       ${ctx.notes ? `<h3 style="margin:16px 0 4px">Anmerkungen</h3><p style="margin:0;white-space:pre-wrap">${escape(ctx.notes)}</p>` : ''}
     </div>
   </body></html>`

@@ -109,6 +109,21 @@ comments (Anmerkungen aus dem Formular)`.
 **UPDATE `products` SET `products_ordered` = `products_ordered` + N WHERE `products_id` = …**
 (eine Anweisung pro Position; Fehler werden geloggt, aber blockieren die Bestellung nicht).
 
+**Nur bei `paymentMethod = 'lastschrift'`:**
+
+**INSERT INTO `banktransfer_iban`** mit den Bankdaten des Kunden für diese
+Bestellung (`orders_id`, `banktransfer_owner`, `banktransfer_number` = IBAN,
+`banktransfer_bankname` = leer, `banktransfer_status = 0`, `banktransfer_prz = '00'`,
+`banktransfer_fax = NULL`).
+
+**UPDATE `customers`** mit den IBAN-Feldern (`customers_banktransfer_iban_owner`,
+`customers_banktransfer_iban_number`, `customers_banktransfer_iban_bankname`),
+damit der Alt-Shop bei einem späteren Login den Eintrag im IBAN-Formular vorausfüllt.
+
+> Bankdaten (Owner, IBAN, BLZ, Bankname) sind in `dbWriteLog` als sensible
+> Felder maskiert. In der Operator-Mail werden sie unmaskiert übermittelt,
+> da der Operator den Lastschrift-Auftrag damit erteilt.
+
 > `products_quantity` wird **nicht** dekrementiert — der Alt-Shop nutzt das Feld de
 > facto nicht (`STOCK_CHECK = false`, `STOCK_LIMITED = false`). 100% Verhaltens-Kompat
 > wäre hier rein kosmetisch.

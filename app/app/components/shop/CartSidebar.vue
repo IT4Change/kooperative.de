@@ -57,9 +57,13 @@
                 :shipping="shippingMethod"
                 :payment="paymentMethod"
                 :notes="orderNotes"
+                :account-holder="bankAccountHolder"
+                :iban="bankIban"
                 @update:shipping="shippingMethod = $event"
                 @update:payment="paymentMethod = $event"
                 @update:notes="orderNotes = $event"
+                @update:account-holder="bankAccountHolder = $event"
+                @update:iban="bankIban = $event"
                 @back="goToCart"
                 @next="goToConfirm"
               />
@@ -71,6 +75,7 @@
                 :total-price="totalPrice"
                 :shipping="shippingMethod"
                 :payment="paymentMethod"
+                :iban="bankIban"
                 :notes="orderNotes"
                 :submitting="submitting"
                 :submit-error="submitError"
@@ -117,6 +122,8 @@ const {
   orderNotes,
   shippingMethod,
   paymentMethod,
+  bankAccountHolder,
+  bankIban,
   totalPrice,
   isEmpty,
   submitting,

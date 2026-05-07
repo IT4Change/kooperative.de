@@ -1,7 +1,7 @@
 import type { RowDataPacket } from 'mysql2/promise'
 import { requireSession } from '../utils/auth'
 import { parseOrder } from '../utils/validate'
-import { dbInsert, dbUpdateExpr } from '../utils/dbWrite'
+import { dbInsert, dbUpdate, dbUpdateExpr } from '../utils/dbWrite'
 import { buildOrderMail, countryName } from '../utils/orderMail'
 import { getMailer, MAIL_FROM, MAIL_OPERATOR } from '../utils/mailer'
 import { SHIPPING_OPTIONS, PAYMENT_OPTIONS } from '../utils/checkoutOptions'
@@ -267,6 +267,33 @@ export default defineEventHandler(async (event) => {
     sort_order: 4,
   }, { customerId: customer.customers_id, orderId, remoteIp })
 
+  // Lastschrift: persist IBAN data on the customer + order-specific row
+  if (input.paymentMethod === 'lastschrift' && input.bankDetails) {
+    const bd = input.bankDetails
+    await dbInsert(db, 'banktransfer_iban', {
+      orders_id: orderId,
+      banktransfer_owner: bd.accountHolder,
+      banktransfer_number: bd.iban,
+      banktransfer_bankname: '',
+      banktransfer_status: 0,
+      banktransfer_prz: '00',
+      banktransfer_fax: null,
+    }, { customerId: customer.customers_id, orderId, remoteIp })
+    try {
+      await dbUpdate(db, 'customers',
+        { customers_id: customer.customers_id },
+        {
+          customers_banktransfer_iban_owner: bd.accountHolder,
+          customers_banktransfer_iban_number: bd.iban,
+          customers_banktransfer_iban_bankname: '',
+        },
+        { customerId: customer.customers_id, orderId, remoteIp },
+      )
+    } catch (err) {
+      console.warn('[orders/create] customers IBAN update failed:', err)
+    }
+  }
+
   // Status history (initial entry, exactly like checkout_process.php)
   await dbInsert(db, 'orders_status_history', {
     orders_id: orderId,
@@ -319,6 +346,7 @@ export default defineEventHandler(async (event) => {
       shippingMethod: shippingOpt.module,
       shippingPrice: shippingGross,
       paymentMethod: paymentOpt.label,
+      bankDetails: input.bankDetails,
       notes: input.notes,
       adminBaseUrl: process.env.ADMIN_BASE_URL,
     })

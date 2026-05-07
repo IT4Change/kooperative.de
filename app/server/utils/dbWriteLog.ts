@@ -3,13 +3,20 @@ import { join, dirname } from 'node:path'
 
 const SENSITIVE_FIELDS = new Set([
   'customers_password',
+  // customers table — IBAN-era columns
   'customers_banktransfer_iban_owner',
   'customers_banktransfer_iban_number',
   'customers_banktransfer_iban_bankname',
+  // customers table — legacy BLZ/Konto columns
   'customers_banktransfer_owner',
   'customers_banktransfer_number',
   'customers_banktransfer_bankname',
   'customers_banktransfer_blz',
+  // banktransfer_iban / banktransfer / banktransfer_blz tables — per-order snapshots
+  'banktransfer_owner',
+  'banktransfer_number',
+  'banktransfer_bankname',
+  'banktransfer_blz',
 ])
 
 function maskRow<T extends Record<string, unknown>>(row: T): T {

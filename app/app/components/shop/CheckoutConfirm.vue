@@ -42,6 +42,10 @@
         <span class="text-gray-500">Zahlung</span>
         <span>{{ paymentDisplay?.label ?? '–' }}</span>
       </div>
+      <div v-if="payment === 'lastschrift' && iban" class="flex justify-between text-xs text-gray-500">
+        <span>IBAN</span>
+        <span class="font-mono">{{ maskedIban }}</span>
+      </div>
       <div class="flex justify-between font-bold pt-2 border-t border-gray-200">
         <span>Gesamt</span>
         <span>{{ totalPrice.toFixed(2) }}<span v-if="hasNoFixedShipping" class="text-xs font-normal text-gray-500"> + Versand n. A.</span> €</span>
@@ -82,6 +86,7 @@ const props = defineProps<{
   totalPrice: number
   shipping: ShippingMethod | null
   payment: PaymentMethod | null
+  iban: string
   notes: string
   submitting: boolean
   submitError: string
@@ -95,6 +100,11 @@ const accountUrl = 'https://shop.kooperative.de/account.php'
 const shippingDisplay = computed(() => SHIPPING_OPTIONS.find(o => o.id === props.shipping))
 const paymentDisplay = computed(() => PAYMENT_OPTIONS.find(o => o.id === props.payment))
 const hasNoFixedShipping = computed(() => shippingDisplay.value?.price === 'nach Aufwand')
+const maskedIban = computed(() => {
+  const i = props.iban.replace(/\s+/g, '').toUpperCase()
+  if (i.length < 8) return '••••'
+  return i.slice(0, 4) + ' •••• •••• ' + i.slice(-4)
+})
 
 function getVariant(item: CartItem): ProductVariant | null {
   if (item.variantIndex !== undefined && item.product.variants) {
