@@ -35,7 +35,7 @@
           <div class="relative bg-white rounded-xl shadow-2xl max-w-sm w-full p-6">
             <h2 class="text-lg font-bold mb-3">Cookies erforderlich</h2>
             <p class="text-sm text-gray-600 mb-4">
-              Um Artikel in den Warenkorb legen zu können, muss der lokale Speicher (Cookies/localStorage) in deinem Browser aktiviert sein.
+              Um Artikel auf die Bestellliste setzen zu können, muss der lokale Speicher (Cookies/localStorage) in deinem Browser aktiviert sein.
             </p>
             <p class="text-sm text-gray-500 mb-5">
               Bitte erlaube Cookies für diese Seite und versuche es erneut. Du wirst anschließend gebeten, der Verwendung technisch notwendiger Cookies zuzustimmen.

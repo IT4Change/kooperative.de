@@ -69,7 +69,7 @@
         </div>
 
         <KoopButton @click="handleAdd">
-          In den Warenkorb
+          Auf die Bestellliste
         </KoopButton>
       </div>
     </div>
