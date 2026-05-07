@@ -69,10 +69,16 @@ identisch befüllt). Statische Werte: `payment_method = 'vorkasse'`, `currency =
 final_price (Brutto pro Stk.), products_tax (%), products_quantity`.
 
 **INSERT INTO `orders_total`** (zwei Zeilen):
-1. Zwischensumme (`class = 'ot_subtotal'`, `sort_order = 1`)
-2. Gesamtsumme (`class = 'ot_total'`, `sort_order = 4`)
+1. Zwischensumme (`class = 'ot_subtotal'`, `sort_order = 1`,
+   `title = "Zwischensumme:"`, `text = "X,XX&nbsp;EURO"`)
+2. Gesamtsumme (`class = 'ot_total'`, `sort_order = 4`,
+   `title = "<b>Summe</b>:"`, `text = "<b>X,XX&nbsp;EURO</b>"`)
 
-Versand-/Steuerzeilen werden in Phase 1 nicht erzeugt.
+Format-Strings (Komma-Dezimal, `&nbsp;EURO`, `<b>`-Tags) entsprechen dem
+Alt-Shop, damit die Anzeige im Operator-Admin konsistent ist.
+
+Versand- und Steuerzeilen werden in Phase 1 **nicht** erzeugt — siehe Abweichung
+unten.
 
 **INSERT INTO `orders_status_history`**:
 `orders_id, orders_status_id (=1), date_added (=NOW), customer_notified (=0),

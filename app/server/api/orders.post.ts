@@ -139,11 +139,14 @@ export default defineEventHandler(async (event) => {
     }, { customerId: customer.customers_id, orderId, remoteIp })
   }
 
-  // Totals (sub_total + total only — keine Versandberechnung in Phase 1)
+  // Totals (sub_total + total only — keine Versandberechnung in Phase 1).
+  // Format-Strings spiegeln das Alt-Shop-Schema (Komma-Dezimal, "EURO", &nbsp;).
+  const fmt = (n: number) => `${n.toFixed(2).replace('.', ',')}&nbsp;EURO`
+
   await dbInsert(db, 'orders_total', {
     orders_id: orderId,
     title: 'Zwischensumme:',
-    text: `${total.toFixed(2)} €`,
+    text: fmt(total),
     value: total,
     class: 'ot_subtotal',
     sort_order: 1,
@@ -151,8 +154,8 @@ export default defineEventHandler(async (event) => {
 
   await dbInsert(db, 'orders_total', {
     orders_id: orderId,
-    title: 'Gesamtsumme:',
-    text: `<b>${total.toFixed(2)} €</b>`,
+    title: '<b>Summe</b>:',
+    text: `<b>${fmt(total)}</b>`,
     value: total,
     class: 'ot_total',
     sort_order: 4,
