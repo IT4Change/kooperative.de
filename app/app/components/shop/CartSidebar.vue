@@ -8,7 +8,7 @@
             <!-- Header -->
             <div class="flex items-center justify-between px-5 py-4 border-b border-gray-200">
               <h2 class="text-lg font-semibold">
-                <template v-if="checkoutStep === 'cart'">Warenkorb</template>
+                <template v-if="checkoutStep === 'cart'">Bestellliste</template>
                 <template v-else-if="checkoutStep === 'form'">Bestellung</template>
                 <template v-else>Übersicht</template>
               </h2>
@@ -28,7 +28,7 @@
               <!-- Cart Step -->
               <template v-if="checkoutStep === 'cart'">
                 <template v-if="isEmpty">
-                  <p class="text-gray-400 text-center py-12">Dein Warenkorb ist leer.</p>
+                  <p class="text-gray-400 text-center py-12">Deine Bestellliste ist leer.</p>
                 </template>
                 <template v-else>
                   <ShopCartItem

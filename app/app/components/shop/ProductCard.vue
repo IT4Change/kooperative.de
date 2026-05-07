@@ -55,7 +55,7 @@
           <span v-else-if="product.unit" class="text-xs font-normal text-gray-400">/ {{ product.unit }}</span>
         </div>
         <KoopButton size="sm" @click="handleAdd">
-          In den Warenkorb
+          Auf die Bestellliste
         </KoopButton>
       </div>
     </div>

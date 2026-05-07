@@ -56,7 +56,7 @@
               </div>
               <div>
                 <p class="font-semibold text-gray-800">1. Produkte ausw&auml;hlen</p>
-                <p class="text-sm text-gray-500 mt-0.5">St&ouml;bern Sie im Sortiment und legen Sie Artikel in den Warenkorb.</p>
+                <p class="text-sm text-gray-500 mt-0.5">St&ouml;bern Sie im Sortiment und setzen Sie Artikel auf die Bestellliste.</p>
               </div>
             </div>
             <div class="flex gap-4 items-start">
@@ -66,8 +66,8 @@
                 </svg>
               </div>
               <div>
-                <p class="font-semibold text-gray-800">2. Warenkorb pr&uuml;fen</p>
-                <p class="text-sm text-gray-500 mt-0.5">&Ouml;ffnen Sie den Warenkorb und kontrollieren Sie Ihre Auswahl.</p>
+                <p class="font-semibold text-gray-800">2. Bestellliste pr&uuml;fen</p>
+                <p class="text-sm text-gray-500 mt-0.5">&Ouml;ffnen Sie die Bestellliste und kontrollieren Sie Ihre Auswahl.</p>
               </div>
             </div>
             <div class="flex gap-4 items-start">
