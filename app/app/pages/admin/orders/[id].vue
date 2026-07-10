@@ -20,6 +20,7 @@
           {{ data.origin === 'neu' ? 'Neuer Shop' : 'Alter Shop' }}
         </span>
         <span class="text-sm text-gray-500 ml-auto">{{ dateTime(data.order.datePurchased) }}</span>
+        <a v-if="data.oldAdminUrl" :href="data.oldAdminUrl" target="_blank" rel="noopener" class="text-sm text-gray-500 hover:text-[#00af8c] hover:underline whitespace-nowrap">Alter Admin ↗</a>
       </div>
 
       <!-- Status stepper -->
@@ -211,6 +212,7 @@ interface OrderDetail {
   statusFlow: FlowStep[]
   origin: 'alt' | 'neu'
   confirmation: { via: string | null, at: string | null } | null
+  oldAdminUrl: string | null
   availableStatuses: { id: number, name: string }[]
   mails: MailRow[]
   order: {
