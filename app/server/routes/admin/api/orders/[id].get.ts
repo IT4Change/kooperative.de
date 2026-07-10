@@ -104,10 +104,16 @@ export default defineEventHandler(async (event) => {
     console.warn('[admin/order] mail log unavailable:', (err as Error).message)
   }
 
+  // Link to the same order in the legacy osCommerce admin (if configured). Every
+  // osCommerce order (incl. materialized new-shop ones) is visible there via oID.
+  const adminBase = process.env.ADMIN_BASE_URL
+  const oldAdminUrl = adminBase ? `${adminBase.replace(/\/$/, '')}/orders.php?oID=${id}` : null
+
   return {
     statusFlow,
     origin,
     confirmation,
+    oldAdminUrl,
     availableStatuses: statusRows.map(r => ({ id: Number(r.orders_status_id), name: String(r.orders_status_name) })),
     mails,
     order: {
