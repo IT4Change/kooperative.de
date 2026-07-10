@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.6.3](https://github.com/IT4Change/kooperative.de/compare/v0.6.2...v0.6.3) (2026-07-10)
+
+
+### Bug Fixes
+
+* **app:** fix ust in mail ([#24](https://github.com/IT4Change/kooperative.de/issues/24)) ([e50781d](https://github.com/IT4Change/kooperative.de/commit/e50781d4ac29654f12c33a95a4b8e73d785228a2))
+* **app:** layout cleanup ([#26](https://github.com/IT4Change/kooperative.de/issues/26)) ([7246541](https://github.com/IT4Change/kooperative.de/commit/7246541a30e3b7681b86872370382ea9f52e3b30))
+
 ## [0.6.2](https://github.com/IT4Change/kooperative.de/compare/v0.6.1...v0.6.2) (2026-07-10)
 
 
