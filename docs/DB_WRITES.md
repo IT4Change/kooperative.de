@@ -69,9 +69,17 @@ Dateipfad: `app/server/api/auth/login.post.ts`
 
 ### 3. Bestellung absenden — `POST /api/orders`
 
-Dateipfad: `app/server/api/orders/create.post.ts`
+Dateipfad: `app/server/api/orders.post.ts`
 
-Erfordert eingeloggte Session. In Reihenfolge:
+> **GEÄNDERT (Mail-Bestätigungs-Flow):** Beim Absenden werden die osCommerce-Tabellen
+> **NICHT mehr** beschrieben. Stattdessen wird die berechnete Bestellung (Preise gepinnt)
+> als **`koop_pending_order`** gespeichert (Status `pending`) und es gehen zwei Mails raus
+> (Kunde: Bestätigungs-Anfrage mit Link/Reply; Admin: „unbestätigt eingegangen") — beide in
+> `koop_order_mail_log`. Die unten beschriebenen osCommerce-INSERTs passieren erst bei der
+> **Bestätigung** (Materialisierung), siehe Abschnitt 3b. Berechnung/Insert liegen in
+> `app/server/utils/orderCompute.ts` (`computeOrder` / `insertComputedOrder`).
+
+Bei der Materialisierung (Abschnitt 3b) in Reihenfolge:
 
 **INSERT INTO `orders`** — Header inkl. Kunden-, Liefer- und Rechnungsadresse (in Phase 1
 identisch befüllt). Statische Werte: `currency = 'EUR'`, `currency_value = 1.0`,
@@ -142,6 +150,29 @@ damit der Alt-Shop bei einem späteren Login den Eintrag im IBAN-Formular voraus
 > facto nicht (`STOCK_CHECK = false`, `STOCK_LIMITED = false`). 100% Verhaltens-Kompat
 > wäre hier rein kosmetisch.
 
+### 3a. Pending-Bestellung anlegen — `POST /api/orders`
+
+**INSERT INTO `koop_pending_order`** (`token, customers_id, email, payload` (JSON:
+`{input, comp}` mit gepinnter Berechnung), `total`, `status='pending'`, `created_at`).
+Plus 2× **INSERT INTO `koop_order_mail_log`** (`order_confirmation_request` an Kunde,
+`admin_new_pending` an Betreiber). Keine osCommerce-Writes.
+
+### 3b. Bestellung bestätigen / materialisieren
+
+Dateien: `app/server/api/orders/confirm.post.ts` (Kunde via Link),
+`app/server/routes/admin/api/pending/[id]/confirm.post.ts` (Betreiber manuell, z.B. nach
+Reply). Beide rufen `confirmPending` → `materializePending` → `insertComputedOrder`.
+
+- Die osCommerce-INSERTs aus Abschnitt 3 (`orders`, `orders_products`, `orders_total`,
+  ggf. `banktransfer_iban`/`customers`, `orders_status_history`, `products.products_ordered`)
+  laufen **hier** — exakt wie zuvor beim Direkt-Checkout.
+- **UPDATE `koop_pending_order`** SET `status='materialized'`, `orders_id`, `confirmed_via`,
+  `confirmed_at`, `materialized_at`. **Idempotent** (zweite Bestätigung legt nichts erneut an).
+- 2× **INSERT INTO `koop_order_mail_log`** (`order_confirmed` an Kunde, `admin_order_confirmed`
+  an Betreiber).
+- Storno: `POST /admin/api/pending/:id/cancel` → **UPDATE `koop_pending_order`** SET
+  `status='cancelled'` (nie materialisiert, kein osCommerce-Write).
+
 ### 4. Admin: Bestellabwicklung (State-Machine) — `POST /admin/api/orders/:id/status`
 
 Dateipfad: `app/server/routes/admin/api/orders/[id]/status.post.ts`
@@ -207,9 +238,11 @@ unbekannte Tabellen). Migrationen unter `database/migrations/`, idempotent
 (`CREATE TABLE IF NOT EXISTS`), vor Deploy auf der Live-DB auszuführen:
 
 - `001_koop_order_mail_log.sql` — Mail-Log pro Bestellung (Admin-Timeline).
+- `002_koop_pending_order.sql` — unbestätigte Bestellungen („Bestätigung ausstehend").
+- `003_mail_log_pending.sql` — `koop_order_mail_log.orders_id` nullbar +
+  `pending_order_id` (Mails vor Materialisierung).
 
-> Der neue Status **„Bestätigung ausstehend"** (Neu-Shop-Bestätigungsschritt,
-> Phase 3) ist noch NICHT umgesetzt. Geplant NICHT als Zeile in der geteilten
-> `orders_status`-Tabelle, sondern via „Materialize-on-confirm" (unbestätigte
-> Bestellungen leben separat, erst nach Bestätigung als Status-1-Bestellung in
-> `orders`). Details offen — vor Umsetzung abstimmen.
+**„Bestätigung ausstehend" ist via „Materialize-on-confirm" umgesetzt:** Der Status
+existiert nur in `koop_pending_order`, NICHT als Zeile in der geteilten `orders_status`.
+Erst bei Bestätigung wird die Bestellung als normale Status-1-Bestellung in `orders`
+materialisiert. Die alte DB wird vom Konzept nicht berührt.

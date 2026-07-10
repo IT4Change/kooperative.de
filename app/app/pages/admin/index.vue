@@ -4,6 +4,18 @@
       Daten konnten nicht geladen werden: {{ error.statusMessage || error.message }}
     </div>
 
+    <NuxtLink
+      v-if="(data?.pendingCount ?? 0) > 0"
+      to="/admin/pending"
+      class="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-lg px-5 py-4 hover:bg-amber-100 transition"
+    >
+      <span class="inline-flex items-center justify-center w-9 h-9 rounded-full bg-amber-400 text-amber-950 font-bold">{{ data?.pendingCount }}</span>
+      <span class="text-sm text-amber-900">
+        <strong>{{ data?.pendingCount }} Bestellung(en)</strong> warten auf die Bestätigung des Kunden.
+        <span class="underline">Ansehen →</span>
+      </span>
+    </NuxtLink>
+
     <div class="grid gap-6 md:grid-cols-2">
       <!-- Bestellungen -->
       <section class="bg-white rounded-lg shadow-sm border border-gray-200">
@@ -60,6 +72,7 @@ const { statusClass } = useAdminFormat()
 
 interface Dashboard {
   statuses: { id: number, name: string, count: number }[]
+  pendingCount: number
   stats: { customers: number, productsActive: number, reviews: number }
 }
 const { data, error } = await useFetch<Dashboard>('/admin/api/dashboard')

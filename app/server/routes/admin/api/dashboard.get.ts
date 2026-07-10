@@ -28,12 +28,24 @@ export default defineEventHandler(async () => {
   )
   const stats = statRows[0] || {}
 
+  // New-shop orders awaiting customer confirmation (koop layer, not yet in osCommerce)
+  let pendingCount = 0
+  try {
+    const [pRows] = await db.execute<RowDataPacket[]>(
+      "SELECT COUNT(*) AS c FROM koop_pending_order WHERE status = 'pending'",
+    )
+    pendingCount = Number(pRows[0]?.c || 0)
+  } catch {
+    // table may not exist yet on some environments
+  }
+
   return {
     statuses: statusRows.map(r => ({
       id: Number(r.id),
       name: String(r.name),
       count: Number(r.count),
     })),
+    pendingCount,
     stats: {
       customers: Number(stats.customers || 0),
       productsActive: Number(stats.productsActive || 0),

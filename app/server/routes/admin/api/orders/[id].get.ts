@@ -62,6 +62,21 @@ export default defineEventHandler(async (event) => {
     historyRows.map(r => ({ statusId: Number(r.orders_status_id), dateAdded: r.date_added })),
   )
 
+  // New-shop origin: if this order was materialized from a pending confirmation,
+  // prepend a "Bestätigung ausstehend" (done) step and expose the confirmation info.
+  let origin: 'alt' | 'neu' = 'alt'
+  let confirmation: { via: string | null, at: unknown } | null = null
+  try {
+    const pending = await getPendingByOrderId(db, id)
+    if (pending) {
+      origin = 'neu'
+      confirmation = { via: pending.confirmedVia, at: pending.confirmedAt }
+      statusFlow.unshift({ id: -1, name: 'Bestätigung ausstehend', state: 'done', visitedAt: pending.confirmedAt as string | null })
+    }
+  } catch {
+    // koop_pending_order may be absent on some environments
+  }
+
   // Mail history (koop_order_mail_log). Tolerate the table being absent.
   let mails: {
     id: number, direction: string, recipient: string, mailType: string,
@@ -91,6 +106,8 @@ export default defineEventHandler(async (event) => {
 
   return {
     statusFlow,
+    origin,
+    confirmation,
     availableStatuses: statusRows.map(r => ({ id: Number(r.orders_status_id), name: String(r.orders_status_name) })),
     mails,
     order: {

@@ -10,7 +10,8 @@ import { getMailer, MAIL_FROM, MAIL_OPERATOR } from './mailer'
  * by ALLOW_DB_WRITES and audited like every other write.
  */
 export interface OrderMailInput {
-  ordersId: number
+  ordersId?: number | null
+  pendingOrderId?: number | null
   direction: 'to_customer' | 'to_admin'
   recipient: string
   mailType: string
@@ -47,7 +48,8 @@ export async function sendAndLogOrderMail(
 
   try {
     await dbInsert(db, 'koop_order_mail_log', {
-      orders_id: mail.ordersId,
+      orders_id: mail.ordersId ?? null,
+      pending_order_id: mail.pendingOrderId ?? null,
       direction: mail.direction,
       recipient: mail.recipient,
       mail_type: mail.mailType,
@@ -59,7 +61,7 @@ export async function sendAndLogOrderMail(
       error_message: errorMessage,
       sent_by: mail.sentBy ?? 'system',
       created_at: new Date(),
-    }, { orderId: mail.ordersId, remoteIp: ctx.remoteIp })
+    }, { orderId: mail.ordersId ?? undefined, remoteIp: ctx.remoteIp })
   } catch (err) {
     console.error('[orderMail] log write failed:', err)
   }
