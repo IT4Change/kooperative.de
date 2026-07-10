@@ -25,6 +25,13 @@ export default defineNuxtConfig({
   },
   css: ['~/assets/css/main.css'],
   ssr: true,
+  routeRules: {
+    // Admin is client-rendered so the browser's Basic-Auth credentials are sent
+    // with the /admin/api data requests (SSR internal fetch would not carry them),
+    // and no admin data is ever embedded in server-rendered HTML.
+    '/admin': { ssr: false },
+    '/admin/**': { ssr: false },
+  },
   nitro: {
     prerender: {
       routes: [],

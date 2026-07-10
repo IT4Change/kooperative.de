@@ -142,6 +142,43 @@ damit der Alt-Shop bei einem späteren Login den Eintrag im IBAN-Formular voraus
 > facto nicht (`STOCK_CHECK = false`, `STOCK_LIMITED = false`). 100% Verhaltens-Kompat
 > wäre hier rein kosmetisch.
 
+### 4. Admin: Bestellabwicklung (State-Machine) — `POST /admin/api/orders/:id/status`
+
+Dateipfad: `app/server/routes/admin/api/orders/[id]/status.post.ts`
+(gesamter `/admin`-Bereich per HTTP-Basic-Auth geschützt, siehe `server/middleware/admin-auth.ts`)
+
+Setzt eine Bestellung frei bedienbar auf einen anderen Status — exakt wie der
+Alt-Admin (`admin/orders.php`):
+
+**UPDATE `orders` SET `orders_status` = :statusId, `last_modified` = NOW() WHERE `orders_id` = :id**
+
+**INSERT INTO `orders_status_history`**:
+`orders_id, orders_status_id, date_added (=NOW), customer_notified (=0/1 je nach
+Häkchen), comments (Operator-Kommentar)`.
+
+**Nur bei „Kunde benachrichtigen":** zusätzlich Kundenmail (Status-Meldung,
+`From: shop@kooperative.de`, `Reply-To:` Betreiber) + **INSERT INTO
+`koop_order_mail_log`** (siehe unten).
+
+### 4b. Admin: Benachrichtigung (erneut) senden — `POST /admin/api/orders/:id/notify`
+
+Dateipfad: `app/server/routes/admin/api/orders/[id]/notify.post.ts`
+
+Sendet dem Kunden die Mail zum **aktuellen** Status, **ohne** Statuswechsel.
+Kein Write in `orders`/`orders_status_history`; nur **INSERT INTO
+`koop_order_mail_log`** (`mail_type = 'status_notification_resend'`).
+
+### 4c. Mail-Log — `koop_order_mail_log` (neu, additiv)
+
+Zentral über `app/server/utils/orderMailLog.ts` (`sendAndLogOrderMail`). Jede zu
+einer Bestellung versendete Mail (an Kunde ODER Administration) wird protokolliert:
+`orders_id, direction, recipient, mail_type, related_status_id, subject,
+body_text, body_html, status (sent/failed), error_message, sent_by (Operator),
+created_at`. Sichtbar im Admin als Mail-Timeline der Bestellung.
+
+> `body_text`/`body_html` enthalten Kunden-PII (Name/Adresse) und landen dadurch
+> auch im `dbWriteLog`-JSONL. Kein Passwort/keine IBAN darin.
+
 ## NICHT geschriebene Tabellen
 
 Phase 1 schreibt **nicht** in:
@@ -162,6 +199,17 @@ customers_banktransfer_owner / number / bankname / blz
 
 ## Schema-Änderungen
 
-**Phase 1: Keine.** ALTER TABLE / CREATE TABLE / DROP * sind verboten, solange
-der Alt-Shop parallel läuft. Eigene Felder werden später in einer separaten DB
-hinzugefügt.
+**An bestehenden osCommerce-Tabellen: weiterhin keine.** ALTER / DROP an den
+Alt-Shop-Tabellen bleiben verboten, solange der Alt-Shop parallel läuft.
+
+**Additive Neu-Tabellen mit `koop_`-Prefix sind erlaubt** (der Alt-Shop ignoriert
+unbekannte Tabellen). Migrationen unter `database/migrations/`, idempotent
+(`CREATE TABLE IF NOT EXISTS`), vor Deploy auf der Live-DB auszuführen:
+
+- `001_koop_order_mail_log.sql` — Mail-Log pro Bestellung (Admin-Timeline).
+
+> Der neue Status **„Bestätigung ausstehend"** (Neu-Shop-Bestätigungsschritt,
+> Phase 3) ist noch NICHT umgesetzt. Geplant NICHT als Zeile in der geteilten
+> `orders_status`-Tabelle, sondern via „Materialize-on-confirm" (unbestätigte
+> Bestellungen leben separat, erst nach Bestätigung als Status-1-Bestellung in
+> `orders`). Details offen — vor Umsetzung abstimmen.
