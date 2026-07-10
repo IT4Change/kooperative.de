@@ -226,7 +226,14 @@ Phase 1 schreibt **nicht** in:
 customers_password
 customers_banktransfer_iban_owner / iban_number / iban_bankname
 customers_banktransfer_owner / number / bankname / blz
+banktransfer_owner / number / bankname / blz
 ```
+
+Zusätzlich: **IBAN-Muster (DE/AT/CH) werden in JEDEM geloggten String redigiert**
+(`***IBAN***`) — so ist die IBAN auch im `koop_pending_order.payload`-JSON nicht im
+Klartext im Audit. Nach der Materialisierung wird die IBAN aus dem gespeicherten
+`payload` entfernt (Scrub); sie lebt dann nur noch in `banktransfer_iban` (dort maskiert).
+Während des Pending-Fensters steht die IBAN im `payload` der DB (nötig zur Materialisierung).
 
 ## Schema-Änderungen
 

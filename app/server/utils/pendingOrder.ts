@@ -103,12 +103,21 @@ export async function materializePending(
 
   const ordersId = await insertComputedOrder(db, pending.payload.comp, { remoteIp: ctx.remoteIp })
   const now = new Date()
+
+  // Scrub bank details from the retained payload — the IBAN now lives only in
+  // banktransfer_iban (masked in the audit log). Limits plaintext-IBAN exposure
+  // to the pending window.
+  const scrubbed: PendingPayload = JSON.parse(JSON.stringify(pending.payload))
+  if (scrubbed.input) delete scrubbed.input.bankDetails
+  if (scrubbed.comp) delete (scrubbed.comp as { bankDetails?: unknown }).bankDetails
+
   await dbUpdate(db, 'koop_pending_order', { id: pending.id }, {
     status: 'materialized',
     orders_id: ordersId,
     confirmed_via: via,
     confirmed_at: now,
     materialized_at: now,
+    payload: JSON.stringify(scrubbed),
   }, { customerId: pending.customersId, orderId: ordersId, remoteIp: ctx.remoteIp })
 
   return { ordersId, alreadyDone: false }
