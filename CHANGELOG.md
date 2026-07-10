@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.4](https://github.com/IT4Change/kooperative.de/compare/v0.6.3...v0.6.4) (2026-07-10)
+
+
+### Bug Fixes
+
+* **app:** fix gebindegrößen ([#27](https://github.com/IT4Change/kooperative.de/issues/27)) ([6f09bac](https://github.com/IT4Change/kooperative.de/commit/6f09bac24e3c4a3e14069f9b964f5dbb54aeedc3))
+
 ## [0.6.3](https://github.com/IT4Change/kooperative.de/compare/v0.6.2...v0.6.3) (2026-07-10)
 
 
