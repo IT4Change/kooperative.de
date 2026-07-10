@@ -17,7 +17,7 @@
           :class="isActive(item) ? 'bg-[#00af8c] text-white font-medium' : 'text-gray-200'"
         >
           <span>{{ item.label }}</span>
-          <span v-if="item.badge && pendingCount > 0" class="ml-auto text-[11px] font-semibold bg-amber-400 text-amber-950 rounded-full px-2 py-0.5">{{ pendingCount }}</span>
+          <span v-if="item.badge && pendingCount > 0" class="ml-auto inline-flex items-center justify-center min-w-[20px] h-5 px-1 text-[11px] font-semibold bg-amber-400 text-amber-950 rounded-full leading-none">{{ pendingCount }}</span>
           <span v-else-if="item.readonly" class="ml-auto text-[10px] uppercase text-gray-400 border border-gray-500 rounded px-1">nur Anzeige</span>
         </NuxtLink>
       </nav>
