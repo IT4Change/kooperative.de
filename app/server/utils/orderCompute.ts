@@ -1,8 +1,19 @@
 import type { Pool, RowDataPacket } from 'mysql2/promise'
 import { dbInsert, dbUpdate, dbUpdateExpr } from './dbWrite'
 import { countryName } from './orderMail'
+import { loadCatalog } from './catalog'
 import { SHIPPING_OPTIONS, PAYMENT_OPTIONS } from './checkoutOptions'
 import type { ShippingMethod, PaymentMethod } from './checkoutOptions'
+import type { Product } from '~/data/products'
+
+/** Mirror of findTierIndex (app/data/products.ts) for quantity-tier products. */
+function tierIndex(variants: readonly { minQty?: number }[], quantity: number): number {
+  let best = 0
+  for (let i = 1; i < variants.length; i++) {
+    if (variants[i].minQty && quantity >= (variants[i].minQty as number)) best = i
+  }
+  return best
+}
 
 /**
  * Order pricing + persistence, split so the SAME computation can be pinned at
@@ -134,7 +145,27 @@ export async function computeOrder(db: Pool, customerId: number, input: OrderInp
   const country = countryName(customer.entry_country_id)
   const taxZoneId = await resolveTaxZone(db, customer.entry_country_id)
 
-  const productIds = input.items.map(i => Number(i.productId))
+  // Resolve each ordered item to its concrete osCommerce product. Size/quantity
+  // variants are SEPARATE products; the cart sends the group's base id + variantIndex
+  // (or, for quantity tiers, just the quantity). We map that to the real variant
+  // product via the SAME grouping the storefront uses — otherwise the base product
+  // (and its price/name) would be used regardless of the chosen size.
+  const catalog = await loadCatalog(db)
+  const productByGroupId = new Map<string, Product>(catalog.products.map(p => [p.id, p]))
+  const resolvedItems = input.items.map((item) => {
+    const gp = productByGroupId.get(String(item.productId))
+    let effId = Number(item.productId)
+    if (gp?.variants && gp.variants.length > 0) {
+      const idx = gp.variantType === 'quantity'
+        ? tierIndex(gp.variants, item.quantity)
+        : Math.min(Math.max(item.variantIndex ?? 0, 0), gp.variants.length - 1)
+      const vid = gp.variants[idx]?.productId
+      if (vid) effId = Number(vid)
+    }
+    return { item, effId }
+  })
+
+  const productIds = resolvedItems.map(r => r.effId)
   const placeholders = productIds.map(() => '?').join(',')
   const [prodRows] = await db.execute<ProductRow[]>(
     `SELECT p.products_id, p.products_model, p.products_price, pd.products_name,
@@ -146,16 +177,16 @@ export async function computeOrder(db: Pool, customerId: number, input: OrderInp
     taxZoneId == null ? productIds : [taxZoneId, ...productIds],
   )
   const productById = new Map(prodRows.map(r => [Number(r.products_id), r]))
-  for (const item of input.items) {
-    if (!productById.has(Number(item.productId))) {
+  for (const { item, effId } of resolvedItems) {
+    if (!productById.has(effId)) {
       throw createError({ statusCode: 400, statusMessage: `Artikel ${item.productId} nicht verfügbar` })
     }
   }
 
   const taxByDescription = new Map<string, CompTaxRow>()
   let subtotalGross = 0
-  const lines: CompLine[] = input.items.map((item, idx) => {
-    const p = productById.get(Number(item.productId))!
+  const lines: CompLine[] = resolvedItems.map(({ item, effId }, idx) => {
+    const p = productById.get(effId)!
     const rate = Number(p.tax_rate ?? 0)
     const description = String(p.tax_description ?? '')
     const unit = gross(Number(p.products_price), rate)

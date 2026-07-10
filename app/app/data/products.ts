@@ -8,6 +8,7 @@ export interface Category {
 }
 
 export interface ProductVariant {
+  productId: string // underlying osCommerce products_id of this variant (each size is its own product)
   size: string
   price: number
   amount: number

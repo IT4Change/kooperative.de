@@ -77,7 +77,7 @@ export function buildCategoryPaths(rows: DbCategory[]): Map<number, CategoryPath
 }
 
 // Matches size suffixes like "0,5 Liter", "10 Liter", "1 kg", "450 g"
-const SIZE_REGEX = /^(.+?)\s+(\d+(?:[,\.]\d+)?)\s*(Liter|l|L|ml|kg|g)\s*$/
+const SIZE_REGEX = /^(.+?)\s+(\d+(?:[,.]\d+)?)\s*(Liter|l|L|ml|kg|g)\s*$/
 
 // Matches quantity tier suffixes like "10+", "50+", "800+"
 const QUANTITY_REGEX = /^(.+?)\s+(\d+)\+\s*$/
@@ -283,6 +283,7 @@ export function groupProducts(rows: DbProduct[], paths: Map<number, CategoryPath
         const rowImages = collectImages(row)
         if (parsed) {
           return {
+            productId: String(row.products_id),
             size: parsed.size,
             price: grossPrice(Number(row.products_price), row.tax_rate),
             amount: parsed.amount,
@@ -293,6 +294,7 @@ export function groupProducts(rows: DbProduct[], paths: Map<number, CategoryPath
         }
         // Base product without suffix (e.g. single unit for quantity tiers)
         return {
+          productId: String(row.products_id),
           size: '1 Stk.',
           price: grossPrice(Number(row.products_price), row.tax_rate),
           amount: 1,
