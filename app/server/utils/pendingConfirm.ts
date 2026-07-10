@@ -27,7 +27,7 @@ export async function confirmPending(
   const comp = pending.payload.comp
   const sentBy = via === 'admin' ? 'admin' : 'system'
 
-  const cust = buildCustomerConfirmed({ orderId: ordersId, customerName: comp.customer.name, reviewUrl: reviewLink(event, pending.token) })
+  const cust = buildCustomerConfirmed({ orderId: ordersId, comp, reviewUrl: reviewLink(event, pending.token) })
   await sendAndLogOrderMail(db, {
     ordersId, pendingOrderId: pending.id, direction: 'to_customer', recipient: comp.customer.email,
     mailType: 'order_confirmed', subject: cust.subject, text: cust.text, html: cust.html, sentBy,

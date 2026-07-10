@@ -1,4 +1,5 @@
 import type { OrderComputation } from './orderCompute'
+import { footerText, footerHtml } from './mailFooter'
 
 /**
  * Mail templates for the confirmation flow. Every mail carries a link so the
@@ -13,10 +14,13 @@ const money = (n: number) => `${n.toFixed(2).replace('.', ',')} €`
 function itemsText(comp: OrderComputation): string {
   const rows = comp.lines.map((l, i) =>
     `  ${i + 1}. ${l.quantity}× ${l.name}  ·  ${money(l.unitGross)}/Stk = ${money(l.lineGross)}`)
+  const taxLines = comp.taxRows.map(t => `MwSt (${t.rate}%, im Preis enthalten): ${money(t.total)}`)
   return [
     'Positionen:',
     ...rows,
+    `Zwischensumme: ${money(comp.subtotalGross)}`,
     `Versand (${comp.shipping.module}): ${comp.shipping.gross > 0 ? money(comp.shipping.gross) : 'nach Aufwand'}`,
+    ...taxLines,
     `Gesamt: ${money(comp.total)}`,
     `Zahlung: ${comp.payment.label}`,
   ].join('\n')
@@ -35,7 +39,9 @@ function itemsHtml(comp: OrderComputation): string {
     </tr></thead>
     <tbody>${rows}</tbody>
     <tfoot>
+      <tr><td colspan="2" style="padding:4px 6px;text-align:right">Zwischensumme</td><td style="padding:4px 6px;text-align:right">${money(comp.subtotalGross)}</td></tr>
       <tr><td colspan="2" style="padding:4px 6px;text-align:right">Versand (${esc(comp.shipping.module)})</td><td style="padding:4px 6px;text-align:right">${comp.shipping.gross > 0 ? money(comp.shipping.gross) : 'nach Aufwand'}</td></tr>
+      ${comp.taxRows.map(t => `<tr><td colspan="2" style="padding:4px 6px;text-align:right;color:#888;font-size:12px">MwSt (${t.rate}%, im Preis enthalten)</td><td style="padding:4px 6px;text-align:right;color:#888;font-size:12px">${money(t.total)}</td></tr>`).join('')}
       <tr><td colspan="2" style="padding:4px 6px;text-align:right;font-weight:bold">Gesamt</td><td style="padding:4px 6px;text-align:right;font-weight:bold">${money(comp.total)}</td></tr>
     </tfoot>
   </table>
@@ -66,7 +72,8 @@ export function buildCustomerConfirmRequest(ctx: { pendingId: number, comp: Orde
     'oder indem Sie einfach auf diese E-Mail antworten.', '',
     'Erst mit Ihrer Bestätigung kommt der Kaufvertrag zustande.', '',
     itemsText(c), '',
-    'Herzliche Grüße', 'Kooperative Dürnau eG',
+    'Herzliche Grüsze', 'Kooperative Dürnau eG', '',
+    footerText(true),
   ].join('\n')
   const html = wrap('Bitte bestätigen Sie Ihre Bestellung', `
     <p style="margin:0 0 12px">${esc(greeting)}</p>
@@ -74,7 +81,8 @@ export function buildCustomerConfirmRequest(ctx: { pendingId: number, comp: Orde
     ${button(ctx.reviewUrl, 'Inhalt prüfen & bestätigen →')}
     <p style="margin:0 0 12px;color:#555">Alternativ genügt eine <strong>Antwort auf diese E-Mail</strong>. Erst mit Ihrer Bestätigung kommt der Kaufvertrag zustande.</p>
     ${itemsHtml(c)}
-    <p style="margin:12px 0 0;color:#555">Herzliche Grüße<br>Kooperative Dürnau eG</p>`)
+    <p style="margin:12px 0 0;color:#555">Herzliche Grüsze<br>Kooperative Dürnau eG</p>
+    ${footerHtml(true)}`)
   return { subject, text, html }
 }
 
@@ -86,32 +94,39 @@ export function buildAdminNewPending(ctx: { pendingId: number, comp: OrderComput
     'Eine neue Bestellung ist eingegangen und wartet auf die Bestätigung des Kunden.',
     `Kunde: ${c.customer.name} <${c.customer.email}>`,
     `Vorgang im Admin: ${ctx.adminUrl}`, '',
-    itemsText(c),
+    itemsText(c), '',
+    footerText(false),
   ].join('\n')
   const html = wrap('Neue Bestellung (unbestätigt)', `
     <p style="margin:0 0 12px">Eine neue Bestellung ist eingegangen und wartet auf die <strong>Bestätigung des Kunden</strong>.</p>
     <p style="margin:0 0 4px">Kunde: <strong>${esc(c.customer.name)}</strong> · <a href="mailto:${esc(c.customer.email)}">${esc(c.customer.email)}</a></p>
     ${button(ctx.adminUrl, 'Im Admin öffnen →')}
-    ${itemsHtml(c)}`)
+    ${itemsHtml(c)}
+    ${footerHtml(false)}`)
   return { subject, text, html }
 }
 
-/** Customer: confirmation received. */
-export function buildCustomerConfirmed(ctx: { orderId: number, customerName: string, reviewUrl: string }): { subject: string, text: string, html: string } {
+/** Customer: confirmation received (with the full order/invoice listing). */
+export function buildCustomerConfirmed(ctx: { orderId: number, comp: OrderComputation, reviewUrl: string }): { subject: string, text: string, html: string } {
+  const c = ctx.comp
   const subject = `[Kooperative Dürnau] Bestellung #${ctx.orderId} bestätigt`
-  const greeting = ctx.customerName ? `Hallo ${ctx.customerName},` : 'Hallo,'
+  const greeting = c.customer.name ? `Hallo ${c.customer.name},` : 'Hallo,'
   const text = [
     greeting, '',
     `vielen Dank – wir haben Ihre Bestätigung zu Bestellung #${ctx.orderId} erhalten.`,
     'Wir bearbeiten Ihre Bestellung nun.', '',
+    itemsText(c), '',
     `Bestellung ansehen: ${ctx.reviewUrl}`, '',
-    'Herzliche Grüße', 'Kooperative Dürnau eG',
+    'Herzliche Grüsze', 'Kooperative Dürnau eG', '',
+    footerText(true),
   ].join('\n')
   const html = wrap(`Bestellung #${ctx.orderId} bestätigt`, `
     <p style="margin:0 0 12px">${esc(greeting)}</p>
     <p style="margin:0 0 12px">vielen Dank – wir haben Ihre Bestätigung zu Bestellung <strong>#${ctx.orderId}</strong> erhalten und bearbeiten sie nun.</p>
+    ${itemsHtml(c)}
     ${button(ctx.reviewUrl, 'Bestellung ansehen →')}
-    <p style="margin:12px 0 0;color:#555">Herzliche Grüße<br>Kooperative Dürnau eG</p>`)
+    <p style="margin:12px 0 0;color:#555">Herzliche Grüsze<br>Kooperative Dürnau eG</p>
+    ${footerHtml(true)}`)
   return { subject, text, html }
 }
 
@@ -124,12 +139,14 @@ export function buildAdminConfirmed(ctx: { orderId: number, comp: OrderComputati
     `Bestellung #${ctx.orderId} wurde vom Kunden bestätigt (${viaLabel}) und kann bearbeitet werden.`,
     `Kunde: ${c.customer.name} <${c.customer.email}>`,
     `Im Admin öffnen: ${ctx.adminUrl}`, '',
-    itemsText(c),
+    itemsText(c), '',
+    footerText(false),
   ].join('\n')
   const html = wrap(`Bestellung #${ctx.orderId} bestätigt`, `
     <p style="margin:0 0 12px">Bestellung <strong>#${ctx.orderId}</strong> wurde vom Kunden bestätigt (<em>${esc(viaLabel)}</em>) und kann bearbeitet werden.</p>
     <p style="margin:0 0 4px">Kunde: <strong>${esc(c.customer.name)}</strong> · <a href="mailto:${esc(c.customer.email)}">${esc(c.customer.email)}</a></p>
     ${button(ctx.adminUrl, 'Im Admin öffnen →')}
-    ${itemsHtml(c)}`)
+    ${itemsHtml(c)}
+    ${footerHtml(false)}`)
   return { subject, text, html }
 }

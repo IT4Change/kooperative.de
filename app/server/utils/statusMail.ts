@@ -1,3 +1,5 @@
+import { footerText, footerHtml } from './mailFooter'
+
 /**
  * Customer-facing status notification mail. Sent from MAIL_FROM
  * (shop@kooperative.de) with Reply-To the operator, so the customer can simply
@@ -22,8 +24,10 @@ export function buildStatusMail(ctx: StatusMailContext): { subject: string, text
     '',
     'Bei Fragen antworten Sie einfach auf diese E-Mail.',
     '',
-    'Herzliche Grüße',
+    'Herzliche Grüsze',
     'Kooperative Dürnau eG',
+    '',
+    footerText(false),
   ].filter(l => l !== null).join('\n')
 
   const escape = (s: string) => s.replace(/[<>&"]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c]!))
@@ -37,7 +41,8 @@ export function buildStatusMail(ctx: StatusMailContext): { subject: string, text
         <strong>${escape(ctx.statusName)}</strong>.</p>
       ${ctx.comment ? `<p style="margin:0 0 12px;white-space:pre-wrap"><em>${escape(ctx.comment)}</em></p>` : ''}
       <p style="margin:0 0 12px;color:#555">Bei Fragen antworten Sie einfach auf diese E-Mail.</p>
-      <p style="margin:0;color:#555">Herzliche Grüße<br>Kooperative Dürnau eG</p>
+      <p style="margin:0 0 12px;color:#555">Herzliche Grüsze<br>Kooperative Dürnau eG</p>
+      ${footerHtml(false)}
     </div>
   </body></html>`
 
