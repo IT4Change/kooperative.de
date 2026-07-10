@@ -32,6 +32,12 @@ npm run build
 
 ### DB migrations (idempotent). Runs before the restart so a failure aborts the
 ### deploy WITHOUT downtime — the previous version stays live.
+### Load .env the same way start.sh does, so the migration hits the exact same DB
+### as the running app (e.g. kooperative_db2), not a default.
+set -a
+[ -f .env ] && . ./.env
+set +a
+echo "[deploy] running DB migrations against ${DB_DATABASE:-<default>} on ${DB_HOST:-localhost} …"
 node scripts/migrate.mjs || { echo "[deploy] DB migration failed -- aborting, previous version stays live"; exit 1; }
 
 ### Restart service

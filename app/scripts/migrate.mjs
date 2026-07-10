@@ -43,12 +43,17 @@ function splitStatements(sql) {
     .filter(Boolean)
 }
 
+const dbName = process.env.DB_DATABASE || 'kooperative'
+const dbHost = process.env.DB_HOST || 'localhost'
+const dbUser = process.env.DB_USER || 'koop'
+console.log(`[migrate] target: ${dbUser}@${dbHost}/${dbName}`)
+
 const conn = await mysql.createConnection({
-  host: process.env.DB_HOST || 'localhost',
+  host: dbHost,
   port: Number(process.env.DB_PORT) || 3306,
-  user: process.env.DB_USER || 'koop',
+  user: dbUser,
   password: process.env.DB_PASSWORD || 'koop',
-  database: process.env.DB_DATABASE || 'kooperative',
+  database: dbName,
 })
 
 try {
