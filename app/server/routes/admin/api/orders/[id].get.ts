@@ -107,7 +107,7 @@ export default defineEventHandler(async (event) => {
   // Link to the same order in the legacy osCommerce admin (if configured). Every
   // osCommerce order (incl. materialized new-shop ones) is visible there via oID.
   const adminBase = process.env.ADMIN_BASE_URL
-  const oldAdminUrl = adminBase ? `${adminBase.replace(/\/$/, '')}/orders.php?oID=${id}` : null
+  const oldAdminUrl = adminBase ? `${adminBase.replace(/\/$/, '')}/orders.php?oID=${id}&action=edit` : null
 
   return {
     statusFlow,
