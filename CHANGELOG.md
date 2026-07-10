@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.0](https://github.com/IT4Change/kooperative.de/compare/v0.5.0...v0.6.0) (2026-07-10)
+
+
+### Features
+
+* **app:** admin ([#18](https://github.com/IT4Change/kooperative.de/issues/18)) ([ac757f7](https://github.com/IT4Change/kooperative.de/commit/ac757f75e486f2ed19f313ee5e72d5cbeec8a96e))
+
 ## [0.5.0](https://github.com/IT4Change/kooperative.de/compare/v0.4.0...v0.5.0) (2026-05-07)
 
 
