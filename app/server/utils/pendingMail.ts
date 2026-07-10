@@ -13,10 +13,13 @@ const money = (n: number) => `${n.toFixed(2).replace('.', ',')} €`
 function itemsText(comp: OrderComputation): string {
   const rows = comp.lines.map((l, i) =>
     `  ${i + 1}. ${l.quantity}× ${l.name}  ·  ${money(l.unitGross)}/Stk = ${money(l.lineGross)}`)
+  const taxLines = comp.taxRows.map(t => `MwSt (${t.rate}%, im Preis enthalten): ${money(t.total)}`)
   return [
     'Positionen:',
     ...rows,
+    `Zwischensumme: ${money(comp.subtotalGross)}`,
     `Versand (${comp.shipping.module}): ${comp.shipping.gross > 0 ? money(comp.shipping.gross) : 'nach Aufwand'}`,
+    ...taxLines,
     `Gesamt: ${money(comp.total)}`,
     `Zahlung: ${comp.payment.label}`,
   ].join('\n')
@@ -35,7 +38,9 @@ function itemsHtml(comp: OrderComputation): string {
     </tr></thead>
     <tbody>${rows}</tbody>
     <tfoot>
+      <tr><td colspan="2" style="padding:4px 6px;text-align:right">Zwischensumme</td><td style="padding:4px 6px;text-align:right">${money(comp.subtotalGross)}</td></tr>
       <tr><td colspan="2" style="padding:4px 6px;text-align:right">Versand (${esc(comp.shipping.module)})</td><td style="padding:4px 6px;text-align:right">${comp.shipping.gross > 0 ? money(comp.shipping.gross) : 'nach Aufwand'}</td></tr>
+      ${comp.taxRows.map(t => `<tr><td colspan="2" style="padding:4px 6px;text-align:right;color:#888;font-size:12px">MwSt (${t.rate}%, im Preis enthalten)</td><td style="padding:4px 6px;text-align:right;color:#888;font-size:12px">${money(t.total)}</td></tr>`).join('')}
       <tr><td colspan="2" style="padding:4px 6px;text-align:right;font-weight:bold">Gesamt</td><td style="padding:4px 6px;text-align:right;font-weight:bold">${money(comp.total)}</td></tr>
     </tfoot>
   </table>
