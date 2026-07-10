@@ -21,7 +21,20 @@ export default defineEventHandler(async (event) => {
     [id],
   )
 
+  // Status graphic: the confirmation step is the current step for a pending order;
+  // the osCommerce statuses follow as upcoming (same canonical flow as materialized orders).
+  const [flowStatusRows] = await db.execute<RowDataPacket[]>(
+    'SELECT orders_status_id, orders_status_name FROM orders_status WHERE language_id = 2',
+  )
+  const statusNames = new Map<number, string>(flowStatusRows.map(r => [Number(r.orders_status_id), String(r.orders_status_name)]))
+  const confirmState = pending.status === 'materialized' ? 'done' : 'current'
+  const statusFlow = [
+    { id: -1, name: 'Bestätigung ausstehend', state: confirmState, visitedAt: pending.confirmedAt ?? null },
+    ...ORDER_STATUS_FLOW.map(sid => ({ id: sid, name: statusNames.get(sid) ?? `Status ${sid}`, state: 'upcoming', visitedAt: null })),
+  ]
+
   return {
+    statusFlow,
     pending: {
       id: pending.id,
       status: pending.status,

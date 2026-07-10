@@ -32,6 +32,12 @@
             <div v-if="i < data.statusFlow.length - 1" class="flex-1 h-0.5 mt-5 rounded" :class="s.state === 'done' ? 'bg-[#00af8c]' : 'bg-gray-200'" />
           </template>
         </div>
+        <p v-if="data.origin === 'alt'" class="mt-4 text-xs text-gray-500 bg-gray-50 border border-gray-200 rounded px-3 py-2">
+          Diese Bestellung lief über den <strong>alten Shop</strong> – es fand keine gesonderte Bestätigung durch den Kunden statt.
+        </p>
+        <p v-else-if="data.confirmation" class="mt-4 text-xs text-gray-500">
+          Vom Kunden bestätigt ({{ viaLabel(data.confirmation.via) }})<span v-if="data.confirmation.at"> am {{ dateTime(data.confirmation.at) }}</span>.
+        </p>
       </section>
 
       <div class="grid gap-6 lg:grid-cols-3">
@@ -197,6 +203,8 @@ interface FlowStep { id: number, name: string, state: 'done' | 'current' | 'upco
 interface MailRow { id: number, direction: string, recipient: string, mailType: string, relatedStatusId: number | null, subject: string, status: string, sentBy: string | null, createdAt: string }
 interface OrderDetail {
   statusFlow: FlowStep[]
+  origin: 'alt' | 'neu'
+  confirmation: { via: string | null, at: string | null } | null
   availableStatuses: { id: number, name: string }[]
   mails: MailRow[]
   order: {
@@ -216,6 +224,10 @@ useHead({ title: () => `Bestellung #${route.params.id} – Admin` })
 /** orders_total title/text carry osCommerce markup (<b>, &nbsp;) — render as plain text. */
 function plain(s: string): string {
   return s.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').trim()
+}
+
+function viaLabel(via: string | null): string {
+  return via === 'admin' ? 'manuell im Admin' : via === 'reply' ? 'per Antwort' : 'per Link'
 }
 
 function circleClass(state: FlowStep['state']): string {

@@ -4,18 +4,6 @@
       Daten konnten nicht geladen werden: {{ error.statusMessage || error.message }}
     </div>
 
-    <NuxtLink
-      v-if="(data?.pendingCount ?? 0) > 0"
-      to="/admin/pending"
-      class="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-lg px-5 py-4 hover:bg-amber-100 transition"
-    >
-      <span class="inline-flex items-center justify-center w-9 h-9 rounded-full bg-amber-400 text-amber-950 font-bold">{{ data?.pendingCount }}</span>
-      <span class="text-sm text-amber-900">
-        <strong>{{ data?.pendingCount }} Bestellung(en)</strong> warten auf die Bestätigung des Kunden.
-        <span class="underline">Ansehen →</span>
-      </span>
-    </NuxtLink>
-
     <div class="grid gap-6 md:grid-cols-2">
       <!-- Bestellungen -->
       <section class="bg-white rounded-lg shadow-sm border border-gray-200">
@@ -24,6 +12,15 @@
           <NuxtLink to="/admin/orders" class="text-sm text-[#00af8c] hover:underline">Alle ansehen →</NuxtLink>
         </header>
         <ul class="divide-y divide-gray-100">
+          <li v-if="(data?.pendingCount ?? 0) > 0">
+            <NuxtLink to="/admin/orders?status=pending" class="flex items-center justify-between px-5 py-3 bg-amber-50/60 hover:bg-amber-100">
+              <span class="flex items-center gap-2 text-amber-900">
+                <span class="inline-block w-2 h-2 rounded-full bg-amber-400" />
+                Bestätigung ausstehend
+              </span>
+              <span class="font-mono font-semibold tabular-nums text-amber-800">{{ (data?.pendingCount ?? 0).toLocaleString('de-DE') }}</span>
+            </NuxtLink>
+          </li>
           <li v-for="s in data?.statuses ?? []" :key="s.id">
             <NuxtLink :to="`/admin/orders?status=${s.id}`" class="flex items-center justify-between px-5 py-3 hover:bg-gray-50">
               <span class="flex items-center gap-2">

@@ -39,13 +39,13 @@
 </template>
 
 <script setup lang="ts">
-interface NavItem { label: string, to: string, readonly?: boolean, badge?: boolean, match?: string }
+interface NavItem { label: string, to: string, readonly?: boolean, badge?: boolean, match?: string[] }
 
 const nav: NavItem[] = [
   { label: 'Übersicht', to: '/admin' },
-  { label: 'Bestätigungen', to: '/admin/pending', match: '/admin/pending', badge: true },
-  { label: 'Bestellungen', to: '/admin/orders', match: '/admin/orders' },
-  { label: 'Kunden', to: '/admin/customers', match: '/admin/customers', readonly: true },
+  // Pending orders are merged into the order list — the badge shows how many await confirmation.
+  { label: 'Bestellungen', to: '/admin/orders', match: ['/admin/orders', '/admin/pending'], badge: true },
+  { label: 'Kunden', to: '/admin/customers', match: ['/admin/customers'], readonly: true },
 ]
 
 // Badge: count of orders awaiting customer confirmation.
@@ -54,7 +54,7 @@ const pendingCount = computed(() => dash.value?.pendingCount ?? 0)
 
 const route = useRoute()
 function isActive(item: NavItem): boolean {
-  if (item.match) return route.path.startsWith(item.match)
+  if (item.match) return item.match.some(m => route.path.startsWith(m))
   return route.path === item.to
 }
 

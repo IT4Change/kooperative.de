@@ -15,6 +15,7 @@
         @change="applyFilters"
       >
         <option value="">Alle Status</option>
+        <option value="pending">Bestätigung ausstehend</option>
         <option v-for="s in statusOptions" :key="s.id" :value="String(s.id)">{{ s.name }}</option>
       </select>
       <button class="px-3 py-2 bg-[#00af8c] text-white rounded text-sm hover:bg-[#009579]" @click="applyFilters">Filtern</button>
@@ -47,20 +48,29 @@
           </tr>
           <tr
             v-for="o in data?.orders ?? []"
-            :key="o.id"
+            :key="o.kind + o.id"
             class="hover:bg-gray-50 cursor-pointer"
-            @click="goto(o.id)"
+            @click="goto(o)"
           >
-            <td class="px-4 py-2.5 font-mono">{{ o.id }}</td>
+            <td class="px-4 py-2.5 font-mono">
+              <span v-if="o.kind === 'order'">{{ o.id }}</span>
+              <span v-else class="text-gray-400" title="Noch keine Bestell-Nr. (unbestätigt)">—</span>
+            </td>
             <td class="px-4 py-2.5 whitespace-nowrap text-gray-600">{{ dateTime(o.datePurchased) }}</td>
             <td class="px-4 py-2.5">
-              <div class="font-medium text-gray-800">{{ o.customerName || '—' }}</div>
+              <div class="font-medium text-gray-800 flex items-center gap-2">
+                {{ o.customerName || '—' }}
+                <span v-if="o.kind === 'order' && o.origin === 'neu'" class="text-[10px] uppercase text-[#00af8c] border border-[#00af8c]/40 rounded px-1">Neu</span>
+              </div>
               <div class="text-xs text-gray-400">{{ o.email }}</div>
             </td>
             <td class="px-4 py-2.5 text-gray-600">{{ o.paymentMethod }}</td>
             <td class="px-4 py-2.5 text-right font-mono tabular-nums">{{ euro(o.total) }}</td>
             <td class="px-4 py-2.5">
-              <span class="inline-block px-2 py-0.5 rounded-full text-xs font-medium" :class="statusClass(o.statusId)">
+              <span
+                class="inline-block px-2 py-0.5 rounded-full text-xs font-medium"
+                :class="o.kind === 'pending' ? 'bg-amber-100 text-amber-800' : statusClass(o.statusId)"
+              >
                 {{ o.statusName || `Status ${o.statusId}` }}
               </span>
             </td>
@@ -92,8 +102,8 @@ const page = computed(() => Math.max(1, Number(route.query.page) || 1))
 const LIMIT = 50
 
 interface OrderRow {
-  id: number, customerName: string, email: string, datePurchased: string,
-  statusId: number, statusName: string | null, paymentMethod: string, total: number | null
+  kind: 'order' | 'pending', id: number, customerName: string, email: string, datePurchased: string,
+  statusId: number, statusName: string | null, paymentMethod: string, total: number | null, origin: 'alt' | 'neu'
 }
 interface OrderList { total: number, page: number, limit: number, orders: OrderRow[] }
 
@@ -123,7 +133,7 @@ function pruned(q: Record<string, unknown>): Record<string, string> {
   for (const [k, v] of Object.entries(q)) if (v != null && v !== '') out[k] = String(v)
   return out
 }
-function goto(id: number) {
-  router.push(`/admin/orders/${id}`)
+function goto(o: OrderRow) {
+  router.push(o.kind === 'pending' ? `/admin/pending/${o.id}` : `/admin/orders/${o.id}`)
 }
 </script>
