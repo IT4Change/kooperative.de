@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.2](https://github.com/IT4Change/kooperative.de/compare/v0.6.1...v0.6.2) (2026-07-10)
+
+
+### Bug Fixes
+
+* **app:** fix deploy & migrations ([#22](https://github.com/IT4Change/kooperative.de/issues/22)) ([4faab2a](https://github.com/IT4Change/kooperative.de/commit/4faab2a4e1cbc8f7a63d8b26c0340edd3bb40a62))
+
 ## [0.6.1](https://github.com/IT4Change/kooperative.de/compare/v0.6.0...v0.6.1) (2026-07-10)
 
 
