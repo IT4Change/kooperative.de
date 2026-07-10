@@ -11,6 +11,7 @@
         <h2 class="text-xl font-bold text-gray-800">Bestellung</h2>
         <span class="text-sm text-gray-400">noch keine Bestell-Nr.</span>
         <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium" :class="statusBadge">{{ statusLabel }}</span>
+        <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#00af8c]/10 text-[#00838a]">Neuer Shop</span>
         <span class="text-sm text-gray-500 ml-auto">{{ dateTime(data.pending.createdAt) }}</span>
       </div>
 

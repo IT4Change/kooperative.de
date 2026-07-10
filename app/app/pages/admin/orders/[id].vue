@@ -13,6 +13,12 @@
         <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium" :class="statusClass(data.order.statusId)">
           {{ data.order.statusName || `Status ${data.order.statusId}` }}
         </span>
+        <span
+          class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium"
+          :class="data.origin === 'neu' ? 'bg-[#00af8c]/10 text-[#00838a]' : 'bg-gray-100 text-gray-500'"
+        >
+          {{ data.origin === 'neu' ? 'Neuer Shop' : 'Alter Shop' }}
+        </span>
         <span class="text-sm text-gray-500 ml-auto">{{ dateTime(data.order.datePurchased) }}</span>
       </div>
 

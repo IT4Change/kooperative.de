@@ -14,12 +14,22 @@ export default defineEventHandler(async (event) => {
   const q = getQuery(event)
   const db = useDB()
 
-  const statusParam = q.status != null ? String(q.status) : ''
-  const isPendingFilter = statusParam === 'pending'
-  const statusNum = !isPendingFilter && statusParam !== '' ? Number(statusParam) : null
+  // Status filter — supports combining multiple statuses:
+  //   absent        → default: active only (hides completed = Versendet/status 3)
+  //   'all'         → everything
+  //   'none'        → nothing
+  //   'pending,1,4' → those (comma-separated; 'pending' = virtual confirmation step)
+  // Default excludes the completed status "Versendet" (3).
+  const raw = q.status != null ? String(q.status).trim() : ''
+  const showAll = raw === 'all'
+  let tokens: string[]
+  if (showAll || raw === 'none') tokens = []
+  else if (raw === '') tokens = ['pending', '1', '4', '2']
+  else tokens = raw.split(',').map(s => s.trim()).filter(Boolean)
 
-  const includeOrders = !isPendingFilter
-  const includePending = statusNum == null // pending drop out once a concrete osCommerce status is filtered
+  const includePending = showAll || tokens.includes('pending')
+  const numericStatuses = tokens.filter(t => /^\d+$/.test(t)).map(Number)
+  const includeOrders = showAll || numericStatuses.length > 0
 
   const search = typeof q.q === 'string' ? q.q.trim() : ''
   const page = Math.max(1, Number(q.page) || 1)
@@ -30,9 +40,9 @@ export default defineEventHandler(async (event) => {
   // --- WHERE for the osCommerce orders part ---
   const oConds: string[] = []
   const oParams: unknown[] = []
-  if (statusNum != null && !Number.isNaN(statusNum)) {
-    oConds.push('o.orders_status = ?')
-    oParams.push(statusNum)
+  if (!showAll && numericStatuses.length > 0) {
+    oConds.push(`o.orders_status IN (${numericStatuses.map(() => '?').join(',')})`)
+    oParams.push(...numericStatuses)
   }
   if (search) {
     if (numeric) {
@@ -78,6 +88,11 @@ export default defineEventHandler(async (event) => {
   const params: unknown[] = []
   if (includeOrders) { parts.push(ordersSelect); params.push(...oParams) }
   if (includePending) { parts.push(pendingSelect); params.push(...pParams) }
+
+  // Nothing selected → empty result (avoids an empty UNION / invalid SQL).
+  if (parts.length === 0) {
+    return { total: 0, page, limit, orders: [] }
+  }
 
   // --- counts ---
   let total = 0

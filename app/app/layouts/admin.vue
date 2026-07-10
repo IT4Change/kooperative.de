@@ -45,6 +45,7 @@ const nav: NavItem[] = [
   { label: 'Übersicht', to: '/admin' },
   // Pending orders are merged into the order list — the badge shows how many await confirmation.
   { label: 'Bestellungen', to: '/admin/orders', match: ['/admin/orders', '/admin/pending'], badge: true },
+  { label: 'Produkte', to: '/admin/products', match: ['/admin/products'], readonly: true },
   { label: 'Kunden', to: '/admin/customers', match: ['/admin/customers'], readonly: true },
 ]
 
