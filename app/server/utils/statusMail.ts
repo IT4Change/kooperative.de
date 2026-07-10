@@ -24,7 +24,7 @@ export function buildStatusMail(ctx: StatusMailContext): { subject: string, text
     '',
     'Bei Fragen antworten Sie einfach auf diese E-Mail.',
     '',
-    'Herzliche Grüße',
+    'Herzliche Grüsze',
     'Kooperative Dürnau eG',
     '',
     footerText(false),
@@ -41,7 +41,7 @@ export function buildStatusMail(ctx: StatusMailContext): { subject: string, text
         <strong>${escape(ctx.statusName)}</strong>.</p>
       ${ctx.comment ? `<p style="margin:0 0 12px;white-space:pre-wrap"><em>${escape(ctx.comment)}</em></p>` : ''}
       <p style="margin:0 0 12px;color:#555">Bei Fragen antworten Sie einfach auf diese E-Mail.</p>
-      <p style="margin:0 0 12px;color:#555">Herzliche Grüße<br>Kooperative Dürnau eG</p>
+      <p style="margin:0 0 12px;color:#555">Herzliche Grüsze<br>Kooperative Dürnau eG</p>
       ${footerHtml(false)}
     </div>
   </body></html>`

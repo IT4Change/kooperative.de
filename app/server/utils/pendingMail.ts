@@ -72,7 +72,7 @@ export function buildCustomerConfirmRequest(ctx: { pendingId: number, comp: Orde
     'oder indem Sie einfach auf diese E-Mail antworten.', '',
     'Erst mit Ihrer Bestätigung kommt der Kaufvertrag zustande.', '',
     itemsText(c), '',
-    'Herzliche Grüße', 'Kooperative Dürnau eG', '',
+    'Herzliche Grüsze', 'Kooperative Dürnau eG', '',
     footerText(true),
   ].join('\n')
   const html = wrap('Bitte bestätigen Sie Ihre Bestellung', `
@@ -81,7 +81,7 @@ export function buildCustomerConfirmRequest(ctx: { pendingId: number, comp: Orde
     ${button(ctx.reviewUrl, 'Inhalt prüfen & bestätigen →')}
     <p style="margin:0 0 12px;color:#555">Alternativ genügt eine <strong>Antwort auf diese E-Mail</strong>. Erst mit Ihrer Bestätigung kommt der Kaufvertrag zustande.</p>
     ${itemsHtml(c)}
-    <p style="margin:12px 0 0;color:#555">Herzliche Grüße<br>Kooperative Dürnau eG</p>
+    <p style="margin:12px 0 0;color:#555">Herzliche Grüsze<br>Kooperative Dürnau eG</p>
     ${footerHtml(true)}`)
   return { subject, text, html }
 }
@@ -117,7 +117,7 @@ export function buildCustomerConfirmed(ctx: { orderId: number, comp: OrderComput
     'Wir bearbeiten Ihre Bestellung nun.', '',
     itemsText(c), '',
     `Bestellung ansehen: ${ctx.reviewUrl}`, '',
-    'Herzliche Grüße', 'Kooperative Dürnau eG', '',
+    'Herzliche Grüsze', 'Kooperative Dürnau eG', '',
     footerText(true),
   ].join('\n')
   const html = wrap(`Bestellung #${ctx.orderId} bestätigt`, `
@@ -125,7 +125,7 @@ export function buildCustomerConfirmed(ctx: { orderId: number, comp: OrderComput
     <p style="margin:0 0 12px">vielen Dank – wir haben Ihre Bestätigung zu Bestellung <strong>#${ctx.orderId}</strong> erhalten und bearbeiten sie nun.</p>
     ${itemsHtml(c)}
     ${button(ctx.reviewUrl, 'Bestellung ansehen →')}
-    <p style="margin:12px 0 0;color:#555">Herzliche Grüße<br>Kooperative Dürnau eG</p>
+    <p style="margin:12px 0 0;color:#555">Herzliche Grüsze<br>Kooperative Dürnau eG</p>
     ${footerHtml(true)}`)
   return { subject, text, html }
 }
