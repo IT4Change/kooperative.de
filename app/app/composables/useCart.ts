@@ -55,7 +55,7 @@ export function useCart() {
         }
       }
       items.value = restored
-    } catch {}
+    } catch { /* ignore malformed stored cart */ }
   }
 
   function itemPrice(item: CartItem): number {
@@ -205,11 +205,13 @@ export function useCart() {
           iban: bankIban.value.replace(/\s+/g, '').toUpperCase(),
         }
       }
-      const res = await $fetch<{ ok: boolean, orderId: number }>('/api/orders', {
+      // New flow: the order is stored as pending and a confirmation mail is sent.
+      // No osCommerce order number exists yet (materialized only on confirmation).
+      await $fetch<{ ok: boolean, pendingId: number, total: number }>('/api/orders', {
         method: 'POST',
         body: payload,
       })
-      lastOrderId.value = res.orderId
+      lastOrderId.value = null
       checkoutStep.value = 'success'
       clearCart()
       orderNotes.value = ''

@@ -19,10 +19,19 @@ const SENSITIVE_FIELDS = new Set([
   'banktransfer_blz',
 ])
 
+// Defense-in-depth: redact IBAN-looking substrings inside ANY logged string value
+// (e.g. the koop_pending_order `payload` JSON), restricted to the shop's countries
+// (DE/AT/CH) to avoid false positives. Complements the field-name masking above.
+const IBAN_RE = /\b(?:DE|AT|CH)\d{2}[0-9A-Z]{11,28}\b/g
+
+function redactIban(value: unknown): unknown {
+  return typeof value === 'string' ? value.replace(IBAN_RE, '***IBAN***') : value
+}
+
 function maskRow<T extends Record<string, unknown>>(row: T): T {
   const out: Record<string, unknown> = {}
   for (const [k, v] of Object.entries(row)) {
-    out[k] = SENSITIVE_FIELDS.has(k) ? '***' : v
+    out[k] = SENSITIVE_FIELDS.has(k) ? '***' : redactIban(v)
   }
   return out as T
 }
