@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.5](https://github.com/IT4Change/kooperative.de/compare/v0.6.4...v0.6.5) (2026-07-10)
+
+
+### Bug Fixes
+
+* **app:** direct to edit for old admin ([#29](https://github.com/IT4Change/kooperative.de/issues/29)) ([fa86012](https://github.com/IT4Change/kooperative.de/commit/fa860125c072ad83fa5b29906b130b4062eab87b))
+
 ## [0.6.4](https://github.com/IT4Change/kooperative.de/compare/v0.6.3...v0.6.4) (2026-07-10)
 
 
