@@ -241,8 +241,12 @@ Während des Pending-Fensters steht die IBAN im `payload` der DB (nötig zur Mat
 Alt-Shop-Tabellen bleiben verboten, solange der Alt-Shop parallel läuft.
 
 **Additive Neu-Tabellen mit `koop_`-Prefix sind erlaubt** (der Alt-Shop ignoriert
-unbekannte Tabellen). Migrationen unter `database/migrations/`, idempotent
-(`CREATE TABLE IF NOT EXISTS`), vor Deploy auf der Live-DB auszuführen:
+unbekannte Tabellen). Migrationen unter `database/migrations/` werden beim Deploy
+**automatisch** über `app/scripts/migrate.mjs` ausgeführt (in `deploy.sh` nach dem
+Build, vor dem Restart). Der Runner ist idempotent (Tracking-Tabelle
+`koop_schema_migrations`, toleriert „schon vorhanden"-Fehler) und portabel für
+MySQL & MariaDB. Manuell auf dem Host: `cd app && node scripts/migrate.mjs`.
+Migrationen:
 
 - `001_koop_order_mail_log.sql` — Mail-Log pro Bestellung (Admin-Timeline).
 - `002_koop_pending_order.sql` — unbestätigte Bestellungen („Bestätigung ausstehend").
