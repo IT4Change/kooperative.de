@@ -64,10 +64,14 @@ const CFG = {
 const CONCURRENCY = Number(arg('concurrency', 10))
 const STEP_TIMEOUT = Number(arg('timeout', 15000)) // ms per step, no step may hang
 const APP_URL = arg('url', '')
+const SKIP_LOAD = process.argv.includes('--skip-load')
+const FORCE_LOAD = process.argv.includes('--force-load')
 
 // ------------------------------------------------------------------ plumbing
 
 const findings = []
+let saturated = false // server is thrashing → later steps must not pile on
+let catalogFailed = false
 const t0 = process.hrtime.bigint()
 const ms = start => Number(process.hrtime.bigint() - start) / 1e6
 const fmt = n => `${n.toFixed(0)} ms`
@@ -94,6 +98,21 @@ function withTimeout(promise, limit, label) {
     timer = setTimeout(() => reject(new Error(`${label} exceeded ${limit} ms (no answer)`)), limit)
   })
   return Promise.race([promise, guard]).finally(() => clearTimeout(timer))
+}
+
+/** Abandon a query server-side after the client stopped waiting for it. */
+async function killOwnQuery(threadId, label) {
+  if (!threadId) return
+  let killer
+  try {
+    killer = await mysql.createConnection({ ...CFG, connectTimeout: 5000 })
+    await killer.query(`KILL QUERY ${Number(threadId)}`)
+    console.log(`      → killed the abandoned ${label} server-side (thread ${threadId})`)
+  } catch (err) {
+    console.log(`      → could NOT kill thread ${threadId} (${err.code || err.message}); it keeps running`)
+  } finally {
+    await killer?.end().catch(() => {})
+  }
 }
 
 // The catalog queries, mirrored from server/utils/catalog.ts. Kept verbatim so
@@ -241,6 +260,13 @@ if (handshakeOk) {
     if (pct > 80) fail(`${line} — connection pool of the SERVER is nearly exhausted`)
     else if (pct > 50) warn(line)
     else ok(line)
+    // Threads_running is the sharper signal: connected-but-idle is harmless,
+    // simultaneously *executing* threads compete for the same CPU and IO.
+    const running = Number(S.Threads_running)
+    if (running > 50) {
+      saturated = true
+      fail(`Threads_running=${running} — the server is thrashing; any new query starves regardless of its own cost`)
+    }
     // A handful of aborted connects is normal (port scans, monitoring); a flood
     // of them is the signature of clients bouncing off a saturated server.
     if (Number(S.Aborted_connects) > 20) {
@@ -254,6 +280,30 @@ if (handshakeOk) {
     ok(`processlist: ${procs.length} threads visible, ${active.length} active`)
     if (longest && Number(longest.Time) > 5) {
       fail(`longest running query ${longest.Time}s (${longest.State || 'no state'}): ${String(longest.Info || '').replace(/\s+/g, ' ').slice(0, 160)}`)
+    }
+
+    // Group the active queries by shape, so a pile-up points at its source
+    // (which application/endpoint) instead of just showing one sample.
+    if (active.length > 5) {
+      const shape = q => String(q || '(no sql)')
+        .replace(/\s+/g, ' ')
+        .replace(/'[^']*'/g, "'?'")
+        .replace(/\b\d+\b/g, '?')
+        .trim()
+        .slice(0, 90)
+      const groups = new Map()
+      for (const p of active) {
+        const k = shape(p.Info)
+        const g = groups.get(k) || { count: 0, maxTime: 0, states: new Set() }
+        g.count++
+        g.maxTime = Math.max(g.maxTime, Number(p.Time))
+        g.states.add(p.State || '-')
+        groups.set(k, g)
+      }
+      console.log('    top query shapes among active threads:')
+      for (const [k, g] of [...groups].sort((a, b) => b[1].count - a[1].count).slice(0, 8)) {
+        console.log(`      ${String(g.count).padStart(4)}× (max ${g.maxTime}s, ${[...g.states].join('/')}) ${k}`)
+      }
     }
   } catch (err) {
     warn(`could not read server state (missing PROCESS/SELECT privilege?): ${err.message}`)
@@ -270,7 +320,12 @@ if (handshakeOk) {
       else if (took > 500) warn(line)
       else ok(line)
     } catch (err) {
+      catalogFailed = true
       fail(`${name} query failed after ${fmt(ms(s))}: ${err.code || ''} ${err.message}`)
+      // Giving up on the client does NOT stop the query on the server — it would
+      // keep burning IO on an already struggling box. Kill it explicitly from a
+      // second connection (KILL QUERY on one's own thread needs no privilege).
+      await killOwnQuery(conn.threadId, `${name} query`)
     }
   }
 
@@ -279,7 +334,13 @@ if (handshakeOk) {
 
 // ---------------------------------------------------------- 7) pool under load
 
-if (handshakeOk) {
+if (handshakeOk && SKIP_LOAD) {
+  step(7, 'Pool under load — SKIPPED (--skip-load)')
+} else if (handshakeOk && catalogFailed && !FORCE_LOAD) {
+  step(7, 'Pool under load — SKIPPED (catalog query already failed)')
+  console.log(`    firing ${CONCURRENCY} more heavy queries would only add load to the very`)
+  console.log('    server under suspicion. Fix the DB first, then re-run — or force with --force-load.')
+} else if (handshakeOk) {
   step(7, `Pool under load — ${CONCURRENCY} concurrent catalog loads (pool config identical to the app)`)
   const pool = mysql.createPool({
     ...CFG,
@@ -364,7 +425,12 @@ if (!tcpOk) {
   code = 1
 } else if (fails.length) {
   console.log('THEORY REJECTED — the DB is reachable and authenticates with the app credentials.')
-  console.log('It is degraded, not down. Findings:')
+  if (saturated) {
+    console.log('It is SATURATED, not down: connect and SELECT 1 are fast, but real queries starve')
+    console.log('behind hundreds of concurrently executing threads. Look at the query shapes in step 5')
+    console.log('to find which application produces the pile-up — it need not be this one.')
+  }
+  console.log('Findings:')
   for (const f of fails) console.log(`  ✗ ${f.msg}`)
   code = 2
 } else if (warns.length) {
