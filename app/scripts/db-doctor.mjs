@@ -252,12 +252,20 @@ if (handshakeOk) {
       STEP_TIMEOUT, 'SHOW GLOBAL STATUS',
     )
     const [vars] = await conn.query(
-      `SHOW GLOBAL VARIABLES WHERE Variable_name IN ('max_connections','wait_timeout','max_allowed_packet','version')`,
+      `SHOW GLOBAL VARIABLES WHERE Variable_name IN
+        ('max_connections','max_user_connections','wait_timeout','net_write_timeout','max_allowed_packet','version')`,
     )
     const S = Object.fromEntries(status.map(r => [r.Variable_name, r.Value]))
     const V = Object.fromEntries(vars.map(r => [r.Variable_name, r.Value]))
 
     ok(`version ${V.version}, uptime ${(Number(S.Uptime) / 3600).toFixed(1)} h`)
+    // On shared hosting the per-user cap bites long before max_connections does,
+    // and net_write_timeout decides how long a stalled send may hold its locks.
+    const perUser = Number(V.max_user_connections)
+    ok(`max_user_connections ${perUser || 'unlimited'}, net_write_timeout ${V.net_write_timeout}s, wait_timeout ${V.wait_timeout}s`)
+    if (perUser && perUser <= 20) {
+      warn(`the per-user cap of ${perUser} is below the app's pool size (10) plus this script's connections`)
+    }
     const used = Number(S.Threads_connected)
     const limit = Number(V.max_connections)
     const pct = limit ? (used / limit) * 100 : 0
@@ -281,16 +289,14 @@ if (handshakeOk) {
     // MyISAM locks whole tables and gives writers priority: one slow SELECT
     // holds a read lock, the next UPDATE queues, and every later read queues
     // behind that pending write. Table_locks_waited is the fingerprint.
+    // These counters are cumulative since server start, so the ratio says
+    // nothing about right now — it is context only. The live signal is how
+    // many threads sit in "Waiting for table level lock" (counted below).
     const waited = Number(S.Table_locks_waited)
     const immediate = Number(S.Table_locks_immediate)
     if (immediate + waited > 0) {
       const ratio = (waited / (immediate + waited)) * 100
-      const lockLine = `table locks: ${waited} waited / ${immediate} immediate (${ratio.toFixed(2)}% contended)`
-      if (ratio > 1) {
-        saturated = true
-        fail(`${lockLine} — table-level lock contention (MyISAM convoy), not raw query cost`)
-      } else if (ratio > 0.1) warn(lockLine)
-      else ok(lockLine)
+      ok(`table locks since start: ${waited} waited / ${immediate} immediate (${ratio.toFixed(2)}%, cumulative)`)
     }
 
     // Which engines are in play — MyISAM explains lock convoys, InnoDB does not.
@@ -308,6 +314,28 @@ if (handshakeOk) {
     const active = procs.filter(p => p.Command !== 'Sleep')
     const longest = active.sort((a, b) => Number(b.Time) - Number(a.Time))[0]
     ok(`processlist: ${procs.length} threads visible, ${active.length} active`)
+
+    // The live convoy signal: with MyISAM a table lock is held for the whole
+    // statement — including the time spent sending the result to a slow client.
+    // One stalled reader therefore parks every writer, and write priority then
+    // parks every later reader behind it.
+    const lockWaiters = active.filter(p => /waiting for table( level)? lock|^locked$/i.test(p.State || ''))
+    const stalledSend = active.filter(p => /sending to client|writing to net/i.test(p.State || ''))
+    if (lockWaiters.length) {
+      saturated = true
+      fail(`${lockWaiters.length} of ${active.length} threads are waiting for a TABLE LOCK`
+        + ` (longest ${Math.max(...lockWaiters.map(p => Number(p.Time)))}s) — a MyISAM convoy is in progress`)
+    }
+    if (stalledSend.length) {
+      const worst = Math.max(...stalledSend.map(p => Number(p.Time)))
+      if (worst > 30) {
+        saturated = true
+        fail(`${stalledSend.length} thread(s) stuck in "Sending to client" (longest ${worst}s)`
+          + ' — the server has the result but a client is not reading it; those threads hold their'
+          + ' table locks for the entire time and are the head of the convoy')
+      }
+    }
+
     if (longest && Number(longest.Time) > 5) {
       fail(`longest running query ${longest.Time}s (${longest.State || 'no state'}): ${String(longest.Info || '').replace(/\s+/g, ' ').slice(0, 160)}`)
     }

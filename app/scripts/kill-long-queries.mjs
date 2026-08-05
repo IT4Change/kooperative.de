@@ -66,6 +66,10 @@ const CFG = {
 }
 
 const DO_KILL = flag('kill')
+// KILL QUERY only takes effect where the thread reaches a kill checkpoint. A
+// thread stuck in "Sending to client" (blocked writing to a client that does
+// not read) never gets there — only closing the connection clears it.
+const HARD = flag('connection')
 const MIN_AGE = Number(arg('min-age', 300))
 const MAX_KILLS = Number(arg('max-kills', 100))
 const ALL_DBS = flag('all-dbs')
@@ -155,7 +159,7 @@ async function pass(conn) {
       continue
     }
     try {
-      await conn.query(`KILL QUERY ${Number(t.id)}`)
+      await conn.query(`KILL ${HARD ? 'CONNECTION' : 'QUERY'} ${Number(t.id)}`)
       killed++
       console.log(`  ✓ killed     ${label}`)
     } catch (err) {
@@ -170,8 +174,31 @@ async function pass(conn) {
 
   if (!DO_KILL) {
     console.log(`  DRY RUN — nothing was aborted. Re-run with --kill to actually abort these ${targets.length}.`)
+    return 0
+  }
+
+  // "KILL accepted" is not "thread gone". Verify, because a thread blocked in a
+  // socket write survives KILL QUERY while happily reporting success.
+  await new Promise(r => setTimeout(r, 1500))
+  const [still] = await conn.query(
+    `SELECT id, time, state FROM information_schema.processlist WHERE id IN (?)`,
+    [targets.map(t => Number(t.id))],
+  )
+  if (!still.length) {
+    console.log(`  aborted ${killed}/${targets.length}, all gone.`)
+    return killed
+  }
+
+  console.log(`  ✗ ${still.length}/${targets.length} thread(s) SURVIVED the kill:`)
+  for (const t of still) {
+    console.log(`      id=${String(t.id).padEnd(9)} still ${age(t.time).padStart(6)} in "${t.state || '-'}"`)
+  }
+  if (!HARD) {
+    console.log('      → KILL QUERY cannot stop a thread that is blocked writing to its client.')
+    console.log('      → Re-run with --connection to close those connections instead.')
   } else {
-    console.log(`  aborted ${killed}/${targets.length}.`)
+    console.log('      → even KILL CONNECTION did not clear them; the server is waiting on a dead')
+    console.log('        socket (half-open connection). Restart the client application.')
   }
   return killed
 }
