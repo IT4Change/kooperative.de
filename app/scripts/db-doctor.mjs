@@ -66,6 +66,10 @@ const STEP_TIMEOUT = Number(arg('timeout', 15000)) // ms per step, no step may h
 const APP_URL = arg('url', '')
 const SKIP_LOAD = process.argv.includes('--skip-load')
 const FORCE_LOAD = process.argv.includes('--force-load')
+const EXPLAIN = process.argv.includes('--explain')
+// The catalog query may legitimately need longer than a generic step; give it
+// its own budget so "slow" and "starving" can be told apart.
+const QUERY_TIMEOUT = Number(arg('query-timeout', STEP_TIMEOUT))
 
 // ------------------------------------------------------------------ plumbing
 
@@ -243,7 +247,8 @@ if (handshakeOk) {
   try {
     const [status] = await withTimeout(
       conn.query(`SHOW GLOBAL STATUS WHERE Variable_name IN
-        ('Threads_connected','Threads_running','Max_used_connections','Aborted_connects','Uptime','Slow_queries')`),
+        ('Threads_connected','Threads_running','Max_used_connections','Aborted_connects','Uptime','Slow_queries',
+         'Table_locks_immediate','Table_locks_waited')`),
       STEP_TIMEOUT, 'SHOW GLOBAL STATUS',
     )
     const [vars] = await conn.query(
@@ -272,6 +277,31 @@ if (handshakeOk) {
     if (Number(S.Aborted_connects) > 20) {
       warn(`Aborted_connects=${S.Aborted_connects} — clients repeatedly fail to complete the handshake`)
     }
+
+    // MyISAM locks whole tables and gives writers priority: one slow SELECT
+    // holds a read lock, the next UPDATE queues, and every later read queues
+    // behind that pending write. Table_locks_waited is the fingerprint.
+    const waited = Number(S.Table_locks_waited)
+    const immediate = Number(S.Table_locks_immediate)
+    if (immediate + waited > 0) {
+      const ratio = (waited / (immediate + waited)) * 100
+      const lockLine = `table locks: ${waited} waited / ${immediate} immediate (${ratio.toFixed(2)}% contended)`
+      if (ratio > 1) {
+        saturated = true
+        fail(`${lockLine} — table-level lock contention (MyISAM convoy), not raw query cost`)
+      } else if (ratio > 0.1) warn(lockLine)
+      else ok(lockLine)
+    }
+
+    // Which engines are in play — MyISAM explains lock convoys, InnoDB does not.
+    const [engines] = await conn.query(
+      'SELECT engine, COUNT(*) n FROM information_schema.tables WHERE table_schema = ? GROUP BY engine',
+      [CFG.database],
+    )
+    const engineLine = engines.map(e => `${e.engine} ${e.n}`).join(', ')
+    const myisam = engines.find(e => e.engine === 'MyISAM')
+    if (myisam) warn(`storage engines: ${engineLine} — MyISAM tables lock table-wide, readers block on pending writers`)
+    else ok(`storage engines: ${engineLine}`)
 
     // PROCESS privilege may be missing — then we only see our own threads.
     const [procs] = await conn.query('SHOW FULL PROCESSLIST')
@@ -313,7 +343,7 @@ if (handshakeOk) {
   for (const [name, sql] of [['categories', Q_CATEGORIES], ['products', Q_PRODUCTS]]) {
     const s = process.hrtime.bigint()
     try {
-      const [rows] = await withTimeout(conn.query(sql), STEP_TIMEOUT, `${name} query`)
+      const [rows] = await withTimeout(conn.query(sql), QUERY_TIMEOUT, `${name} query`)
       const took = ms(s)
       const line = `${name}: ${rows.length} rows in ${fmt(took)}`
       if (took > 3000) fail(`${line} — this alone can blow the HTTP timeout`)
@@ -326,6 +356,50 @@ if (handshakeOk) {
       // keep burning IO on an already struggling box. Kill it explicitly from a
       // second connection (KILL QUERY on one's own thread needs no privilege).
       await killOwnQuery(conn.threadId, `${name} query`)
+    }
+  }
+
+  // ------------------------------------------------ 6b) why is it slow?
+
+  if (EXPLAIN) {
+    step('6b', 'Query plan and table sizes (EXPLAIN executes nothing — safe on a loaded server)')
+    try {
+      // information_schema estimates instead of COUNT(*): no table scan, no
+      // extra load on a server that is already the suspect.
+      const [sizes] = await conn.query(
+        `SELECT table_name, table_rows, engine,
+                ROUND((data_length + index_length) / 1048576) AS mb
+           FROM information_schema.tables
+          WHERE table_schema = ?
+            AND table_name IN ('products','products_description','products_to_categories',
+                               'categories','categories_description','tax_rates')
+          ORDER BY table_rows DESC`,
+        [CFG.database],
+      )
+      console.log('    table sizes (estimates):')
+      for (const t of sizes) {
+        console.log(`      ${String(t.table_name).padEnd(24)} ~${String(t.table_rows).padStart(9)} rows  ${String(t.mb).padStart(5)} MB  ${t.engine}`)
+      }
+
+      const [plan] = await conn.query(`EXPLAIN ${Q_PRODUCTS}`)
+      console.log('    plan for the products query:')
+      for (const r of plan) {
+        const line = `      ${String(r.table || '-').padEnd(6)} type=${String(r.type || '-').padEnd(8)} `
+          + `key=${String(r.key || 'NONE').padEnd(22)} rows=${String(r.rows ?? '-').padStart(8)} ${r.Extra || ''}`
+        console.log(line)
+        // ALL = full table scan; a missing key on a joined table is the usual
+        // reason a catalog query degrades from milliseconds to minutes.
+        // A scan over a lookup table (tax_rates has 8 rows) is irrelevant;
+        // only a scan over a large table explains minutes of runtime.
+        if (r.type === 'ALL' && r.table && Number(r.rows) > 10000) {
+          fail(`full table scan on ${r.table} (no index used) — ~${r.rows} rows`)
+        }
+        if (/Using temporary/.test(r.Extra || '') && /Using filesort/.test(r.Extra || '')) {
+          warn(`${r.table}: temp table + filesort — GROUP BY/ORDER BY cannot use an index here`)
+        }
+      }
+    } catch (err) {
+      warn(`could not analyse the plan: ${err.code || ''} ${err.message}`)
     }
   }
 
