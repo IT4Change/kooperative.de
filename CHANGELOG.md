@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.7.0](https://github.com/IT4Change/kooperative.de/compare/v0.6.5...v0.7.0) (2026-08-05)
+
+
+### Features
+
+* **other:** db doctor scripts ([#31](https://github.com/IT4Change/kooperative.de/issues/31)) ([7f2f237](https://github.com/IT4Change/kooperative.de/commit/7f2f237709ec3a8b5ae7bb21215d033ef8f196cc))
+
+
+### Bug Fixes
+
+* **app:** fix hanging db with timeout, cache and other methods ([#33](https://github.com/IT4Change/kooperative.de/issues/33)) ([86b2b79](https://github.com/IT4Change/kooperative.de/commit/86b2b79468536157f442bc34ecabc2cab859b0eb))
+
 ## [0.6.5](https://github.com/IT4Change/kooperative.de/compare/v0.6.4...v0.6.5) (2026-07-10)
 
 
