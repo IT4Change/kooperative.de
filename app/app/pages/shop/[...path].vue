@@ -80,42 +80,35 @@
 </template>
 
 <script setup lang="ts">
-import type { Product, Category } from '~/data/products'
+import type { Product } from '~/data/products'
 import { unitPrice, findTierIndex } from '~/data/products'
 
 const route = useRoute()
-const { data } = await useFetch<{ products: Product[], categories: Category[] }>('/api/products')
 
-// Parse path: /shop/747/bad-reiniger, /shop/747, or /shop/bad-reiniger
+// Parse path: /shop/747/bad-reiniger, /shop/747, or /shop/bad-reiniger.
+// The first segment identifies the product in every shape — as id or as slug.
 const segments = Array.isArray(route.params.path) ? route.params.path : [route.params.path]
-let product: Product | undefined
+const productRef = segments[0]
 
-if (segments.length >= 2) {
-  // /shop/{id}/{slug} — canonical
-  product = data.value?.products.find(p => p.id === segments[0])
-} else if (segments.length === 1) {
-  const param = segments[0]
-  if (/^\d+$/.test(param)) {
-    // /shop/{id} — redirect to canonical
-    product = data.value?.products.find(p => p.id === param)
-    if (product) {
-      await navigateTo(`/shop/${product.id}/${product.slug}`, { replace: true })
-    }
-  } else {
-    // /shop/{slug} — redirect to canonical
-    product = data.value?.products.find(p => p.slug === param)
-    if (product) {
-      await navigateTo(`/shop/${product.id}/${product.slug}`, { replace: true })
-    }
-  }
-}
+// One product instead of the whole catalogue: the listing endpoint carries
+// every product, which is far too much to ship for a single detail view.
+const { data } = await useFetch<{ product: Product, categoryName: string }>(
+  `/api/products/${encodeURIComponent(productRef ?? '')}`,
+  { key: `product-${productRef}` },
+)
 
+const product = data.value?.product
 if (!product) {
   navigateTo('/shop')
   throw new Error('Product not found')
 }
 
-const categoryName = data.value?.categories.find(c => c.slug === product.category)?.name ?? product.category
+// /shop/{id} and /shop/{slug} are aliases — send them to the canonical URL.
+if (segments.length === 1) {
+  await navigateTo(`/shop/${product.id}/${product.slug}`, { replace: true })
+}
+
+const categoryName = data.value?.categoryName ?? product.category
 
 useHead({
   title: product.metaTitle
