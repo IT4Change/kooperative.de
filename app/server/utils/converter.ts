@@ -10,8 +10,6 @@ export interface DbProduct {
   products_image_detail_3: string
   products_image_detail_4: string
   products_image_detail_5: string
-  products_status: number
-  products_tax_class_id: number
   products_date_added: Date | string | null
   tax_rate: number
   products_name: string

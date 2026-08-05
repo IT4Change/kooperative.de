@@ -1,7 +1,7 @@
 import type { Pool, RowDataPacket } from 'mysql2/promise'
 import { dbInsert, dbUpdate, dbUpdateExpr } from './dbWrite'
 import { countryName } from './orderMail'
-import { loadCatalog } from './catalog'
+import { getCatalog } from './catalog'
 import { SHIPPING_OPTIONS, PAYMENT_OPTIONS } from './checkoutOptions'
 import type { ShippingMethod, PaymentMethod } from './checkoutOptions'
 import type { Product } from '~/data/products'
@@ -150,7 +150,10 @@ export async function computeOrder(db: Pool, customerId: number, input: OrderInp
   // (or, for quantity tiers, just the quantity). We map that to the real variant
   // product via the SAME grouping the storefront uses — otherwise the base product
   // (and its price/name) would be used regardless of the chosen size.
-  const catalog = await loadCatalog(db)
+  // Cached: this is only used to map a group id + variantIndex to the concrete
+  // variant product. Prices and names are re-read from the DB below, so a
+  // snapshot that is up to a minute old cannot affect what is charged.
+  const catalog = await getCatalog(db)
   const productByGroupId = new Map<string, Product>(catalog.products.map(p => [p.id, p]))
   const resolvedItems = input.items.map((item) => {
     const gp = productByGroupId.get(String(item.productId))
