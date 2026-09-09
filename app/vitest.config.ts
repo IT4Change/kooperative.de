@@ -16,10 +16,10 @@ export default defineVitestConfig({
       // One floor for the whole project, raised as the suite grows and never
       // lowered. Target is 90 %. See docs/testing.md.
       thresholds: {
-        statements: 58,
-        branches: 53,
-        functions: 47,
-        lines: 59,
+        statements: 69,
+        branches: 60,
+        functions: 60,
+        lines: 69,
       },
     },
   },
