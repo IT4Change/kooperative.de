@@ -7,6 +7,7 @@
           <div
             v-if="isOpen"
             class="relative w-full max-w-md bg-white h-full shadow-xl flex flex-col overflow-hidden"
+            data-testid="cart-sidebar"
           >
             <!-- Header -->
             <div class="flex items-center justify-between px-5 py-4 border-b border-gray-200">
@@ -94,7 +95,7 @@
               />
 
               <!-- Success Step -->
-              <div v-if="checkoutStep === 'success'" class="py-6">
+              <div v-if="checkoutStep === 'success'" class="py-6" data-testid="cart-success">
                 <div class="text-center mb-5">
                   <div
                     class="w-16 h-16 mx-auto mb-4 rounded-full bg-[#00af8c]/10 flex items-center justify-center"
@@ -152,10 +153,12 @@
             >
               <div class="flex justify-between text-sm font-bold mb-3">
                 <span>Gesamt</span>
-                <span>{{ totalPrice.toFixed(2) }} €</span>
+                <span data-testid="cart-total">{{ totalPrice.toFixed(2) }} €</span>
               </div>
               <div class="flex justify-center">
-                <KoopButton @click="onProceed">Zur Bestellung</KoopButton>
+                <KoopButton data-testid="cart-proceed" @click="onProceed"
+                  >Zur Bestellung</KoopButton
+                >
               </div>
             </div>
           </div>

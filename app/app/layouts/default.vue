@@ -97,7 +97,9 @@
             </p>
             <div class="flex flex-col sm:flex-row gap-2 sm:justify-end">
               <KoopButton size="sm" variant="orange" @click="declineConsent">Ablehnen</KoopButton>
-              <KoopButton size="sm" @click="acceptConsent">Akzeptieren</KoopButton>
+              <KoopButton size="sm" data-testid="consent-accept" @click="acceptConsent">
+                Akzeptieren
+              </KoopButton>
             </div>
           </div>
         </div>

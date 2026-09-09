@@ -100,6 +100,7 @@
       <textarea
         v-model="notesModel"
         rows="3"
+        data-testid="details-notes"
         maxlength="500"
         class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-[#00af8c] resize-none"
         placeholder="z. B. Lieferzeit, Anlieferungswünsche…"
@@ -114,7 +115,12 @@
       >
         Zurück
       </button>
-      <KoopButton size="sm" :disabled="!canProceed" @click="$emit('next')">
+      <KoopButton
+        size="sm"
+        data-testid="details-next"
+        :disabled="!canProceed"
+        @click="$emit('next')"
+      >
         Weiter zur Übersicht
       </KoopButton>
     </div>

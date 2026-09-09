@@ -1,0 +1,45 @@
+# Backend stack for the full-stack E2E suite.
+#
+# Separate from docker-compose.yml on purpose: it uses its own project name,
+# its own volume and shifted host ports, so it can run next to the dev stack
+# (and next to other projects' MariaDB/maildev) without fighting over 3306/1025.
+#
+#   docker compose -f docker-compose.e2e.yml up -d --wait
+#   cd app && npm run test:e2e
+#   docker compose -f docker-compose.e2e.yml down -v
+#
+# The suite itself is driven from app/.env.e2e, which points at these ports.
+name: koop-e2e
+
+services:
+  mariadb:
+    build: ./database
+    container_name: koop-e2e-mariadb
+    ports:
+      - "3307:3306"
+    tmpfs:
+      # Throwaway data — keeping it in RAM makes the repeated full resets fast
+      # and guarantees a cold start leaves nothing behind.
+      - /var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 3s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  maildev:
+    # Pinned: `latest` currently resolves to a 3.0 release candidate that moved
+    # the REST API to /api/email. The suite reads /email, so stay on stable 2.x
+    # until the upgrade is done deliberately.
+    image: maildev/maildev:2.2.1
+    container_name: koop-e2e-maildev
+    ports:
+      - "1026:1025"
+      - "1081:1080"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:1080/healthz"]
+      interval: 3s
+      timeout: 5s
+      retries: 30
+      start_period: 10s

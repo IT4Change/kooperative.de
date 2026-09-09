@@ -161,7 +161,17 @@ export default withNuxt(
   ...comments,
   ...json,
   ...yaml,
-  ...vitest,
+  // The vitest module keys off **/*.spec.ts, which also matches the Playwright
+  // specs under e2e/. Keep it away from them — they are a different runner.
+  ...vitest.map((c) => ({ ...c, ignores: [...(c.ignores ?? []), 'e2e/**'] })),
+  {
+    files: ['e2e/**'],
+    rules: {
+      // The suite is configured through .env.e2e, deliberately outside runtimeConfig
+      'n/no-process-env': 'off',
+      'import/no-extraneous-dependencies': 'off',
+    },
+  },
   {
     files: ['**/*.spec.ts', 'test/**'],
     rules: {

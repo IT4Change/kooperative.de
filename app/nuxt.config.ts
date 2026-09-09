@@ -13,11 +13,16 @@ export default defineNuxtConfig({
     // Root-level tool configs are TypeScript too — pull them into the node project
     // so type-aware linting can resolve them (paths are relative to .nuxt/).
     nodeTsConfig: {
-      include: ['../eslint.config.ts', '../prettier.config.ts', '../vitest.config.ts'],
+      include: [
+        '../eslint.config.ts',
+        '../prettier.config.ts',
+        '../vitest.config.ts',
+        '../playwright.config.ts',
+      ],
     },
     // Nuxt only picks up test/nuxt/**; our shared test setup lives in test/.
     tsConfig: {
-      include: ['../test/**/*'],
+      include: ['../test/**/*', '../e2e/**/*'],
     },
   },
   runtimeConfig: {

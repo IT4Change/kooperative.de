@@ -1,5 +1,9 @@
 <template>
-  <div class="bg-white border border-gray-200 rounded-lg flex flex-col overflow-hidden">
+  <div
+    class="bg-white border border-gray-200 rounded-lg flex flex-col overflow-hidden"
+    data-testid="product-card"
+    :data-product-id="product.id"
+  >
     <NuxtLink :to="`/shop/${product.id}/${product.slug}`">
       <ShopProductGallery :images="displayImages" />
     </NuxtLink>
@@ -18,6 +22,7 @@
       <div v-if="product.variants && product.variantType !== 'quantity'" class="mb-3">
         <select
           v-model.number="selectedVariant"
+          data-testid="product-variant"
           class="w-full text-sm border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#00af8c] focus:border-[#00af8c]"
         >
           <option v-for="(v, idx) in product.variants" :key="idx" :value="idx">
@@ -37,6 +42,7 @@
             v-model.number="quantity"
             type="number"
             min="1"
+            data-testid="product-quantity"
             class="w-16 text-sm border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[#00af8c] focus:border-[#00af8c]"
           />
         </div>
@@ -53,7 +59,7 @@
 
       <div class="flex items-center justify-between">
         <div>
-          <span class="text-lg font-bold text-[#00af8c]">
+          <span class="text-lg font-bold text-[#00af8c]" data-testid="product-price">
             {{ displayPrice.toFixed(2) }}&nbsp;€
           </span>
           <span
@@ -69,7 +75,9 @@
             >/ {{ product.unit }}</span
           >
         </div>
-        <KoopButton size="sm" @click="handleAdd"> Auf die Bestellliste </KoopButton>
+        <KoopButton size="sm" data-testid="product-add" @click="handleAdd">
+          Auf die Bestellliste
+        </KoopButton>
       </div>
     </div>
   </div>

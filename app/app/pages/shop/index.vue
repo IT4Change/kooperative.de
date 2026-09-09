@@ -161,7 +161,9 @@
             Kein Online-Payment &mdash; alle Zahlungswege werden separat abgewickelt.
           </p>
           <div class="mt-6 flex justify-center">
-            <KoopButton @click="dismissWelcome">Verstanden</KoopButton>
+            <KoopButton data-testid="welcome-dismiss" @click="dismissWelcome">
+              Verstanden
+            </KoopButton>
           </div>
         </div>
       </div>

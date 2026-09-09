@@ -9,6 +9,9 @@ Alle Kommandos laufen in `app/`.
 | `npm run test:lint:typecheck` | `vue-tsc --noEmit` |
 | `npm run test:unit` | Vitest einmalig inkl. Coverage-Gate |
 | `npm run test:unit:dev` | Vitest im Watch-Modus |
+| `npm run test:e2e` | Playwright gegen echte DB + Mailserver (Stack muss laufen) |
+| `npm run e2e:stack:up` / `:down` | Wegwerf-Backend starten/entfernen |
+| `npm run e2e:seed` | DB manuell zurücksetzen (macht `test:e2e` selbst) |
 
 Jedes Gate hat einen eigenen Workflow unter `.github/workflows/app.test.*.yml`,
 jeweils mit vorgeschaltetem `paths-filter`-Job, damit Änderungen außerhalb von
@@ -87,4 +90,83 @@ Wert fällt, fehlt ein Test.
 
 Composables mit State (`useCart`, `useAuth`, `useConsent`, `useStorage`),
 API-Handler mit gemocktem DB-Layer, `orderCompute`/`pendingOrder` (brauchen ein
-Pool-Mock), Komponenten-Rendering, e2e.
+Pool-Mock), Komponenten-Rendering.
+
+## E2E-Tests (Full-Stack)
+
+Playwright fährt die App gegen eine **echte MariaDB und einen echten Mailserver**.
+Das ist der einzige Weg, den eigentlichen Risikopfad zu prüfen: Bestellung →
+`koop_pending_order` → Bestätigungsmail → Token-Link → Materialisierung in den
+osCommerce-Tabellen → Admin-Statuswechsel → Status-Mail.
+
+```bash
+cd app
+npm run e2e:stack:up     # MariaDB (3307) + maildev (1026/1081)
+npm run test:e2e
+npm run e2e:stack:down   # -v, der Stack ist Wegwerfware
+```
+
+### Warum ein eigener Stack
+
+`docker-compose.e2e.yml` ist bewusst getrennt von `docker-compose.yml`: eigener
+Projektname, `tmpfs` statt Volume, und verschobene Ports (3307/1026/1081). So
+kollidiert er weder mit dem Dev-Stack noch mit MariaDB/maildev anderer Projekte.
+Die App läuft auf **3100**, nicht auf 3000.
+
+### Woher die Datenbank kommt
+
+Die Produktivdaten sind ein 33 MB großer osCommerce-Dump mit echten Kundendaten
+(`old/`, nicht im Repo — und das bleibt so). Stattdessen gibt es zwei
+committete, personendatenfreie Artefakte:
+
+| Datei | Inhalt |
+| --- | --- |
+| `database/schema/oscommerce.sql` | DDL der 20 benutzten Tabellen, ohne Zeilen |
+| `database/seed/reference.sql` | Lookup-Zeilen, deren IDs im Code hart stehen (`countries` 81/14/204, `tax_rates`, `orders_status`) |
+
+Beide werden von `database/extract-schema.mjs` aus dem Dump erzeugt:
+
+```bash
+node database/extract-schema.mjs old/kooperative_db2.sql
+```
+
+`app/scripts/seed-e2e.mjs` setzt daraus vor jedem Lauf eine frische DB auf:
+Schema neu anlegen → Referenzdaten → `koop_*`-Tabellen droppen und über den
+echten `migrate.mjs` neu bauen → synthetische Fixtures. Das Skript **verweigert**
+den Dienst gegen eine Datenbank mit mehr als 50 Bestellungen.
+
+Beim Erweitern der Tabellenliste beide Zugriffsarten prüfen — Lesezugriffe stehen
+als literales SQL im Code, Schreibzugriffe laufen über `dbInsert`/`dbUpdate` mit
+dem Tabellennamen als Parameter. Genau daran fehlten anfangs `customers_info`
+und `banktransfer_iban`.
+
+### Fixtures
+
+Ein Produkt pro Konvertierungsfall, sonst nichts: normaler MwSt-Satz (Honig,
+19 % → 11,90), ermäßigter Satz (Brot, 7 % → 3,21), Größenvarianten (Olivenöl),
+Mengenstaffel (Karte 1 Stk. / ab 10 Stk.), ein inaktives Produkt, ein
+verschachtelter Kategoriebaum und ein Testkunde mit deutscher Adresse
+(Steuerzone 2).
+
+### Zwei Stolpersteine, die dokumentiert bleiben sollten
+
+**Production-Build statt `nuxt dev`.** Der Dev-Server lädt Nuxt DevTools nach der
+Hydration nach und rendert die Seite unter dem Test neu — das erzeugte
+reproduzierbare Flakes. Playwright baut deshalb und startet `.output/server`.
+
+**Hydration abwarten.** Seiten sind serverseitig gerendert; wer vor der Hydration
+klickt oder tippt, löst nichts aus und sieht nur einen unveränderten Wert. Für
+den Shop dient das „So funktioniert die Bestellung"-Modal als Signal: es wird aus
+`onMounted` geöffnet, seine Sichtbarkeit ist also der Beweis, dass der Client
+übernommen hat. Vue-Interna taugen nicht — `app._instance` fällt im
+Production-Build weg.
+
+Dazu passend: `e2e/helpers/api.ts` ruft die API per `fetch` **innerhalb der
+Seite** auf. Das Session-Cookie ist im Production-Build `Secure`; Chromium
+akzeptiert das auf `127.0.0.1`, Playwrights eigenständiger Request-Context nicht.
+
+### Selektoren
+
+Die Suite greift ausschließlich über `data-testid` zu — Tailwind-Klassen und
+deutsche UI-Texte sind als Selektoren zu brüchig. Die Hooks sind bewusst dünn
+gesät (Produktkarte, Warenkorb, Login, Checkout-Schritte, Admin-Statusformular).
