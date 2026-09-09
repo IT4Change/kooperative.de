@@ -1,6 +1,11 @@
 // @vitest-environment node
 import { describe, it, expect } from 'vitest'
 
+import {
+  SHIPPING_OPTIONS as CLIENT_SHIPPING,
+  PAYMENT_OPTIONS as CLIENT_PAYMENT,
+} from '../../app/data/checkoutOptions'
+
 import { SHIPPING_OPTIONS, SHIPPING_ORDER, PAYMENT_OPTIONS, PAYMENT_ORDER } from './checkoutOptions'
 
 /**
@@ -18,13 +23,17 @@ describe('SHIPPING_OPTIONS', () => {
     const opt = SHIPPING_OPTIONS[method]
     expect(opt.module).not.toBe('')
     expect(opt.description).not.toBe('')
-    // orders_total joins module + title, so the colon suffix must be present.
-    // Casing is not normalized — the old shop wrote "Versand mit EXPRESS:".
-    expect(opt.totalTitle.toLowerCase()).toBe(`${opt.module.toLowerCase()}:`)
+    // Character for character, casing included: the customer reads `module` in
+    // the mails and `totalTitle` lands in orders_total for the same order.
+    expect(opt.totalTitle).toBe(`${opt.module}:`)
     expect(opt.net).toBeGreaterThanOrEqual(0)
   })
 
   it("keeps the old shop's upper-case EXPRESS spelling", () => {
+    // The only spelling that appears in the shop's order data. The legacy
+    // module also carries a mixed-case "Versand mit Express" in a field
+    // osCommerce never writes to an order — that one must not leak back in.
+    expect(SHIPPING_OPTIONS.express.module).toBe('Versand mit EXPRESS')
     expect(SHIPPING_OPTIONS.express.totalTitle).toBe('Versand mit EXPRESS:')
   })
 
@@ -59,5 +68,35 @@ describe('PAYMENT_OPTIONS', () => {
     expect(PAYMENT_OPTIONS.vorkasse.label).toBe('Bezahlung mit Vorkasse')
     expect(PAYMENT_OPTIONS.rechnung.label).toBe('Bezahlung mit Rechnung')
     expect(PAYMENT_OPTIONS.lastschrift.label).toBe('Lastschriftverfahren IBAN (DE)')
+  })
+})
+
+/**
+ * `app/data/checkoutOptions.ts` is a second copy of this list, so the checkout
+ * can render without pulling the server module into the bundle. Both halves are
+ * customer-facing for the *same* order — the shop shows one, the mail shows the
+ * other — so a divergence is visible to the customer, not merely cosmetic. That
+ * is exactly how "Versand mit EXPRESS" and "Versand mit Express" came to stand
+ * side by side; these tests are what keeps it from happening again.
+ */
+describe('the client copy', () => {
+  it('lists the methods in the order the server prescribes', () => {
+    expect(CLIENT_SHIPPING.map((o) => o.id)).toStrictEqual(SHIPPING_ORDER)
+  })
+
+  it.each(SHIPPING_ORDER)('spells %s identically on both sides', (method) => {
+    const client = CLIENT_SHIPPING.find((o) => o.id === method)
+    const server = SHIPPING_OPTIONS[method]
+
+    expect(client?.module).toBe(server.module)
+    expect(client?.description).toBe(server.description)
+    expect(client?.price).toBe(server.displayPrice)
+  })
+
+  it('offers exactly the payment methods the server accepts, worded the same', () => {
+    expect(CLIENT_PAYMENT.map((o) => o.id)).toStrictEqual(PAYMENT_ORDER)
+    for (const option of CLIENT_PAYMENT) {
+      expect(option.label).toBe(PAYMENT_OPTIONS[option.id].label)
+    }
   })
 })
