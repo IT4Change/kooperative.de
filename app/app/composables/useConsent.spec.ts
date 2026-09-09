@@ -114,6 +114,17 @@ describe('returning visit', () => {
     expect(consent.showBanner.value).toBe(false)
   })
 
+  it('assumes no consent when reading it throws', async () => {
+    vi.spyOn(globalThis.localStorage, 'getItem').mockImplementation(() => {
+      throw new Error('SecurityError')
+    })
+
+    const consent = await freshConsent()
+
+    // Fail closed: without a readable record there is no consent on file.
+    expect(consent.consentGiven.value).toBe(false)
+  })
+
   it('treats any other stored value as no consent', async () => {
     localStorage.setItem(CONSENT_KEY, 'maybe')
 

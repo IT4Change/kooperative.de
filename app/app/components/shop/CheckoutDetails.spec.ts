@@ -195,7 +195,13 @@ describe('live IBAN lookup', () => {
     vi.useFakeTimers()
     fetchMock.mockResolvedValue({ ok: true, valid: false })
     try {
-      const wrapper = await mount({ shipping: 'abholung', payment: 'lastschrift' })
+      // Everything else is filled in, so the rejected IBAN is the only thing
+      // standing between the customer and the next step.
+      const wrapper = await mount({
+        shipping: 'abholung',
+        payment: 'lastschrift',
+        accountHolder: 'Erika Musterfrau',
+      })
       await wrapper.setProps({ iban: 'DE00000000000000000000' })
 
       await vi.advanceTimersByTimeAsync(300)
@@ -220,6 +226,116 @@ describe('live IBAN lookup', () => {
       await wrapper.vm.$nextTick()
 
       expect(wrapper.text()).toContain('12345678')
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('asks only once while the customer is still typing', async () => {
+    vi.useFakeTimers()
+    try {
+      const wrapper = await mount({ shipping: 'abholung', payment: 'lastschrift' })
+      await wrapper.setProps({ iban: 'DE8937040044' })
+      await vi.advanceTimersByTimeAsync(100)
+
+      // Still within the debounce window — the pending lookup is dropped.
+      await wrapper.setProps({ iban: 'DE89370400440532013000' })
+      await vi.advanceTimersByTimeAsync(300)
+
+      expect(fetchMock).toHaveBeenCalledTimes(1)
+      expect(fetchMock).toHaveBeenCalledWith('/api/iban/info', {
+        query: { iban: 'DE89370400440532013000' },
+      })
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('names a bank the Bundesbank list has no code for', async () => {
+    vi.useFakeTimers()
+    fetchMock.mockResolvedValue({ ok: true, valid: true, bankName: 'Kooperative Bank' })
+    try {
+      const wrapper = await mount({ shipping: 'abholung', payment: 'lastschrift' })
+      await wrapper.setProps({ iban: 'DE89370400440532013000' })
+
+      await vi.advanceTimersByTimeAsync(300)
+      await wrapper.vm.$nextTick()
+
+      expect(wrapper.text()).toContain('Kooperative Bank')
+      expect(wrapper.text()).not.toContain('BLZ')
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('opens the way forward once the server confirms the IBAN', async () => {
+    vi.useFakeTimers()
+    try {
+      const wrapper = await mount({
+        shipping: 'abholung',
+        payment: 'lastschrift',
+        accountHolder: 'Erika Musterfrau',
+      })
+      await wrapper.setProps({ iban: 'DE89370400440532013000' })
+
+      await vi.advanceTimersByTimeAsync(300)
+      await wrapper.vm.$nextTick()
+
+      expect(nextButton(wrapper).attributes('disabled')).toBeUndefined()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('ignores an answer that a newer lookup has already overtaken', async () => {
+    vi.useFakeTimers()
+    const deferred: { resolve: (v: unknown) => void; reject: (e: unknown) => void }[] = []
+    fetchMock.mockImplementation(
+      async () => new Promise((resolve, reject) => deferred.push({ resolve, reject })),
+    )
+    try {
+      const wrapper = await mount({ shipping: 'abholung', payment: 'lastschrift' })
+      await wrapper.setProps({ iban: 'DE89370400440532013000' })
+      await vi.advanceTimersByTimeAsync(300)
+      await wrapper.setProps({ iban: 'DE89100000000000000000' })
+      await vi.advanceTimersByTimeAsync(300)
+
+      // The second answer arrives first, the first one late.
+      deferred[1].resolve({ ok: true, valid: true, bankName: 'Zweite Bank' })
+      await vi.runAllTimersAsync()
+      deferred[0].resolve({ ok: true, valid: true, bankName: 'Erste Bank' })
+      await vi.runAllTimersAsync()
+      await wrapper.vm.$nextTick()
+
+      // Otherwise the customer would see the bank of an IBAN they overwrote.
+      expect(wrapper.text()).toContain('Zweite Bank')
+      expect(wrapper.text()).not.toContain('Erste Bank')
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('ignores a late failure of a lookup that was overtaken', async () => {
+    vi.useFakeTimers()
+    const deferred: { resolve: (v: unknown) => void; reject: (e: unknown) => void }[] = []
+    fetchMock.mockImplementation(
+      async () => new Promise((resolve, reject) => deferred.push({ resolve, reject })),
+    )
+    try {
+      const wrapper = await mount({ shipping: 'abholung', payment: 'lastschrift' })
+      await wrapper.setProps({ iban: 'DE89370400440532013000' })
+      await vi.advanceTimersByTimeAsync(300)
+      await wrapper.setProps({ iban: 'DE89100000000000000000' })
+      await vi.advanceTimersByTimeAsync(300)
+
+      deferred[1].resolve({ ok: true, valid: true, bankName: 'Zweite Bank' })
+      await vi.runAllTimersAsync()
+      deferred[0].reject(new Error('offline'))
+      await vi.runAllTimersAsync()
+      await wrapper.vm.$nextTick()
+
+      // A stale failure must not wipe the result the customer is looking at.
+      expect(wrapper.text()).toContain('Zweite Bank')
     } finally {
       vi.useRealTimers()
     }

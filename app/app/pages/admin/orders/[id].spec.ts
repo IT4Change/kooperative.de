@@ -18,8 +18,10 @@ const ID = 4711
 
 let detail: Record<string, unknown> = {}
 let detailStatus = 200
+let detailMessage: string | undefined = 'Datenbank weg'
 let statusResponse: unknown = { notified: false, mail: null }
 let statusFails: string | null = null
+let statusThrowsBare = false
 let notifyResponse: unknown = { ok: true, mail: { status: 'sent' } }
 let notifyFails: string | null = null
 const statusCalls: unknown[] = []
@@ -125,7 +127,7 @@ function base() {
 registerEndpoint(`/admin/api/orders/${ID}`, () => {
   refreshes += 1
   if (detailStatus !== 200) {
-    throw createError({ statusCode: detailStatus, statusMessage: 'Datenbank weg' })
+    throw createError({ statusCode: detailStatus, statusMessage: detailMessage })
   }
   return detail
 })
@@ -134,6 +136,7 @@ registerEndpoint(`/admin/api/orders/${ID}/status`, {
   handler: async (event) => {
     statusCalls.push(await readBody(event))
     if (statusFails) throw createError({ statusCode: 400, statusMessage: statusFails })
+    if (statusThrowsBare) throw new Error('Verbindung abgebrochen')
     return statusResponse
   },
 })
@@ -151,8 +154,10 @@ let unmount: (() => void) | null = null
 beforeEach(() => {
   detail = base()
   detailStatus = 200
+  detailMessage = 'Datenbank weg'
   statusResponse = { notified: false, mail: null }
   statusFails = null
+  statusThrowsBare = false
   notifyResponse = { ok: true, mail: { status: 'sent' } }
   notifyFails = null
   statusCalls.length = 0
@@ -219,12 +224,29 @@ describe('the header', () => {
     expect(wrapper.text()).toContain('Datenbank weg')
   })
 
+  it('shows the transport error when the server names no reason', async () => {
+    detailStatus = 503
+    detailMessage = undefined
+
+    const wrapper = await mount()
+
+    expect(wrapper.text()).toMatch(/\[GET\].*503/)
+  })
+
   it('says plainly when the order is simply not there', async () => {
     detailStatus = 404
 
     const wrapper = await mount()
 
     expect(wrapper.text()).toContain('Bestellung nicht gefunden.')
+  })
+
+  it('shows the payment method as unset when the order carries none', async () => {
+    detail = { ...base(), order: { ...base().order, paymentMethod: '' } }
+
+    const wrapper = await mount()
+
+    expect(wrapper.text()).toContain('–')
   })
 })
 
@@ -261,6 +283,16 @@ describe('the status stepper', () => {
     const wrapper = await mount()
 
     expect(wrapper.text()).toContain(label)
+  })
+
+  it('says nothing about a confirmation that never happened', async () => {
+    // A new-shop order can sit in the list before the customer answered.
+    detail = { ...base(), confirmation: null }
+
+    const wrapper = await mount()
+
+    expect(wrapper.text()).not.toContain('Vom Kunden bestätigt')
+    expect(wrapper.text()).not.toContain('keine gesonderte Bestätigung')
   })
 
   it('explains that old orders were never confirmed', async () => {
@@ -432,6 +464,18 @@ describe('setting a status', () => {
     expect((wrapper.get('textarea').element as HTMLTextAreaElement).value).toBe('Notiz')
   })
 
+  it('falls back to the transport error when the server names no reason', async () => {
+    // An unhandled exception in the handler arrives as a bare 500 — the reason
+    // stays on the server, so the operator gets the request line instead.
+    statusThrowsBare = true
+    const wrapper = await mount()
+
+    await button(wrapper, 'Status aktualisieren').trigger('click')
+    await waitForText(wrapper, 'Fehler:')
+
+    expect(wrapper.text()).toMatch(/Fehler: \[POST\].*500/)
+  })
+
   it('can leave the customer out of it', async () => {
     const wrapper = await mount()
     await wrapper.get('input[type="checkbox"]').setValue(false)
@@ -483,6 +527,24 @@ describe('customer and addresses', () => {
     expect(wrapper.get('a[href="mailto:erika@example.org"]').text()).toBe('erika@example.org')
     expect(wrapper.text()).toContain('Muster GmbH')
     expect(wrapper.text()).toContain('Kunden-Nr. 88')
+  })
+
+  it('shows a delivery company and leaves an absent suburb out', async () => {
+    const order = base().order
+    detail = {
+      ...base(),
+      order: {
+        ...order,
+        customer: { ...order.customer, company: null },
+        delivery: { ...order.delivery, company: 'Muster GmbH', suburb: null },
+      },
+    }
+
+    const wrapper = await mount()
+    const text = wrapper.text()
+
+    expect(text).toContain('Muster GmbH')
+    expect(text).not.toContain('Hinterhaus')
   })
 
   it('shows the delivery address including the suburb', async () => {

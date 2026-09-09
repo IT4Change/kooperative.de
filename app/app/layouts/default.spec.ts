@@ -20,6 +20,40 @@ const CONSENT_KEY = 'kooperative-consent-v1'
 // before anything calls into it.
 ;(window as unknown as { __storageBlocked: boolean }).__storageBlocked = true
 
+/**
+ * happy-dom has no IntersectionObserver, and no layout for one to work on. The
+ * fake records what was observed and lets the tests fire entries by hand.
+ */
+interface FakeObserver {
+  callback: IntersectionObserverCallback
+  observed: Element[]
+  disconnected: boolean
+}
+const observers: FakeObserver[] = []
+
+class FakeIntersectionObserver {
+  callback: IntersectionObserverCallback
+  options: IntersectionObserverInit | undefined
+  observed: Element[] = []
+  disconnected = false
+
+  constructor(callback: IntersectionObserverCallback, options?: IntersectionObserverInit) {
+    this.callback = callback
+    this.options = options
+    observers.push(this)
+  }
+  observe(el: Element) {
+    this.observed.push(el)
+  }
+  disconnect() {
+    this.disconnected = true
+  }
+  unobserve() {}
+  takeRecords() {
+    return []
+  }
+}
+
 /** happy-dom's scrollY is a getter; the scroll handler reads it on every event. */
 function scrollTo(y: number) {
   Object.defineProperty(window, 'scrollY', { value: y, configurable: true })
@@ -30,6 +64,9 @@ function scrollTo(y: number) {
 let unmount: (() => void) | null = null
 
 beforeEach(() => {
+  observers.length = 0
+  globalThis.IntersectionObserver =
+    FakeIntersectionObserver as unknown as typeof IntersectionObserver
   localStorage.clear()
   useConsent().decline()
   useStorage().dismissWarning()
@@ -105,6 +142,20 @@ describe('burger menu', () => {
     await wrapper.get('.main-nav a').trigger('click')
 
     expect(wrapper.get('.main-nav').classes()).not.toContain('open')
+  })
+
+  it('closes for every entry, not only the first', async () => {
+    const wrapper = await mount()
+    const links = wrapper.findAll('.main-nav a')
+
+    for (const link of links) {
+      await wrapper.get('.burger').trigger('click')
+      expect(wrapper.get('.main-nav').classes()).toContain('open')
+
+      await link.trigger('click')
+
+      expect(wrapper.get('.main-nav').classes()).not.toContain('open')
+    }
   })
 })
 
@@ -196,6 +247,83 @@ describe('shrinking header', () => {
   })
 })
 
+describe('the active section marker', () => {
+  it('watches the hero on the start page', async () => {
+    const wrapper = await mount('/')
+    // The hero lives in the page, not in the layout, so the test supplies it.
+    const hero = document.createElement('section')
+    hero.id = 'hero'
+    document.body.append(hero)
+    await useRouter().push('/impressum')
+    await useRouter().push('/')
+    await new Promise((resolve) => setTimeout(resolve, 0))
+
+    expect(observers.at(-1)?.observed).toContain(hero)
+
+    observers
+      .at(-1)!
+      .callback(
+        [{ isIntersecting: true, target: hero } as unknown as IntersectionObserverEntry],
+        observers.at(-1) as unknown as IntersectionObserver,
+      )
+    await nextTick()
+
+    expect(wrapper.get('.logo').classes()).toContain('active')
+    hero.remove()
+  })
+
+  it('ignores a section that scrolled out of view again', async () => {
+    const wrapper = await mount('/')
+    const hero = document.createElement('section')
+    hero.id = 'hero'
+    document.body.append(hero)
+    await useRouter().push('/impressum')
+    await useRouter().push('/')
+    await new Promise((resolve) => setTimeout(resolve, 0))
+
+    observers
+      .at(-1)!
+      .callback(
+        [{ isIntersecting: false, target: hero } as unknown as IntersectionObserverEntry],
+        observers.at(-1) as unknown as IntersectionObserver,
+      )
+    await nextTick()
+
+    expect(wrapper.get('.logo').classes()).not.toContain('active')
+    hero.remove()
+  })
+
+  it('starts a fresh observer on every return to the start page', async () => {
+    await mount('/')
+    const hero = document.createElement('section')
+    hero.id = 'hero'
+    document.body.append(hero)
+    await useRouter().push('/impressum')
+    await useRouter().push('/')
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    const before = observers.length
+
+    await useRouter().push('/impressum')
+    await useRouter().push('/')
+    await new Promise((resolve) => setTimeout(resolve, 0))
+
+    // Exactly one new one, and the previous one is gone — otherwise every
+    // return to the start page would leave another observer behind.
+    expect(observers).toHaveLength(before + 1)
+    expect(observers[before - 1].disconnected).toBe(true)
+    hero.remove()
+  })
+
+  it('clears the marker when leaving the start page', async () => {
+    const wrapper = await mount('/')
+
+    await useRouter().push('/impressum')
+    await nextTick()
+
+    expect(wrapper.get('.logo').classes()).not.toContain('active')
+  })
+})
+
 describe('storage warning', () => {
   it('stays away until storage is actually needed', async () => {
     await mount()
@@ -210,6 +338,20 @@ describe('storage warning', () => {
     await nextTick()
 
     expect(document.body.textContent).toContain('Cookies erforderlich')
+  })
+
+  it('can be dismissed by clicking beside it', async () => {
+    await mount()
+    useStorage().require()
+    await nextTick()
+    const dialog = document.body.querySelector<HTMLElement>('[role="dialog"]')!
+
+    // @click.self on the container — a click bubbling up from the panel must
+    // not count.
+    dialog.parentElement!.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    await nextTick()
+
+    expect(document.body.textContent).not.toContain('Cookies erforderlich')
   })
 
   it('can be dismissed', async () => {

@@ -13,7 +13,11 @@ let initialized = false
 let pendingAction: (() => void) | null = null
 
 function init() {
+  // import.meta.server is a build-time constant and false in the client build
+  // the unit suite runs, so only the `initialized` half is reachable here.
+  /* v8 ignore start */
   if (initialized || import.meta.server) return
+  /* v8 ignore stop */
   initialized = true
   try {
     consentGiven.value = localStorage.getItem(CONSENT_KEY) === 'true'

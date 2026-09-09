@@ -213,23 +213,14 @@
       .filter((el): el is HTMLElement => el !== null)
   }
 
-  function getTargetSection(direction: 'down' | 'up'): HTMLElement | null {
-    const sections = getSections()
+  /** The first section below the current position, or null at the bottom. */
+  function getNextSection(): HTMLElement | null {
     const scrollY = window.scrollY
     const threshold = 20
-
-    if (direction === 'down') {
-      for (const section of sections) {
-        if (section.offsetTop > scrollY + threshold) {
-          return section
-        }
-      }
-    } else {
-      // Beim Hochscrollen: nur zur Startseite (erste Sektion) einrasten
-      const hero = sections[0]
-      if (hero && scrollY > threshold && scrollY < hero.offsetHeight) {
-        return hero
-      }
+    // Scrolling up is handled by the callers directly: it always snaps back to
+    // the hero rather than to whatever section happens to be above.
+    for (const section of getSections()) {
+      if (section.offsetTop > scrollY + threshold) return section
     }
     return null
   }
@@ -254,15 +245,12 @@
       return
     }
 
-    const next = getTargetSection('down')
+    const next = getNextSection()
     if (!next) return
 
-    const scrollY = window.scrollY
-    const lastSection = getSections().at(-1)
-    if (
-      lastSection &&
-      scrollY >= lastSection.offsetTop + lastSection.offsetHeight - window.innerHeight
-    )
+    // There is a next section, so there is a last one too.
+    const lastSection = getSections().at(-1)!
+    if (window.scrollY >= lastSection.offsetTop + lastSection.offsetHeight - window.innerHeight)
       return
 
     e.preventDefault()
@@ -303,15 +291,12 @@
 
     if (deltaY <= 30) return
 
-    const next = getTargetSection('down')
+    const next = getNextSection()
     if (!next) return
 
-    const scrollY = window.scrollY
-    const lastSection = getSections().at(-1)
-    if (
-      lastSection &&
-      scrollY >= lastSection.offsetTop + lastSection.offsetHeight - window.innerHeight
-    )
+    // There is a next section, so there is a last one too.
+    const lastSection = getSections().at(-1)!
+    if (window.scrollY >= lastSection.offsetTop + lastSection.offsetHeight - window.innerHeight)
       return
 
     e.preventDefault()

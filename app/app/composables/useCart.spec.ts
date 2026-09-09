@@ -104,6 +104,16 @@ describe('adding items', () => {
     expect(cart.totalItems.value).toBe(2)
   })
 
+  it('counts a tier product up one at a time when no amount is given', async () => {
+    const cart = await freshCart()
+
+    cart.addToCart(TIERED)
+    cart.addToCart(TIERED)
+
+    expect(cart.items.value).toHaveLength(1)
+    expect(cart.items.value[0].quantity).toBe(2)
+  })
+
   it('keeps two sizes of the same product apart', async () => {
     const cart = await freshCart()
 
@@ -255,6 +265,46 @@ describe('persistence', () => {
     expect(cart.isEmpty.value).toBe(true)
   })
 
+  it('writes nothing at all while consent is missing', async () => {
+    const cart = await freshCart({ consent: false })
+
+    // clearCart persists too — every write has to go through the same gate.
+    cart.clearCart()
+
+    expect(localStorage.getItem(CART_KEY)).toBeNull()
+  })
+
+  it('refuses to add anything while the browser blocks storage', async () => {
+    ;(window as unknown as { __storageBlocked?: boolean }).__storageBlocked = true
+    try {
+      const cart = await freshCart()
+
+      cart.addToCart(product())
+
+      // Adding without being able to remember it would lose the list on reload.
+      expect(cart.isEmpty.value).toBe(true)
+    } finally {
+      delete (window as unknown as { __storageBlocked?: boolean }).__storageBlocked
+    }
+  })
+
+  it('restores the chosen size along with the item', async () => {
+    localStorage.setItem(CONSENT_KEY, 'true')
+    localStorage.setItem(
+      CART_KEY,
+      JSON.stringify([{ productId: '3', quantity: 1, variantIndex: 1 }]),
+    )
+    fetchMock.mockResolvedValue({ products: [SIZED] })
+
+    vi.resetModules()
+    globalThis.$fetch = fetchMock as unknown as typeof $fetch
+    const { useCart } = await import('./useCart')
+    const cart = useCart()
+    await new Promise((resolve) => setTimeout(resolve, 0))
+
+    expect(cart.items.value[0]).toMatchObject({ variantIndex: 1, quantity: 1 })
+  })
+
   it('restores a stored cart on the next visit', async () => {
     localStorage.setItem(CONSENT_KEY, 'true')
     localStorage.setItem(CART_KEY, JSON.stringify([{ productId: '1', quantity: 3 }]))
@@ -335,6 +385,21 @@ describe('submitting the order', () => {
     fetchMock.mockResolvedValue({ ok: true, pendingId: 12, total: 11.9 })
     return cart
   }
+
+  it('sends the chosen size along with the line', async () => {
+    const cart = await freshCart()
+    cart.addToCart(SIZED, 1)
+    cart.shippingMethod.value = 'abholung'
+    cart.paymentMethod.value = 'vorkasse'
+    fetchMock.mockResolvedValue({ ok: true, pendingId: 12, total: 17.85 })
+
+    await cart.submitOrder()
+
+    // Without the index the server would price the small bottle.
+    expect(fetchMock.mock.calls.at(-1)?.[1].body.items).toStrictEqual([
+      { productId: '3', quantity: 1, variantIndex: 1 },
+    ])
+  })
 
   it('sends the cart and clears it on success', async () => {
     const cart = await readyCart()

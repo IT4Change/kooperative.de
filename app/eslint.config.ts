@@ -197,6 +197,8 @@ export default withNuxt(
       'vitest/require-hook': 'off',
       // happy-dom does not implement scrollIntoView, so there is nothing to spy on
       'vitest/prefer-spy-on': 'off',
+      // Composable specs define throwaway host components next to each other
+      'vue/one-component-per-file': 'off',
       // Fake timers and flush helpers legitimately construct promises
       'promise/avoid-new': 'off',
       // Its auto-fix rewrites toHaveBeenCalled() into toHaveBeenCalledWith(),

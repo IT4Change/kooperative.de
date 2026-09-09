@@ -20,11 +20,16 @@ export default defineVitestConfig({
       exclude: ['**/*.spec.ts'],
       // One floor for the whole project, raised as the suite grows and never
       // lowered. See docs/testing.md.
+      //
+      // Branches sit one point below the rest, not for want of tests: twelve
+      // counters in app/pages/shop/[...path].vue never register at all (both
+      // sides read 0) although the suite renders each of them. They are an
+      // artefact of the v8 → istanbul remapping for that SFC template.
       thresholds: {
-        statements: 97,
-        branches: 94,
-        functions: 94,
-        lines: 97,
+        statements: 100,
+        branches: 99,
+        functions: 100,
+        lines: 100,
       },
     },
   },

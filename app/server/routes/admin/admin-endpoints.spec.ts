@@ -409,6 +409,21 @@ describe('GET /admin/api/orders', () => {
     expect(sql).not.toContain("kp.status = 'pending'")
   })
 
+  it('asks only for pending orders when no osCommerce status is selected', async () => {
+    const db = useMockDb([
+      { match: 'FROM koop_pending_order kp LIMIT', rows: [{ 1: 1 }] },
+      { match: 'COUNT(*) AS c', rows: [{ c: 2 }] },
+    ])
+
+    const result = await callHandler<{ total: number }>(orderList, {
+      url: '/admin/api/orders?status=pending',
+    })
+
+    // Counting the osCommerce orders too would inflate the total by the whole table.
+    expect(db.calls.some((c) => c.sql.includes('COUNT(*) AS c FROM orders o'))).toBe(false)
+    expect(result.total).toBe(2)
+  })
+
   it('takes an explicit list of statuses', async () => {
     const db = useMockDb([
       { match: 'FROM koop_pending_order kp LIMIT', rows: [{ 1: 1 }] },

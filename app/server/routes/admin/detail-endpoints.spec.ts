@@ -181,7 +181,11 @@ describe('GET /admin/api/orders/[id]', () => {
     ])
 
     const result = await callHandler<{
-      order: { currency: string; customer: Record<string, string>; delivery: Record<string, string> }
+      order: {
+        currency: string
+        customer: Record<string, string>
+        delivery: Record<string, string>
+      }
     }>(orderDetail, { params: { id: '55' } })
 
     expect(result.order.currency).toBe('CHF')
@@ -264,7 +268,13 @@ describe('GET /admin/api/orders/[id]', () => {
     ])
 
     const result = await callHandler<{
-      order: { statusName: null; paymentMethod: string; currency: string; customer: Record<string, unknown>; delivery: Record<string, unknown> }
+      order: {
+        statusName: null
+        paymentMethod: string
+        currency: string
+        customer: Record<string, unknown>
+        delivery: Record<string, unknown>
+      }
       products: Record<string, unknown>[]
       totals: Record<string, unknown>[]
       history: Record<string, unknown>[]
@@ -392,7 +402,10 @@ describe('GET /admin/api/orders/[id]', () => {
   it('still renders the order when the mail log table is missing', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     orderDb([
-      { match: 'koop_order_mail_log', error: new Error("Table 'koop_order_mail_log' doesn't exist") },
+      {
+        match: 'koop_order_mail_log',
+        error: new Error("Table 'koop_order_mail_log' doesn't exist"),
+      },
     ])
 
     const result = await callHandler<{ mails: unknown[]; order: unknown }>(orderDetail, {

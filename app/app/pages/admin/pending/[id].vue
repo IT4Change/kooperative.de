@@ -265,7 +265,7 @@
 <script setup lang="ts">
   definePageMeta({ layout: 'admin' })
 
-  const { euro, dateTime, date } = useAdminFormat()
+  const { euro, dateTime, date, errorMessage } = useAdminFormat()
   const route = useRoute()
 
   interface FlowStep {
@@ -361,7 +361,7 @@
       await refresh()
     } catch (e) {
       actionError.value = true
-      actionMsg.value = `Fehler: ${errMsg(e)}`
+      actionMsg.value = `Fehler: ${errorMessage(e)}`
     } finally {
       busy.value = false
     }
@@ -377,14 +377,9 @@
       await refresh()
     } catch (e) {
       actionError.value = true
-      actionMsg.value = `Fehler: ${errMsg(e)}`
+      actionMsg.value = `Fehler: ${errorMessage(e)}`
     } finally {
       busy.value = false
     }
-  }
-
-  function errMsg(e: unknown): string {
-    const err = e as { data?: { statusMessage?: string }; statusMessage?: string; message?: string }
-    return err.data?.statusMessage || err.statusMessage || err.message || 'unbekannt'
   }
 </script>

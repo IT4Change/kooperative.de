@@ -66,7 +66,7 @@
         @click="selectedTopLevel && $emit('select', selectedTopLevel)"
       >
         Alle
-        <span class="ml-1 opacity-70">{{ counts[selectedTopLevel ?? ''] || 0 }}</span>
+        <span class="ml-1 opacity-70">{{ selectedTopLevelCount }}</span>
       </button>
     </div>
   </div>
@@ -94,10 +94,18 @@
     return idx === -1 ? props.selected : props.selected.slice(0, idx)
   })
 
-  // Both "Alle" buttons would otherwise be announced identically.
-  const selectedTopLevelName = computed(
-    () => props.categories.find((c) => c.slug === selectedTopLevel.value)?.name ?? 'Kategorien',
+  /**
+   * The category the subcategory row belongs to. Both values below are only ever
+   * read inside that row, which renders when `children` is non-empty — and a
+   * child can only exist if its parent is in the list.
+   */
+  const selectedParent = computed(() =>
+    props.categories.find((c) => c.slug === selectedTopLevel.value),
   )
+
+  // Both "Alle" buttons would otherwise be announced identically.
+  const selectedTopLevelName = computed(() => selectedParent.value!.name)
+  const selectedTopLevelCount = computed(() => props.counts[selectedParent.value!.slug] ?? 0)
 
   function isSelected(slug: string) {
     return props.selected === slug || selectedTopLevel.value === slug

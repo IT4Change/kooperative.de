@@ -145,6 +145,11 @@ describe('parseOrder', () => {
       'Position 1: Menge',
     ],
     [
+      'a quantity that is not a number at all',
+      { ...VALID_ORDER, items: [{ productId: '1', quantity: '2' }] },
+      'Position 1: Menge',
+    ],
+    [
       'a quantity above the cap',
       { ...VALID_ORDER, items: [{ productId: '1', quantity: 10000 }] },
       'Position 1: Menge',

@@ -65,6 +65,16 @@ describe('switching modes', () => {
     expect(wrapper.findAll('input').length).toBeGreaterThan(2)
   })
 
+  it('switches back to the login form', async () => {
+    const wrapper = await mountSuspended(CheckoutLogin)
+    await wrapper.findAll('[role="tab"]')[1].trigger('click')
+
+    await wrapper.findAll('[role="tab"]')[0].trigger('click')
+
+    expect(wrapper.get('[role="tab"][aria-selected="true"]').text()).toBe('Anmelden')
+    expect(wrapper.findAll('input')).toHaveLength(2)
+  })
+
   it('exposes the two forms as tab panels', async () => {
     const wrapper = await mountSuspended(CheckoutLogin)
 
@@ -125,6 +135,19 @@ describe('logging in', () => {
     expect(wrapper.get('[role="alert"]').text()).toBe('Fehler')
   })
 
+  it('reports a rejection that is not an object at all', async () => {
+    const wrapper = await mountSuspended(CheckoutLogin)
+    fetchMock.mockRejectedValue('offline')
+    await wrapper.get('input[type="email"]').setValue('a@b.c')
+    await wrapper.get('input[type="password"]').setValue('x')
+
+    await wrapper.get('form').trigger('submit')
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.get('[role="alert"]').text()).toBe('Fehler')
+  })
+
   it('emits back', async () => {
     const wrapper = await mountSuspended(CheckoutLogin)
 
@@ -134,6 +157,32 @@ describe('logging in', () => {
       .trigger('click')
 
     expect(wrapper.emitted('back')).toHaveLength(1)
+  })
+
+  it('emits back from the registration form too', async () => {
+    const wrapper = await mountSuspended(CheckoutLogin)
+    await wrapper.findAll('[role="tab"]')[1].trigger('click')
+
+    await wrapper
+      .findAll('button')
+      .find((b) => b.text() === 'Zurück')!
+      .trigger('click')
+
+    expect(wrapper.emitted('back')).toHaveLength(1)
+  })
+
+  it('offers the countries the shop delivers to', async () => {
+    const wrapper = await mountSuspended(CheckoutLogin)
+    await wrapper.findAll('[role="tab"]')[1].trigger('click')
+    const country = wrapper.get('[id$="-country"]')
+
+    await country.setValue('AT')
+
+    expect(country.findAll('option').map((o) => o.attributes('value'))).toStrictEqual([
+      'DE',
+      'AT',
+      'CH',
+    ])
   })
 })
 

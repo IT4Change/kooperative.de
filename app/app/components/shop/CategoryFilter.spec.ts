@@ -134,6 +134,14 @@ describe('subcategories', () => {
     expect(wrapper.emitted('select')?.[0]).toStrictEqual(['lebensmittel'])
   })
 
+  it('shows a zero for a parent no product counts towards', async () => {
+    const wrapper = await mountSuspended(CategoryFilter, {
+      props: { selected: 'lebensmittel/oele', counts: {}, categories: CATEGORIES, total: 0 },
+    })
+
+    expect(subRow(wrapper).at(-1)?.text()).toContain('0')
+  })
+
   it('names the top-level "Alle" distinctly', async () => {
     const wrapper = await mount(null)
 

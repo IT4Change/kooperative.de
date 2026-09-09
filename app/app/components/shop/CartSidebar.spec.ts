@@ -52,7 +52,7 @@ const bodyText = () => document.body.textContent
 /** The button that leaves the cart step. */
 const proceed = () =>
   [...document.body.querySelectorAll('button')].find((b) =>
-    b.textContent?.includes('Zur Bestellung'),
+    b.textContent.includes('Zur Bestellung'),
   )
 
 beforeEach(() => {
@@ -243,10 +243,11 @@ describe('step machine', () => {
     cart.goToDetails()
     await new Promise((resolve) => setTimeout(resolve, 0))
 
-    const pick = (name: string, value: string) =>
+    const pick = (name: string, value: string) => {
       document.body
         .querySelector<HTMLInputElement>(`input[name="${name}"][value="${value}"]`)!
         .click()
+    }
     const type = (el: HTMLInputElement | HTMLTextAreaElement, value: string) => {
       el.value = value
       el.dispatchEvent(new Event('input', { bubbles: true }))

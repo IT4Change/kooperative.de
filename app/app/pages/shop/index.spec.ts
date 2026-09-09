@@ -48,8 +48,17 @@ const BOOKS: Product[] = Array.from({ length: 30 }, (_, i) =>
   }),
 )
 
+/** Same day, so only the name can decide; and one row with no date at all. */
+const TIED: Product[] = [
+  product({ id: 't2', name: 'Gleichstand B', dateAdded: '2026-01-15' }),
+  product({ id: 't1', name: 'Gleichstand A', dateAdded: '2026-01-15' }),
+  product({ id: 't3', name: 'Ohne Datum' }),
+  product({ id: 't4', name: 'Ohne Datum zwei' }),
+]
+
 const PRODUCTS: Product[] = [
   ...BOOKS,
+  ...TIED,
   product({
     id: 'o1',
     name: 'Olivenöl',
@@ -60,12 +69,16 @@ const PRODUCTS: Product[] = [
   product({ id: 'l1', name: 'Honig', category: 'lebensmittel' }),
 ]
 
-registerEndpoint('/api/products', () => ({ products: PRODUCTS, categories: CATEGORIES }))
+/** Swapped out by the tests that need a different catalogue. */
+let catalog: unknown = { products: PRODUCTS, categories: CATEGORIES }
+
+registerEndpoint('/api/products', () => catalog)
 registerEndpoint('/api/auth/me', () => ({ authenticated: false }))
 
 let unmount: (() => void) | null = null
 
 beforeEach(() => {
+  catalog = { products: PRODUCTS, categories: CATEGORIES }
   localStorage.setItem(WELCOME_KEY, '1')
   clearNuxtData()
 })
@@ -132,9 +145,9 @@ describe('choosing a category', () => {
   it('treats "alle" as an explicit choice, not as an absent one', async () => {
     const wrapper = await mount('/shop?kategorie=alle')
 
-    // 33 products, capped at the page size.
+    // 37 products, capped at the page size.
     expect(shownNames(wrapper)).toHaveLength(24)
-    expect(wrapper.text()).toContain('24 von 33 Produkten angezeigt')
+    expect(wrapper.text()).toContain('24 von 37 Produkten angezeigt')
   })
 
   it('falls back to the default for a category that does not exist', async () => {
@@ -254,18 +267,44 @@ describe('search', () => {
   })
 })
 
+describe('an empty answer from the API', () => {
+  it('renders an empty shop instead of failing', async () => {
+    catalog = {}
+
+    const wrapper = await mount('/shop')
+
+    expect(wrapper.text()).toContain('Keine Produkte gefunden.')
+    expect(shownNames(wrapper)).toStrictEqual([])
+  })
+})
+
 describe('category counts', () => {
   it('counts subcategories towards their parent', async () => {
     const wrapper = await mount('/shop')
     const counts = wrapper.findAllComponents({ name: 'ShopCategoryFilter' })[0].props('counts')
 
     expect(counts).toMatchObject({
-      buecher: 30,
-      'buecher/roman': 30,
+      buecher: 34,
+      'buecher/roman': 34,
       lebensmittel: 3,
       'lebensmittel/oele': 2,
     })
     expect(counts).not.toHaveProperty('leer')
+  })
+
+  it('searches a product whose category is not in the list', async () => {
+    // Category and product lists are two queries; a product can name a category
+    // the other query did not return.
+    catalog = {
+      products: [...PRODUCTS, product({ id: 'x1', name: 'Waise', category: 'verschwunden' })],
+      categories: CATEGORIES,
+    }
+    const wrapper = await mount('/shop')
+
+    await wrapper.get('input[type="search"]').setValue('Waise')
+    await urlBecomes({ q: 'Waise' })
+
+    expect(shownNames(wrapper)).toStrictEqual(['Waise'])
   })
 
   it('follows the search', async () => {
@@ -281,6 +320,18 @@ describe('category counts', () => {
 })
 
 describe('sorting', () => {
+  it('breaks a tie between two books of the same day by name', async () => {
+    const wrapper = await mount('/shop?kategorie=buecher&q=Gleichstand')
+
+    expect(shownNames(wrapper)).toStrictEqual(['Gleichstand A', 'Gleichstand B'])
+  })
+
+  it('sorts books without a date to the back, by name', async () => {
+    const wrapper = await mount('/shop?kategorie=buecher&q=Ohne%20Datum')
+
+    expect(shownNames(wrapper)).toStrictEqual(['Ohne Datum', 'Ohne Datum zwei'])
+  })
+
   it('puts the newest book first', async () => {
     // The books arrive in ascending date order, so the server order alone would
     // show the oldest first.
@@ -313,14 +364,14 @@ describe('paging', () => {
       .find((b) => b.text() === 'Mehr anzeigen')!
       .trigger('click')
 
-    expect(shownNames(wrapper)).toHaveLength(33)
+    expect(shownNames(wrapper)).toHaveLength(37)
     expect(wrapper.text()).not.toContain('Mehr anzeigen')
   })
 
   it('announces the count for screen readers', async () => {
     const wrapper = await mount('/shop?kategorie=alle')
 
-    expect(wrapper.get('[role="status"]').text()).toBe('24 von 33 Produkten angezeigt')
+    expect(wrapper.get('[role="status"]').text()).toBe('24 von 37 Produkten angezeigt')
   })
 
   it('goes back to the first page when the filter narrows', async () => {
@@ -333,7 +384,7 @@ describe('paging', () => {
     await clickCategory(wrapper, 'Bücher')
     await urlBecomes({ kategorie: 'buecher' })
 
-    // Leaving the count where it was would dump 33 books on the next category.
+    // Leaving the count where it was would dump every book on the next category.
     expect(shownNames(wrapper)).toHaveLength(24)
   })
 })
@@ -385,7 +436,10 @@ describe('adding to the cart', () => {
     const { clearCart, items, closeCart } = useCart()
     clearCart()
 
-    await wrapper.findAllComponents({ name: 'ShopProductGrid' })[0].vm.$emit('add', PRODUCTS[31], 0)
+    const sonnenblumenoel = PRODUCTS.find((p) => p.id === 'o2')!
+    await wrapper
+      .findAllComponents({ name: 'ShopProductGrid' })[0]
+      .vm.$emit('add', sonnenblumenoel, 0)
 
     expect(items.value[0]).toMatchObject({ product: { id: 'o2' }, variantIndex: 0 })
     clearCart()

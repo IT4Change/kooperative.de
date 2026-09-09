@@ -130,6 +130,15 @@ describe('a product with sizes', () => {
   })
 })
 
+describe('a malformed product', () => {
+  it('falls back to the base price when a tier product has no tiers', async () => {
+    const wrapper = await mount(product({ variantType: 'quantity' }))
+
+    // 11.90 × 1 — no tier list to price against.
+    expect(wrapper.text()).toContain('11.90')
+  })
+})
+
 describe('a product with quantity tiers', () => {
   it('offers a quantity field instead of a size picker', async () => {
     const wrapper = await mount(TIERED)

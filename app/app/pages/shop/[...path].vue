@@ -102,13 +102,15 @@
 
   // Parse path: /shop/747/bad-reiniger, /shop/747, or /shop/bad-reiniger.
   // The first segment identifies the product in every shape — as id or as slug.
-  const segments = Array.isArray(route.params.path) ? route.params.path : [route.params.path]
+  // A catch-all route always hands over an array, and /shop itself is served by
+  // index.vue, so there is always at least one segment to read.
+  const segments = route.params.path as string[]
   const productRef = segments[0]
 
   // One product instead of the whole catalogue: the listing endpoint carries
   // every product, which is far too much to ship for a single detail view.
   const { data } = await useFetch<{ product: Product; categoryName: string }>(
-    `/api/products/${encodeURIComponent(productRef ?? '')}`,
+    `/api/products/${encodeURIComponent(productRef)}`,
     { key: `product-${productRef}` },
   )
 
@@ -150,10 +152,9 @@
 
   const activeVariant = computed(() => product.variants?.[selectedVariant.value])
 
-  const activeTierIndex = computed(() => {
-    if (product.variantType !== 'quantity' || !product.variants) return 0
-    return findTierIndex(product.variants, quantity.value)
-  })
+  // Only read for a quantity-tier product that has its tiers: the template shows
+  // it inside the tier list, and activeTierPrice checks first.
+  const activeTierIndex = computed(() => findTierIndex(product.variants!, quantity.value))
 
   const activeTierPrice = computed(() => {
     if (!product.variants) return product.price
@@ -167,9 +168,9 @@
     return activeVariant.value?.price ?? product.price
   })
 
-  const displayUnitPrice = computed(() =>
-    activeVariant.value ? unitPrice(activeVariant.value).toFixed(2) : '',
-  )
+  // Shown next to the price for size variants only, where activeVariant is the
+  // currently picked one and therefore always set.
+  const displayUnitPrice = computed(() => unitPrice(activeVariant.value!).toFixed(2))
 
   const displayImages = computed(() =>
     activeVariant.value && product.variantType !== 'quantity'

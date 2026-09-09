@@ -1,5 +1,5 @@
 import { mountSuspended } from '@nuxt/test-utils/runtime'
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 import CheckoutConfirm from './CheckoutConfirm.vue'
 
@@ -39,7 +39,84 @@ const BASE = {
 const mount = async (props: Partial<typeof BASE> = {}) =>
   mountSuspended(CheckoutConfirm, { props: { ...BASE, ...props } })
 
+/** Signs a customer in through the composable the component reads. */
+async function signIn(over: Record<string, unknown> = {}) {
+  const { useAuth } = await import('../../composables/useAuth')
+  globalThis.$fetch = vi.fn().mockResolvedValue({
+    authenticated: true,
+    customerId: 3,
+    email: 'kundin@example.org',
+    firstname: 'Erika',
+    lastname: 'Musterfrau',
+    telephone: '0711 123',
+    address: { street: 'Im Winkel 11', postcode: '88422', city: 'Dürnau', countryId: 81 },
+    ...over,
+  }) as unknown as typeof $fetch
+  const auth = useAuth()
+  await auth.refresh()
+  return auth
+}
+
+beforeEach(() => {
+  globalThis.$fetch = vi
+    .fn()
+    .mockResolvedValue({ authenticated: false }) as unknown as typeof $fetch
+})
+
+describe('the delivery address', () => {
+  it('stays away while nobody is signed in', async () => {
+    const wrapper = await mount()
+
+    expect(wrapper.text()).not.toContain('Lieferadresse')
+  })
+
+  it('shows the address on file with a way to correct it', async () => {
+    await signIn()
+
+    const wrapper = await mount()
+
+    expect(wrapper.text()).toContain('Lieferadresse')
+    expect(wrapper.text()).toContain('Erika Musterfrau')
+    expect(wrapper.text()).toContain('Im Winkel 11')
+    expect(wrapper.text()).toContain('88422 Dürnau')
+    expect(wrapper.text()).toContain('0711 123')
+    expect(wrapper.get('a[target="_blank"]').attributes('href')).toContain('account.php')
+  })
+
+  it('leaves the separator out for a customer without a phone number', async () => {
+    await signIn({ telephone: '' })
+
+    const wrapper = await mount()
+
+    expect(wrapper.text()).toContain('kundin@example.org')
+    expect(wrapper.text()).not.toContain('·')
+  })
+})
+
 describe('summary', () => {
+  it('marks shipping and payment as unset while nothing is chosen', async () => {
+    // The step is reachable with both still empty; showing "undefined" there
+    // would look like a bug rather than a missing choice.
+    const wrapper = await mount({ shipping: null, payment: null })
+
+    expect(wrapper.text()).toContain('Versand: –')
+    expect(wrapper.text()).toContain('–')
+  })
+
+  it('prices a line at its chosen variant, and at the base if the index is stale', async () => {
+    const sized = product({
+      variants: [
+        { productId: '1', size: '0,5 L', price: 9.52, amount: 0.5, referenceUnit: 'L', image: '' },
+      ],
+    })
+
+    const chosen = await mount({ items: [{ product: sized, quantity: 1, variantIndex: 0 }] })
+    expect(chosen.text()).toContain('9.52')
+
+    const stale = await mount({ items: [{ product: sized, quantity: 1, variantIndex: 7 }] })
+    expect(stale.text()).toContain('11.90')
+  })
+
   it('lists the items with their totals', async () => {
     const wrapper = await mount()
 

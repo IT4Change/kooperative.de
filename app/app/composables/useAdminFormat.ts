@@ -43,5 +43,19 @@ export function useAdminFormat() {
     }
   }
 
-  return { euro, dateTime, date, statusClass }
+  /**
+   * The reason an admin action failed, in the order of usefulness: what the
+   * handler said, then what the transport said. The last fallback only exists
+   * because every field of a rejected value is optional.
+   */
+  const errorMessage = (e: unknown): string => {
+    const err = e as {
+      data?: { statusMessage?: string }
+      statusMessage?: string
+      message?: string
+    }
+    return err.data?.statusMessage || err.statusMessage || err.message || 'unbekannt'
+  }
+
+  return { euro, dateTime, date, statusClass, errorMessage }
 }

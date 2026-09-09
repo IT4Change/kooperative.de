@@ -11,9 +11,11 @@ import AdminDashboard from './index.vue'
 let response: unknown = {}
 let status = 200
 
+let statusMessage: string | undefined = 'Datenbank weg'
+
 registerEndpoint('/admin/api/dashboard', () => {
   if (status !== 200) {
-    throw createError({ statusCode: status, statusMessage: 'Datenbank weg' })
+    throw createError({ statusCode: status, statusMessage })
   }
   return response
 })
@@ -30,6 +32,7 @@ const FULL = {
 beforeEach(() => {
   response = FULL
   status = 200
+  statusMessage = 'Datenbank weg'
   clearNuxtData()
 })
 
@@ -100,5 +103,15 @@ describe('when the database is unreachable', () => {
 
     expect(wrapper.text()).toContain('Daten konnten nicht geladen werden')
     expect(wrapper.text()).toContain('Datenbank weg')
+  })
+
+  it('falls back to the raw error when the server sends no message', async () => {
+    status = 503
+    statusMessage = undefined
+
+    const wrapper = await mount()
+
+    // Better a technical line than an empty "Daten konnten nicht geladen werden:".
+    expect(wrapper.text()).toMatch(/Daten konnten nicht geladen werden: .+/)
   })
 })

@@ -163,7 +163,7 @@ describe('wheel', () => {
     expect(hero.scrollIntoView).not.toHaveBeenCalled()
   })
 
-  it('releases the page at the last section', async () => {
+  it('releases the page below the last section', async () => {
     await mountPage()
     scrollTo(HERO_HEIGHT * 2 - VIEWPORT)
 
@@ -171,6 +171,47 @@ describe('wheel', () => {
 
     expect(uebersicht.scrollIntoView).not.toHaveBeenCalled()
     expect(event.defaultPrevented).toBe(false)
+  })
+
+  it('releases the page once the last section is fully in view', async () => {
+    // A last section shorter than the window is completely visible long before
+    // it is reached — snapping to it then would scroll backwards.
+    await mountPage()
+    layout(uebersicht, HERO_HEIGHT, 100)
+    scrollTo(200)
+
+    const event = wheel(120)
+
+    expect(uebersicht.scrollIntoView).not.toHaveBeenCalled()
+    expect(event.defaultPrevented).toBe(false)
+  })
+
+  it('releases the scroll lock after the animation, also going up', async () => {
+    await mountPage()
+    scrollTo(400)
+    wheel(-120)
+    vi.advanceTimersByTime(800)
+
+    wheel(-120)
+
+    expect(hero.scrollIntoView).toHaveBeenCalledTimes(2)
+  })
+
+  it('does nothing at all when the sections are gone', async () => {
+    // Defensive, but reachable: the page is still mounted while the router is
+    // already tearing its content down.
+    await mountPage()
+    hero.remove()
+    uebersicht.remove()
+    scrollTo(400)
+
+    const up = wheel(-120)
+    const down = wheel(120)
+
+    expect(hero.scrollIntoView).not.toHaveBeenCalled()
+    expect(uebersicht.scrollIntoView).not.toHaveBeenCalled()
+    expect(up.defaultPrevented).toBe(false)
+    expect(down.defaultPrevented).toBe(false)
   })
 
   it('stops listening once the page is left', async () => {
@@ -231,7 +272,19 @@ describe('touch', () => {
     expect(uebersicht.scrollIntoView).toHaveBeenCalledTimes(1)
   })
 
-  it('releases the page at the last section', async () => {
+  it('does nothing at all when the sections are gone', async () => {
+    await mountPage()
+    hero.remove()
+    uebersicht.remove()
+    scrollTo(400)
+
+    const event = touch(400, 500)
+
+    expect(hero.scrollIntoView).not.toHaveBeenCalled()
+    expect(event.defaultPrevented).toBe(false)
+  })
+
+  it('releases the page below the last section', async () => {
     await mountPage()
     scrollTo(HERO_HEIGHT * 2 - VIEWPORT)
 
@@ -239,5 +292,38 @@ describe('touch', () => {
 
     expect(uebersicht.scrollIntoView).not.toHaveBeenCalled()
     expect(event.defaultPrevented).toBe(false)
+  })
+
+  it('releases the page once the last section is fully in view', async () => {
+    await mountPage()
+    layout(uebersicht, HERO_HEIGHT, 100)
+    scrollTo(200)
+
+    const event = touch(500, 400)
+
+    expect(uebersicht.scrollIntoView).not.toHaveBeenCalled()
+    expect(event.defaultPrevented).toBe(false)
+  })
+
+  it('releases the scroll lock after the animation', async () => {
+    await mountPage()
+    touch(500, 400)
+    vi.advanceTimersByTime(800)
+    scrollTo(400)
+
+    touch(400, 500)
+
+    expect(hero.scrollIntoView).toHaveBeenCalledTimes(1)
+  })
+
+  it('releases the scroll lock after snapping back to the hero', async () => {
+    await mountPage()
+    scrollTo(400)
+    touch(400, 500)
+    vi.advanceTimersByTime(800)
+
+    touch(400, 500)
+
+    expect(hero.scrollIntoView).toHaveBeenCalledTimes(2)
   })
 })

@@ -28,13 +28,14 @@ const ROWS: Row[] = [
 let rows: Row[] = []
 let total = 0
 let fail = false
+let failMessage: string | undefined = 'kaputt'
 const seen: Record<string, string>[] = []
 
 const queryOf = (path: string) => Object.fromEntries(new URLSearchParams(path.split('?')[1] ?? ''))
 
 registerEndpoint('/admin/api/customers', (event) => {
   seen.push(queryOf(event.path))
-  if (fail) throw createError({ statusCode: 500, statusMessage: 'kaputt' })
+  if (fail) throw createError({ statusCode: 500, statusMessage: failMessage })
   return { total, page: 1, limit: 50, customers: rows }
 })
 
@@ -44,6 +45,7 @@ beforeEach(() => {
   rows = ROWS
   total = 2
   fail = false
+  failMessage = 'kaputt'
   seen.length = 0
   clearNuxtData()
 })
@@ -114,6 +116,15 @@ describe('the table', () => {
 
     expect(wrapper.text()).toContain('Fehler beim Laden')
     expect(wrapper.text()).toContain('kaputt')
+  })
+
+  it('falls back to the raw error when the server sends no message', async () => {
+    fail = true
+    failMessage = undefined
+
+    const wrapper = await mount()
+
+    expect(wrapper.text()).toMatch(/Fehler beim Laden: .+/)
   })
 
   it('counts the whole result', async () => {

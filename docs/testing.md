@@ -104,11 +104,35 @@ nicht einzelne Ecken stillschweigend zurückfallen können.
 erreichten Werte als neue Schwellen eintragen. Schwellen werden nie gesenkt; wenn
 ein Wert fällt, fehlt ein Test.
 
-Stand: 891 Tests, 96 % Statements / 89 % Branches / 94 % Functions / 97 % Lines.
+Stand: 1024 Tests, **100 % Statements, Functions und Lines**, 99,46 % Branches.
 
-Was noch offen ist, sind einzelne Fehlerpfade in den Admin-API-Handlern
-(`admin/api/orders/[id].get.ts`, `admin/api/pending/[id].get.ts`) sowie Zweige,
-die nur mit einer echten Datenbank auftreten.
+### Warum Branches nicht bei 100 stehen
+
+Zwölf Branch-Zähler in `app/pages/shop/[...path].vue` melden auf **beiden**
+Seiten den Stand 0 — sie werden also nie erreicht, obwohl die Specs beide
+Varianten rendern und prüfen (`Art.-Nr.` ist bei einem Produkt mit `model` da und
+bei einem ohne nicht). Das ist ein Artefakt der v8→istanbul-Umrechnung für dieses
+eine SFC-Template, keine Testlücke. Zwei Wege dorthin, falls die Zahl stören
+sollte: den Coverage-Provider auf `istanbul` umstellen (zusätzliche
+devDependency, alle Werte neu einmessen), oder die `throw`-im-`setup`-Behandlung
+der Seite umbauen.
+
+### Bewusst ausgenommener Code
+
+`/* v8 ignore start|stop */` steht an drei Stellen, jeweils mit Begründung im
+Code: die `import.meta.server`-Zweige in `useStorage`, `useConsent` und
+`useCart`. Das ist eine Build-Zeit-Konstante, im Client-Build — dem, den die Unit
+-Suite ausführt — immer `false`.
+
+### Was dabei am Produktivcode auffiel
+
+Der Weg auf 100 % hat mehr toten Code gefunden als Testlücken. Entfernt bzw.
+vereinfacht wurden unter anderem: neunmal ein wirkungsloses
+`getRequestIP(...) ?? undefined` (h3 liefert bereits `string | undefined`), zwei
+`catch`-Blöcke um `Buffer.from(..., 'base64')`, das nie wirft, der `lastOrderId`
+-Zustand des Warenkorbs (seit dem Pending-Flow immer `null`), die tote
+`'up'`-Richtung in `getTargetSection` der Startseite und mehrere Fallbacks, die
+hinter einer bereits prüfenden Bedingung standen.
 
 ## E2E-Tests (Full-Stack)
 

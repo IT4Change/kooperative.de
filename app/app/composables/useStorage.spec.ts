@@ -73,6 +73,45 @@ describe('when storage works', () => {
   })
 })
 
+describe('when localStorage itself throws', () => {
+  /**
+   * Safari in private mode and some hardened browsers keep the object around
+   * but throw on access, so the head script never raises __storageBlocked.
+   */
+  const explode = (method: 'getItem' | 'setItem' | 'removeItem') =>
+    vi.spyOn(globalThis.localStorage, method).mockImplementation(() => {
+      throw new Error('SecurityError')
+    })
+
+  it('reads as if the key were not there', async () => {
+    const storage = await freshStorage()
+    const spy = explode('getItem')
+
+    expect(storage.get('irgendwas')).toBeNull()
+    expect(spy).toHaveBeenCalledWith('irgendwas')
+  })
+
+  it('swallows a failing write instead of breaking the cart', async () => {
+    const storage = await freshStorage()
+    const spy = explode('setItem')
+
+    expect(() => {
+      storage.set('key', 'value')
+    }).not.toThrow()
+    expect(spy).toHaveBeenCalled()
+  })
+
+  it('swallows a failing removal', async () => {
+    const storage = await freshStorage()
+    const spy = explode('removeItem')
+
+    expect(() => {
+      storage.remove('key')
+    }).not.toThrow()
+    expect(spy).toHaveBeenCalled()
+  })
+})
+
 describe('when storage is blocked', () => {
   it('reports itself unavailable', async () => {
     const storage = await freshStorage(true)
@@ -106,39 +145,5 @@ describe('when storage is blocked', () => {
       storage.remove('k')
     }).not.toThrow()
     expect(storage.get('k')).toBeNull()
-  })
-})
-
-describe('when localStorage itself throws', () => {
-  it('survives a failing read', async () => {
-    const storage = await freshStorage()
-    vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
-      throw new Error('SecurityError')
-    })
-
-    expect(storage.get('k')).toBeNull()
-  })
-
-  it('survives a full quota on write', async () => {
-    const storage = await freshStorage()
-    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
-      throw new Error('QuotaExceededError')
-    })
-
-    // Losing the cart is bad; throwing in the middle of adding to it is worse.
-    expect(() => {
-      storage.set('k', 'v')
-    }).not.toThrow()
-  })
-
-  it('survives a failing removal', async () => {
-    const storage = await freshStorage()
-    vi.spyOn(Storage.prototype, 'removeItem').mockImplementation(() => {
-      throw new Error('SecurityError')
-    })
-
-    expect(() => {
-      storage.remove('k')
-    }).not.toThrow()
   })
 })

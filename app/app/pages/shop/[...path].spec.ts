@@ -87,12 +87,37 @@ const HONIG: Product = {
   unit: '500 g Glas',
 }
 
+/** A product the legacy catalogue left almost empty. */
+const KARG: Product = {
+  id: '7',
+  name: 'Karg',
+  slug: 'karg',
+  price: 3.5,
+  description: '',
+  category: 'sonstiges',
+  images: [],
+}
+
+/** variantType says tiers, but the tier list never arrived. */
+const KAPUTT: Product = {
+  id: '8',
+  name: 'Kaputt',
+  slug: 'kaputt',
+  price: 4.2,
+  description: '',
+  category: 'sonstiges',
+  images: [],
+  variantType: 'quantity',
+}
+
 const views: string[] = []
 
 registerEndpoint('/api/products/3', () => ({ product: OLIVENOEL, categoryName: 'Öle' }))
 registerEndpoint('/api/products/5', () => ({ product: KARTE, categoryName: 'Papeterie' }))
 registerEndpoint('/api/products/1', () => ({ product: HONIG, categoryName: 'Lebensmittel' }))
 registerEndpoint('/api/products/honig', () => ({ product: HONIG, categoryName: 'Lebensmittel' }))
+registerEndpoint('/api/products/7', () => ({ product: KARG }))
+registerEndpoint('/api/products/8', () => ({ product: KAPUTT, categoryName: 'Sonstiges' }))
 registerEndpoint('/api/products/404', () => ({}))
 // The page also hosts the cart panel, which asks who is logged in.
 registerEndpoint('/api/auth/me', () => ({ authenticated: false }))
@@ -185,6 +210,31 @@ describe('the product itself', () => {
     await waitFor(() => views.length > 0, 'the view counter POST')
 
     expect(views).toStrictEqual(['1'])
+  })
+})
+
+describe('a sparse product', () => {
+  it('leaves out everything the catalogue never filled', async () => {
+    const wrapper = await mount('/shop/7/karg')
+    const text = wrapper.text()
+
+    expect(text).not.toContain('Art.-Nr.')
+    expect(text).not.toContain('/ ')
+    expect(wrapper.find('select').exists()).toBe(false)
+    expect(wrapper.find('input[type="number"]').exists()).toBe(false)
+    expect(text).toContain('3.50')
+  })
+
+  it('names the category slug when the API sends no name for it', async () => {
+    const wrapper = await mount('/shop/7/karg')
+
+    expect(wrapper.text()).toContain('sonstiges')
+  })
+
+  it('prices a tier product without tiers at its base price', async () => {
+    const wrapper = await mount('/shop/8/kaputt')
+
+    expect(wrapper.text()).toContain('4.20')
   })
 })
 

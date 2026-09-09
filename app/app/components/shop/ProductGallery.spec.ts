@@ -71,4 +71,14 @@ describe('sizes', () => {
 
     expect(large.html()).not.toBe(small.html())
   })
+
+  it('jumps to the picture behind a dot', async () => {
+    const wrapper = await mountSuspended(ProductGallery, {
+      props: { images: ['/a.jpg', '/b.jpg', '/c.jpg'] },
+    })
+
+    await wrapper.get('[aria-label="Bild 3"]').trigger('click')
+
+    expect(wrapper.get('[aria-label="Bild 3"]').classes()).toContain('bg-white')
+  })
 })

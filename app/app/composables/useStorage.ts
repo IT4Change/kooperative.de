@@ -9,10 +9,14 @@ const showWarning = ref(false)
 
 function check(): boolean {
   if (available.value !== null) return available.value
+  // Server build only: there is no localStorage there, and the unit suite
+  // exercises the client build, where import.meta.server is a constant false.
+  /* v8 ignore start */
   if (import.meta.server) {
     available.value = false
     return false
   }
+  /* v8 ignore stop */
   // The head script sets this flag when localStorage was blocked and replaced with a fallback
   available.value = !(window as unknown as { __storageBlocked?: boolean }).__storageBlocked
   return available.value

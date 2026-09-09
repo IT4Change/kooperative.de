@@ -14,6 +14,7 @@ const ID = 12
 
 let detail: Record<string, unknown> = {}
 let detailStatus = 200
+let detailMessage: string | undefined = 'Datenbank weg'
 let confirmFails: string | null = null
 let cancelFails: string | null = null
 let confirms = 0
@@ -75,7 +76,7 @@ function base() {
 registerEndpoint(`/admin/api/pending/${ID}`, () => {
   loads += 1
   if (detailStatus !== 200) {
-    throw createError({ statusCode: detailStatus, statusMessage: 'Datenbank weg' })
+    throw createError({ statusCode: detailStatus, statusMessage: detailMessage })
   }
   return detail
 })
@@ -101,6 +102,7 @@ let unmount: (() => void) | null = null
 beforeEach(() => {
   detail = base()
   detailStatus = 200
+  detailMessage = 'Datenbank weg'
   confirmFails = null
   cancelFails = null
   confirms = 0
@@ -154,6 +156,15 @@ describe('the header', () => {
     const wrapper = await mount()
 
     expect(wrapper.text()).toContain('Datenbank weg')
+  })
+
+  it('shows the transport error when the server names no reason', async () => {
+    detailStatus = 503
+    detailMessage = undefined
+
+    const wrapper = await mount()
+
+    expect(wrapper.text()).toMatch(/\[GET\].*503/)
   })
 
   it('says plainly when the process is not there', async () => {
@@ -229,6 +240,35 @@ describe('mails', () => {
     expect(wrapper.text()).toContain('Bitte bestätigen')
     expect(wrapper.text()).toContain('→ Kunde')
     expect(wrapper.text()).toContain('gesendet')
+  })
+
+  it('distinguishes the operator mails from the customer ones', async () => {
+    detail = {
+      ...base(),
+      mails: [
+        ...base().mails,
+        {
+          id: 2,
+          direction: 'to_admin',
+          recipient: 'buero@example.org',
+          mailType: 'admin_new_pending',
+          subject: 'Neue Bestellung',
+          status: 'failed',
+          sentBy: 'system',
+          createdAt: '2026-03-04T10:02:00',
+        },
+      ],
+    }
+
+    const wrapper = await mount()
+    const text = wrapper.text()
+
+    expect(text).toContain('→ Kunde')
+    expect(text).toContain('→ Admin')
+    expect(text).toContain('gesendet')
+    expect(text).toContain('fehlgeschlagen')
+    // sentBy is optional; the second row has one, the first does not.
+    expect(text).toContain('· system')
   })
 
   it('says so when there are none', async () => {

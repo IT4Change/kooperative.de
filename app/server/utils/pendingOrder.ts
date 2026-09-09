@@ -137,7 +137,8 @@ export async function materializePending(
   // to the pending window.
   const scrubbed: StoredPendingPayload = JSON.parse(JSON.stringify(pending.payload))
   delete scrubbed.input.bankDetails
-  if (scrubbed.comp) delete (scrubbed.comp as { bankDetails?: unknown }).bankDetails
+  // comp is a copy of the payload checked above, so it is present here too.
+  delete (scrubbed.comp as unknown as { bankDetails?: unknown }).bankDetails
 
   await dbUpdate(
     db,

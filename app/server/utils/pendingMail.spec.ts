@@ -83,6 +83,21 @@ describe('buildCustomerConfirmRequest', () => {
     expect(mail.text).toContain('Hallo Erika Musterfrau,')
   })
 
+  it('says "nach Aufwand" when the shipping cost is not fixed yet', () => {
+    const collected = buildCustomerConfirmRequest({
+      pendingId: 12,
+      comp: {
+        ...COMP,
+        shipping: { module: 'Abholung', totalTitle: 'Abholung:', gross: 0 },
+      },
+      reviewUrl: REVIEW_URL,
+    })
+
+    // A zero here means "we will work it out", not "free".
+    expect(collected.text).toContain('nach Aufwand')
+    expect(collected.html).toContain('nach Aufwand')
+  })
+
   it('falls back to a neutral greeting without a name', () => {
     const anonymous = buildCustomerConfirmRequest({
       pendingId: 12,
@@ -119,6 +134,19 @@ describe('buildAdminNewPending', () => {
 
   it('includes the customer address for a quick reply', () => {
     expect(mail.text).toContain('kundin@example.org')
+  })
+})
+
+describe('a customer without a name on file', () => {
+  it('greets them without one rather than with a gap', () => {
+    const mail = buildCustomerConfirmed({
+      orderId: 55,
+      comp: { ...COMP, customer: { ...COMP.customer, name: '' } },
+      reviewUrl: REVIEW_URL,
+    })
+
+    expect(mail.text).toContain('Hallo,')
+    expect(mail.text).not.toContain('Hallo ,')
   })
 })
 

@@ -39,6 +39,20 @@ describe('buildOrderMail', () => {
     )
   })
 
+  it('marks an unknown shipping cost and a missing phone number', () => {
+    const { text, html } = buildOrderMail({
+      ...CTX,
+      shippingPrice: 0,
+      customer: { ...CTX.customer, telephone: '' },
+    })
+
+    expect(text).toContain('nach Aufwand')
+    expect(text).toContain('Tel.: –')
+    expect(html).toContain('nach Aufwand')
+    // No dangling separator where the number would be.
+    expect(html).not.toContain('· Tel.')
+  })
+
   it('lets the operator reply straight to the customer', () => {
     expect(buildOrderMail(CTX).replyTo).toBe('kundin@example.org')
   })

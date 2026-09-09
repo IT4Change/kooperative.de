@@ -147,6 +147,34 @@ describe('lookups', () => {
     await expect(getPendingByToken(db.pool, 'nope')).resolves.toBeNull()
   })
 
+  it('returns null for each lookup that finds nothing', async () => {
+    const db = createMockDb([{ match: 'koop_pending_order', rows: [] }])
+
+    await expect(getPendingById(db.pool, 12)).resolves.toBeNull()
+    await expect(getPendingByOrderId(db.pool, 55)).resolves.toBeNull()
+  })
+
+  it('reads a confirmed row with all its optional columns filled', async () => {
+    const db = createMockDb([
+      {
+        match: 'koop_pending_order',
+        rows: [row({ status: 'materialized', orders_id: 55, confirmed_via: 'reply' })],
+      },
+    ])
+
+    const found = await getPendingByToken(db.pool, 'x')
+
+    expect(found).toMatchObject({ ordersId: 55, confirmedVia: 'reply' })
+  })
+
+  it('tolerates a row without a mail address', async () => {
+    const db = createMockDb([{ match: 'koop_pending_order', rows: [row({ email: null })] }])
+
+    const found = await getPendingByToken(db.pool, 'x')
+
+    expect(found?.email).toBe('')
+  })
+
   it('parses the payload back into an object', async () => {
     const db = createMockDb([{ match: 'koop_pending_order', rows: [row()] }])
 

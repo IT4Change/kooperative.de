@@ -42,4 +42,26 @@ describe('CartButton', () => {
     expect(wrapper.get('button').attributes('aria-label')).toBe('Bestellliste öffnen')
     cart.clearCart()
   })
+
+  it('opens the cart when pressed', async () => {
+    const { useCart } = await import('../../composables/useCart')
+    const cart = useCart()
+    cart.addToCart({
+      id: '1',
+      name: 'Honig',
+      price: 11.9,
+      description: '',
+      category: 'lebensmittel',
+      images: [],
+      slug: 'honig',
+    })
+    cart.closeCart()
+    const wrapper = await mountSuspended(CartButton)
+
+    await wrapper.get('button').trigger('click')
+
+    expect(cart.isOpen.value).toBe(true)
+    cart.clearCart()
+    cart.closeCart()
+  })
 })

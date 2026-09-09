@@ -53,6 +53,7 @@ const PENDING: Row = {
 let rows: Row[] = []
 let total = 0
 let fail = false
+let failMessage: string | undefined = 'kaputt'
 const seen: Record<string, string>[] = []
 
 // getQuery() is a Nitro auto-import and not available on this side of the
@@ -61,7 +62,7 @@ const queryOf = (path: string) => Object.fromEntries(new URLSearchParams(path.sp
 
 registerEndpoint('/admin/api/orders', (event) => {
   seen.push(queryOf(event.path))
-  if (fail) throw createError({ statusCode: 500, statusMessage: 'kaputt' })
+  if (fail) throw createError({ statusCode: 500, statusMessage: failMessage })
   return { total, page: 1, limit: 50, orders: rows }
 })
 
@@ -71,6 +72,7 @@ beforeEach(() => {
   rows = [ORDER, PENDING]
   total = 2
   fail = false
+  failMessage = 'kaputt'
   seen.length = 0
   clearNuxtData()
 })
@@ -151,6 +153,15 @@ describe('the table', () => {
     expect(wrapper.text()).toContain('kaputt')
   })
 
+  it('falls back to the raw error when the server sends no message', async () => {
+    fail = true
+    failMessage = undefined
+
+    const wrapper = await mount()
+
+    expect(wrapper.text()).toMatch(/Fehler beim Laden: .+/)
+  })
+
   it('counts the whole result, not the page', async () => {
     total = 1234
 
@@ -220,6 +231,16 @@ describe('the status filter', () => {
     await urlBecomes({ status: '3' })
 
     expect(query().status).toBe('3')
+  })
+
+  it('writes "none" when the last box is unticked', async () => {
+    const wrapper = await mount('/admin/orders?status=1')
+
+    await wrapper.findAll('input[type="checkbox"]')[1].trigger('change')
+    await urlBecomes({ status: 'none' })
+
+    // An empty list is a choice too — an absent parameter would mean "default".
+    expect(query().status).toBe('none')
   })
 
   it('collapses a full selection to "all"', async () => {

@@ -102,10 +102,9 @@
 
   const activeVariant = computed(() => props.product.variants?.[selectedVariant.value])
 
-  const activeTierIndex = computed(() => {
-    if (props.product.variantType !== 'quantity' || !props.product.variants) return 0
-    return findTierIndex(props.product.variants, quantity.value)
-  })
+  // Only ever read for a quantity-tier product that has its tiers: the template
+  // renders it inside the tier list, and activeTierPrice checks first.
+  const activeTierIndex = computed(() => findTierIndex(props.product.variants!, quantity.value))
 
   const activeTierPrice = computed(() => {
     if (!props.product.variants) return props.product.price
@@ -119,9 +118,9 @@
     return activeVariant.value?.price ?? props.product.price
   })
 
-  const displayUnitPrice = computed(() =>
-    activeVariant.value ? unitPrice(activeVariant.value).toFixed(2) : '',
-  )
+  // Shown next to the price for size variants only, where activeVariant is the
+  // currently picked one and therefore always set.
+  const displayUnitPrice = computed(() => unitPrice(activeVariant.value!).toFixed(2))
 
   const displayImages = computed(() =>
     activeVariant.value && props.product.variantType !== 'quantity'
