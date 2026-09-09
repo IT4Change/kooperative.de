@@ -194,6 +194,11 @@ export default withNuxt(
       'vitest/require-top-level-describe': 'off',
       // Fake timers and flush helpers legitimately construct promises
       'promise/avoid-new': 'off',
+      // Its auto-fix rewrites toHaveBeenCalled() into toHaveBeenCalledWith(),
+      // which asserts "called with no arguments" — a different claim entirely
+      'vitest/prefer-called-with': 'off',
+      // Spies are passed around by reference on purpose
+      'vitest/unbound-method': 'off',
       // Tests deliberately set globals and env vars
       'n/no-process-env': 'off',
     },
