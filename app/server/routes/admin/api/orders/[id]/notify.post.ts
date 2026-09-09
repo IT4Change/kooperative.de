@@ -16,7 +16,7 @@ export default defineEventHandler(async (event) => {
 
   const db = useDB()
   const operator = getAdminUser(event) || 'admin'
-  const remoteIp = getRequestIP(event, { xForwardedFor: true }) ?? undefined
+  const remoteIp = getRequestIP(event, { xForwardedFor: true })
 
   const [oRows] = await db.execute<RowDataPacket[]>(
     `SELECT o.orders_id, o.orders_status, o.customers_name, o.customers_email_address, os.orders_status_name

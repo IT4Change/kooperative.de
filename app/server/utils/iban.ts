@@ -27,10 +27,9 @@ export function isValidIban(rawIban: string): boolean {
   const digits = rearranged
     .split('')
     .map((ch) => {
+      // The format check above already guarantees A-Z or 0-9 and nothing else.
       const code = ch.charCodeAt(0)
-      if (code >= 48 && code <= 57) return ch // 0-9
-      if (code >= 65 && code <= 90) return String(code - 55) // A=10 ... Z=35
-      return ''
+      return code >= 48 && code <= 57 ? ch : String(code - 55) // digit, else A=10 ... Z=35
     })
     .join('')
 

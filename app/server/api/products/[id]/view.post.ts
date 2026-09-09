@@ -6,7 +6,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: 'Ungültige Produkt-ID' })
   }
   const productId = Number(idRaw)
-  const remoteIp = getRequestIP(event, { xForwardedFor: true }) ?? undefined
+  const remoteIp = getRequestIP(event, { xForwardedFor: true })
 
   const db = useDB()
   // Mirror the alt-shop: UPDATE products_description SET products_viewed = products_viewed + 1

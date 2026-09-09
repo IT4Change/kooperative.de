@@ -79,6 +79,22 @@ describe('POST /api/auth/login', () => {
     })
   })
 
+  it('returns blanks for a record without a name', async () => {
+    useMockDb([
+      {
+        match: 'FROM customers',
+        rows: [{ ...CUSTOMER_ROW, customers_firstname: null, customers_lastname: null }],
+      },
+    ])
+
+    const result = await callHandler(login, {
+      method: 'POST',
+      body: { email: 'kundin@example.org', password: 'supersecret' },
+    })
+
+    expect(result).toMatchObject({ ok: true, firstname: '', lastname: '' })
+  })
+
   it('sets the session cookie', async () => {
     useMockDb([{ match: 'FROM customers', rows: [CUSTOMER_ROW] }])
     const event = createTestEvent({
@@ -199,6 +215,41 @@ describe('GET /api/auth/me', () => {
       customerId: 3,
       email: 'kundin@example.org',
       address: { street: 'Im Winkel 11', postcode: '88422', city: 'Dürnau', countryId: 81 },
+    })
+  })
+
+  it('reports empty fields rather than "null" for a sparse record', async () => {
+    // Accounts imported into the old shop can be missing everything but the id.
+    useMockDb([
+      {
+        match: 'FROM customers c',
+        rows: [
+          {
+            customers_id: 3,
+            customers_email_address: null,
+            customers_firstname: null,
+            customers_lastname: null,
+            customers_telephone: null,
+            entry_street_address: null,
+            entry_postcode: null,
+            entry_city: null,
+            entry_country_id: null,
+          },
+        ],
+      },
+    ])
+    const token = signSession({ customerId: 3, email: 'kundin@example.org' })
+
+    const result = await callHandler(me, { headers: { cookie: `koop_session=${token}` } })
+
+    expect(result).toStrictEqual({
+      authenticated: true,
+      customerId: 3,
+      email: '',
+      firstname: '',
+      lastname: '',
+      telephone: '',
+      address: { street: '', postcode: '', city: '', countryId: 0 },
     })
   })
 

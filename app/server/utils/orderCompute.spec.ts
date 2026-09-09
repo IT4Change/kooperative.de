@@ -290,6 +290,173 @@ describe('computeOrder', () => {
     ).rejects.toMatchObject({ statusCode: 400, statusMessage: 'Artikel 77 nicht verfügbar' })
   })
 
+  it('charges shipping untaxed when the country has no tax zone', async () => {
+    const db = createMockDb([
+      { match: 'FROM customers c', rows: [CUSTOMER_ROW] },
+      { match: 'zones_to_geo_zones', rows: [] },
+      { match: 'FROM products p', rows: [productRow({ tax_rate: null, tax_description: null })] },
+    ])
+
+    const comp = await computeOrder(db.pool, 3, {
+      items: [{ productId: 1, quantity: 1 }],
+      shippingMethod: 'dpd',
+      paymentMethod: 'vorkasse',
+    })
+
+    // The shipping module has a tax class, but without a zone there is no rate —
+    // so the customer is charged the net 6.30 instead of the advertised 7.50.
+    expect(comp.shipping.gross).toBe(6.3)
+    expect(comp.taxRows).toStrictEqual([])
+  })
+
+  it('charges shipping untaxed when the tax class has no rate on file', async () => {
+    const db = dbFor([productRow({ tax_rate: null, tax_description: null })])
+    db.stub({ match: 'tax_class_id = ? AND tax_zone_id', rows: [] })
+
+    const comp = await computeOrder(db.pool, 3, {
+      items: [{ productId: 1, quantity: 1 }],
+      shippingMethod: 'dpd',
+      paymentMethod: 'vorkasse',
+    })
+
+    expect(comp.taxRows).toStrictEqual([])
+  })
+
+  it('names an unnamed shipping tax rate', async () => {
+    const db = dbFor([productRow({ tax_rate: null, tax_description: null })])
+    db.stub({
+      match: 'tax_class_id = ? AND tax_zone_id',
+      rows: [{ tax_rate: '19.0000', tax_description: null }],
+    })
+
+    const comp = await computeOrder(db.pool, 3, {
+      items: [{ productId: 1, quantity: 1 }],
+      shippingMethod: 'dpd',
+      paymentMethod: 'vorkasse',
+    })
+
+    // The row goes into orders_total, where an empty title would look like a bug.
+    expect(comp.taxRows).toHaveLength(1)
+    expect(comp.taxRows[0].description).toBe('Mehrwertsteuer')
+  })
+
+  it('opens a tax row for shipping when the goods carry no tax', async () => {
+    const db = dbFor([productRow({ tax_rate: null, tax_description: null })])
+    db.stub({
+      match: 'tax_class_id = ? AND tax_zone_id',
+      rows: [{ tax_rate: '19.0000', tax_description: 'Mehrwertsteuer' }],
+    })
+
+    const comp = await computeOrder(db.pool, 3, {
+      items: [{ productId: 1, quantity: 1 }],
+      shippingMethod: 'dpd',
+      paymentMethod: 'vorkasse',
+    })
+
+    // 7.50 gross contains 1.20 of tax; it sorts last, after any goods rows.
+    expect(comp.taxRows).toHaveLength(1)
+    expect(comp.taxRows[0]).toMatchObject({ description: 'Mehrwertsteuer', sortOrder: 99 })
+    expect(comp.taxRows[0].total).toBeCloseTo(1.2, 2)
+  })
+
+  it('takes the first variant when the cart names none', async () => {
+    getCatalog.mockResolvedValue({
+      products: [
+        {
+          id: '1',
+          variants: [{ productId: '11' }, { productId: '12' }],
+        } as unknown as Product,
+      ],
+      categories: [],
+    })
+    const db = dbFor([productRow({ products_id: 11 })])
+
+    const comp = await computeOrder(db.pool, 3, {
+      items: [{ productId: 1, quantity: 1 }],
+      shippingMethod: 'abholung',
+      paymentMethod: 'vorkasse',
+    })
+
+    expect(comp.lines[0].productId).toBe(11)
+  })
+
+  it('stays on the base tier below the next threshold', async () => {
+    getCatalog.mockResolvedValue({
+      products: [
+        {
+          id: '1',
+          variantType: 'quantity',
+          variants: [
+            { productId: '11', minQty: 1 },
+            { productId: '12', minQty: 10 },
+          ],
+        } as unknown as Product,
+      ],
+      categories: [],
+    })
+    const db = dbFor([productRow({ products_id: 11 })])
+
+    const comp = await computeOrder(db.pool, 3, {
+      items: [{ productId: 1, quantity: 5 }],
+      shippingMethod: 'abholung',
+      paymentMethod: 'vorkasse',
+    })
+
+    // Five pieces do not reach the 10+ tier, so the base row is charged.
+    expect(comp.lines[0].productId).toBe(11)
+  })
+
+  it('keeps the ordered product when the variant carries no id of its own', async () => {
+    getCatalog.mockResolvedValue({
+      products: [{ id: '1', variants: [{ size: '1 L' }] } as unknown as Product],
+      categories: [],
+    })
+    const db = dbFor([productRow()])
+
+    const comp = await computeOrder(db.pool, 3, {
+      items: [{ productId: 1, quantity: 1, variantIndex: 0 }],
+      shippingMethod: 'abholung',
+      paymentMethod: 'vorkasse',
+    })
+
+    // A catalogue entry without a product id behind the variant must not turn
+    // the order into one for product NaN.
+    expect(comp.lines[0].productId).toBe(1)
+  })
+
+  it('accepts a product and a customer whose optional columns are empty', async () => {
+    const db = createMockDb([
+      {
+        match: 'FROM customers c',
+        rows: [
+          {
+            ...CUSTOMER_ROW,
+            customers_firstname: null,
+            customers_lastname: null,
+            customers_telephone: null,
+            customers_email_address: null,
+          },
+        ],
+      },
+      { match: 'zones_to_geo_zones', rows: [{ geo_zone_id: 2 }] },
+      { match: 'FROM products p', rows: [productRow({ products_model: null })] },
+    ])
+
+    const comp = await computeOrder(db.pool, 3, {
+      items: [{ productId: 1, quantity: 1 }],
+      shippingMethod: 'abholung',
+      paymentMethod: 'vorkasse',
+    })
+
+    expect(comp.customer).toMatchObject({
+      firstname: '',
+      lastname: '',
+      telephone: '',
+      email: '',
+    })
+    expect(comp.lines[0].model).toBe('')
+  })
+
   it('falls back to no tax zone for a country that has none', async () => {
     const db = createMockDb([
       { match: 'FROM customers c', rows: [CUSTOMER_ROW] },

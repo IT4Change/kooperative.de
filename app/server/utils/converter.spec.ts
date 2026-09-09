@@ -207,6 +207,71 @@ describe('groupProducts', () => {
     ])
   })
 
+  it('sorts a mixed group without dropping the size variant', () => {
+    // Legacy data does contain a base name that carries both a tier suffix and a
+    // size suffix. The tier decides the type; the size variant has no threshold
+    // and has to sort to the front rather than disappear.
+    const products = groupProducts(
+      [
+        product({ products_id: 1, products_name: 'Karte 10+' }),
+        product({ products_id: 2, products_name: 'Karte 500 ml' }),
+      ],
+      paths,
+    )
+
+    expect(products[0].variantType).toBe('quantity')
+    expect(products[0].variants?.map((v) => [v.size, v.minQty])).toStrictEqual([
+      ['500 ml', undefined],
+      ['ab 10 Stk.', 10],
+    ])
+  })
+
+  it('keeps a tier without a threshold at the front, whichever way round it arrives', () => {
+    const products = groupProducts(
+      [
+        product({ products_id: 1, products_name: 'Karte 50+' }),
+        product({ products_id: 2, products_name: 'Karte 500 ml' }),
+        product({ products_id: 3, products_name: 'Karte 10+' }),
+      ],
+      paths,
+    )
+
+    expect(products[0].variants?.map((v) => v.minQty)).toStrictEqual([undefined, 10, 50])
+  })
+
+  it('promotes the row that has a picture to be the base', () => {
+    // The variant rows of the old shop rarely carry images; whichever row does
+    // is the one the catalogue should show.
+    const products = groupProducts(
+      [
+        product({ products_id: 1, products_name: 'Saft 1 Liter' }),
+        product({ products_id: 2, products_name: 'Saft 2 Liter', products_image: 'saft-2l.jpg' }),
+      ],
+      paths,
+    )
+
+    expect(products[0].images[0]).toContain('saft-2l.jpg')
+  })
+
+  it('falls back to a detail image of a later variant', () => {
+    // No row has a main image, so the base row is picked by input order and has
+    // no picture of its own — the group borrows one from the next variant.
+    const products = groupProducts(
+      [
+        product({ products_id: 1, products_name: 'Saft 1 Liter' }),
+        product({
+          products_id: 2,
+          products_name: 'Saft 2 Liter',
+          products_image_detail_1: 'saft-2l.jpg',
+        }),
+      ],
+      paths,
+    )
+
+    expect(products[0].images).toHaveLength(1)
+    expect(products[0].images[0]).toContain('saft-2l.jpg')
+  })
+
   it('takes the base image as fallback for variants without their own image', () => {
     const products = groupProducts(
       [
@@ -303,6 +368,36 @@ describe('groupProducts', () => {
     const [empty] = groupProducts([product({ products_id: 1 })], paths)
     expect(empty.model).toBeUndefined()
     expect(empty.dateAdded).toBeUndefined()
+  })
+
+  it('takes a Date straight from the driver', () => {
+    // mysql2 returns DATETIME columns as Date objects unless dateStrings is on.
+    const [p] = groupProducts(
+      [product({ products_id: 1, products_date_added: new Date('2026-02-01T00:00:00.000Z') })],
+      paths,
+    )
+
+    expect(p.dateAdded).toBe('2026-02-01T00:00:00.000Z')
+  })
+
+  it('collects the detail images alongside the main one', () => {
+    const [p] = groupProducts(
+      [
+        product({
+          products_id: 1,
+          products_image: 'honig.jpg',
+          products_image_detail_1: 'honig-2.jpg',
+          // Gaps in the numbering are normal — the old backend left them blank.
+          products_image_detail_2: '',
+          products_image_detail_3: 'honig-3.jpg',
+        }),
+      ],
+      paths,
+    )
+
+    expect(p.images).toHaveLength(3)
+    expect(p.images[1]).toContain('honig-2.jpg')
+    expect(p.images[2]).toContain('honig-3.jpg')
   })
 
   it('drops implausible legacy dates', () => {

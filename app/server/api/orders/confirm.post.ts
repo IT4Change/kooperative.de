@@ -12,7 +12,7 @@ export default defineEventHandler(async (event) => {
   if (!token) throw createError({ statusCode: 400, statusMessage: 'Token fehlt' })
 
   const db = useDB()
-  const remoteIp = getRequestIP(event, { xForwardedFor: true }) ?? undefined
+  const remoteIp = getRequestIP(event, { xForwardedFor: true })
 
   const pending = await getPendingByToken(db, token)
   if (!pending) throw createError({ statusCode: 404, statusMessage: 'Bestellung nicht gefunden' })

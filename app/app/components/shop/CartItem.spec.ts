@@ -137,6 +137,43 @@ describe('changing the line', () => {
   })
 })
 
+describe('the size picker', () => {
+  it('falls back to the first size when the line carries no index', async () => {
+    const wrapper = await mount({ product: SIZED, quantity: 1 })
+
+    expect((wrapper.get('select').element as HTMLSelectElement).value).toBe('0')
+    // Nothing to compare against yet, so no savings tip either.
+    expect(wrapper.text()).not.toContain('Tipp')
+  })
+
+  it('reports the old and the new index when the size changes', async () => {
+    const wrapper = await mount({ product: SIZED, quantity: 1, variantIndex: 0 })
+
+    await wrapper.get('select').setValue('1')
+
+    // The cart needs the old index to find the line it has to replace.
+    expect(wrapper.emitted('update-variant')?.[0]).toStrictEqual(['3', 0, 1])
+  })
+
+  it('stays quiet when the stored index no longer exists', async () => {
+    // A cart restored from localStorage can point past a shrunken variant list.
+    const wrapper = await mount({ product: SIZED, quantity: 1, variantIndex: 9 })
+
+    expect(wrapper.text()).not.toContain('Tipp')
+  })
+})
+
+describe('a malformed product', () => {
+  const BROKEN = product({ id: '9', name: 'Kaputt', variantType: 'quantity' })
+
+  it('prices a tier product that has no tiers at its base price', async () => {
+    const wrapper = await mount({ product: BROKEN, quantity: 3 })
+
+    expect(wrapper.text()).toContain('11.90')
+    expect(wrapper.text()).not.toMatch(/noch \d+/)
+  })
+})
+
 describe('savings hint', () => {
   it('points at the cheaper pack size', async () => {
     const wrapper = await mount({ product: SIZED, quantity: 1, variantIndex: 0 })

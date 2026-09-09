@@ -92,6 +92,16 @@ describe('checkAdminAuth', () => {
     // Different length takes the early-exit branch of the constant-time compare.
     expect(checkAdminAuth(makeEvent(basic('anna', 'x')))).toBe(false)
   })
+
+  it('rejects everyone when production has no credentials configured', async () => {
+    // parseCredentials() reports an empty map, and an empty map must never let
+    // an empty password through.
+    vi.stubEnv('NODE_ENV', 'production')
+    vi.stubEnv('ADMIN_USERS', '')
+    const { checkAdminAuth } = await import('./adminAuth')
+
+    expect(checkAdminAuth(makeEvent(basic('anna', 'geheim')))).toBe(false)
+  })
 })
 
 describe('getAdminUser', () => {

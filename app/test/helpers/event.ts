@@ -23,7 +23,11 @@ export interface TestEventOptions {
   headers?: Record<string, string>
   /** Serialised as JSON; use a string to send a malformed body on purpose. */
   body?: unknown
-  /** Client address for `getRequestIP`. */
+  /**
+   * Client address for `getRequestIP`. Pass it explicitly as `undefined` to
+   * model a request that arrives without one — behind some proxies and over a
+   * unix socket there is no peer address to report.
+   */
   remoteAddress?: string
 }
 
@@ -53,7 +57,9 @@ export function createTestEvent(options: TestEventOptions = {}): H3Event {
           }),
       ...options.headers,
     },
-    socket: { remoteAddress: options.remoteAddress ?? '127.0.0.1' },
+    socket: {
+      remoteAddress: 'remoteAddress' in options ? options.remoteAddress : '127.0.0.1',
+    },
   })
 
   const res = {

@@ -7,7 +7,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: 'Ungültige ID' })
 
   const db = useDB()
-  const remoteIp = getRequestIP(event, { xForwardedFor: true }) ?? undefined
+  const remoteIp = getRequestIP(event, { xForwardedFor: true })
 
   const pending = await getPendingById(db, id)
   if (!pending) throw createError({ statusCode: 404, statusMessage: 'Nicht gefunden' })

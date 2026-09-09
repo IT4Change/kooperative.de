@@ -314,6 +314,10 @@ describe('GET /api/orders/pending/[token]', () => {
     expect(result.taxRows[0].total).toBe(3.8)
   })
 
+  it('answers 400 when the route carries no token at all', async () => {
+    await expect(callHandler(pendingByToken)).rejects.toMatchObject({ statusCode: 400 })
+  })
+
   it('answers 400 without a token', async () => {
     await expect(callHandler(pendingByToken, { params: { token: '  ' } })).rejects.toMatchObject({
       statusCode: 400,

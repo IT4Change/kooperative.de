@@ -66,6 +66,20 @@ describe('getMailer', () => {
     })
   })
 
+  it('sends an empty password rather than undefined', async () => {
+    // nodemailer treats a missing pass as "no auth at all" and would then send
+    // the mail unauthenticated instead of failing loudly.
+    vi.stubEnv('SMTP_USER', 'shop')
+    vi.stubEnv('SMTP_PASSWORD', '')
+    const { getMailer } = await import('./mailer')
+
+    getMailer()
+
+    expect(createTransport.mock.calls[0][0]).toMatchObject({
+      auth: { user: 'shop', pass: '' },
+    })
+  })
+
   it('reuses the transport instead of opening a connection per mail', async () => {
     const { getMailer } = await import('./mailer')
 

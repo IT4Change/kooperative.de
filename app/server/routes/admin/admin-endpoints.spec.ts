@@ -144,6 +144,37 @@ describe('GET /admin/api/customers', () => {
     })
   })
 
+  it('leaves the fields blank that the legacy record never filled', async () => {
+    useMockDb([
+      { match: 'COUNT(*) AS total', rows: [{ total: 1 }] },
+      {
+        match: 'FROM customers c',
+        rows: [
+          {
+            customers_id: 4,
+            customers_firstname: null,
+            customers_lastname: null,
+            customers_email_address: null,
+            customers_telephone: null,
+            entry_postcode: null,
+            entry_city: null,
+          },
+        ],
+      },
+    ])
+
+    const result = await callHandler<{ customers: Record<string, unknown>[] }>(customerList)
+
+    // The list renders these straight into table cells — "null" must not appear.
+    expect(result.customers[0]).toStrictEqual({
+      id: 4,
+      name: '',
+      email: '',
+      telephone: '',
+      city: '',
+    })
+  })
+
   it('searches name and address for a text query', async () => {
     const db = useMockDb([{ match: 'COUNT(*) AS total', rows: [{ total: 0 }] }])
 
@@ -204,6 +235,39 @@ describe('GET /admin/api/products', () => {
     await callHandler(productList, { url: '/admin/api/products?q=747' })
 
     expect(db.calls[0].params[0]).toBe(747)
+  })
+
+  it('leaves the fields blank that the legacy record never filled', async () => {
+    useMockDb([
+      { match: 'COUNT(*) AS total', rows: [{ total: 1 }] },
+      {
+        match: 'FROM products p',
+        rows: [
+          {
+            products_id: 2,
+            products_model: null,
+            products_name: null,
+            products_price: null,
+            products_status: 0,
+            products_ordered: null,
+            products_quantity: null,
+          },
+        ],
+      },
+    ])
+
+    const result = await callHandler<{ products: Record<string, unknown>[] }>(productList)
+
+    expect(result.products[0]).toStrictEqual({
+      id: 2,
+      model: '',
+      name: '',
+      // A missing price is not a price of zero — the list marks it as unknown.
+      price: null,
+      active: false,
+      ordered: 0,
+      quantity: 0,
+    })
   })
 
   it('converts the DECIMAL price into a number', async () => {
@@ -325,16 +389,165 @@ describe('GET /admin/api/orders', () => {
   })
 
   it('degrades to an osCommerce-only list when the koop table is missing', async () => {
+    // The handler caches a successful probe for the lifetime of the process, so
+    // this case only exists for a module that has never seen the table.
+    vi.resetModules()
+    const { default: freshOrderList } = await import('./api/orders/index.get')
     const db = useMockDb([
-      { match: 'FROM koop_pending_order kp LIMIT', error: new Error('no such table') },
+      // The probe is `SELECT 1 FROM koop_pending_order LIMIT 1` — without an alias.
+      { match: 'SELECT 1 FROM koop_pending_order', error: new Error('no such table') },
       { match: 'COUNT(*) AS c', rows: [{ c: 0 }] },
     ])
 
-    await callHandler(orderList, { url: '/admin/api/orders?status=all' })
+    await callHandler(freshOrderList, { url: '/admin/api/orders?status=all' })
 
-    // Without the table there is nothing to join against, so origin is constant.
-    const union = db.calls.map((c) => c.sql).join(' ')
-    expect(union).toContain("'alt'")
+    const sql = db.calls.map((c) => c.sql).join(' ')
+    // Nothing to join against, so origin is a constant and the join is gone.
+    expect(sql).not.toContain('LEFT JOIN koop_pending_order')
+    expect(sql).toContain("'alt' AS origin")
+    // And no pending rows are asked for either.
+    expect(sql).not.toContain("kp.status = 'pending'")
+  })
+
+  it('takes an explicit list of statuses', async () => {
+    const db = useMockDb([
+      { match: 'FROM koop_pending_order kp LIMIT', rows: [{ 1: 1 }] },
+      { match: 'COUNT(*) AS c', rows: [{ c: 0 }] },
+    ])
+
+    await callHandler(orderList, { url: '/admin/api/orders?status=1,%203%20,,pending' })
+
+    // Whitespace and empty entries are the operator's, not a filter of its own.
+    expect(db.calls.some((c) => c.params.includes(1) && c.params.includes(3))).toBe(true)
+    expect(db.calls.some((c) => c.sql.includes("kp.status = 'pending'"))).toBe(true)
+  })
+
+  it('searches name and mail address for a text query', async () => {
+    const db = useMockDb([
+      { match: 'FROM koop_pending_order kp LIMIT', rows: [{ 1: 1 }] },
+      { match: 'COUNT(*) AS c', rows: [{ c: 0 }] },
+    ])
+
+    await callHandler(orderList, { url: '/admin/api/orders?status=all&q=Muster' })
+
+    // A non-numeric term must not be compared against the order number.
+    expect(db.calls.some((c) => c.sql.includes('o.orders_id = ?'))).toBe(false)
+    expect(db.calls.some((c) => c.sql.includes('o.customers_name LIKE ?'))).toBe(true)
+    expect(db.calls.some((c) => c.params.includes('%Muster%'))).toBe(true)
+  })
+
+  it('reads an osCommerce row straight out of its columns', async () => {
+    useMockDb([
+      { match: 'FROM koop_pending_order kp LIMIT', rows: [{ 1: 1 }] },
+      { match: 'COUNT(*) AS c', rows: [{ c: 1 }] },
+      {
+        match: 'UNION ALL',
+        rows: [
+          {
+            kind: 'order',
+            id: 55,
+            date: '2026-01-01',
+            customer_name: 'Erika Musterfrau',
+            email: 'kundin@example.org',
+            status_id: 3,
+            status_name: 'Versendet',
+            payment: 'Bezahlung mit Vorkasse',
+            total: '23.80',
+            origin: 'alt',
+            payload: null,
+          },
+        ],
+      },
+    ])
+
+    const result = await callHandler<{ orders: Record<string, unknown>[] }>(orderList, {
+      url: '/admin/api/orders?status=all',
+    })
+
+    expect(result.orders[0]).toStrictEqual({
+      kind: 'order',
+      id: 55,
+      customerName: 'Erika Musterfrau',
+      email: 'kundin@example.org',
+      datePurchased: '2026-01-01',
+      statusId: 3,
+      statusName: 'Versendet',
+      paymentMethod: 'Bezahlung mit Vorkasse',
+      total: 23.8,
+      origin: 'alt',
+    })
+  })
+
+  it('blanks out the columns a legacy row left empty', async () => {
+    useMockDb([
+      { match: 'FROM koop_pending_order kp LIMIT', rows: [{ 1: 1 }] },
+      { match: 'COUNT(*) AS c', rows: [{ c: 1 }] },
+      {
+        match: 'UNION ALL',
+        rows: [
+          {
+            kind: 'order',
+            id: 56,
+            date: '2026-01-01',
+            customer_name: null,
+            email: null,
+            status_id: 1,
+            status_name: null,
+            payment: null,
+            total: null,
+            origin: null,
+            payload: null,
+          },
+        ],
+      },
+    ])
+
+    const result = await callHandler<{ orders: Record<string, unknown>[] }>(orderList, {
+      url: '/admin/api/orders?status=all',
+    })
+
+    expect(result.orders[0]).toMatchObject({
+      customerName: '',
+      email: '',
+      statusName: null,
+      paymentMethod: '',
+      total: null,
+      // An order without the marker predates the new shop.
+      origin: 'alt',
+    })
+  })
+
+  it('keeps a pending row blank when its payload carries no names', async () => {
+    useMockDb([
+      { match: 'FROM koop_pending_order kp LIMIT', rows: [{ 1: 1 }] },
+      { match: 'COUNT(*) AS c', rows: [{ c: 1 }] },
+      {
+        match: 'UNION ALL',
+        rows: [
+          {
+            kind: 'pending',
+            id: 13,
+            date: '2026-01-01',
+            customer_name: null,
+            email: 'x@example.org',
+            status_id: 0,
+            status_name: null,
+            payment: null,
+            total: '10.00',
+            origin: 'neu',
+            payload: JSON.stringify({ comp: {} }),
+          },
+        ],
+      },
+    ])
+
+    const result = await callHandler<{ orders: { customerName: string; paymentMethod: string }[] }>(
+      orderList,
+      { url: '/admin/api/orders?status=all' },
+    )
+
+    expect(result.orders[0].customerName).toBe('')
+    expect(result.orders[0].paymentMethod).toBe('')
   })
 
   it('searches by order number for a numeric query', async () => {
@@ -351,7 +564,7 @@ describe('GET /admin/api/orders', () => {
 })
 
 describe('POST /admin/api/orders/[id]/status', () => {
-  function statusDb() {
+  function statusDb(over: Record<string, unknown> = {}) {
     return useMockDb([
       { match: 'FROM orders_status WHERE', rows: [{ orders_status_name: 'Versendet' }] },
       {
@@ -361,6 +574,7 @@ describe('POST /admin/api/orders/[id]/status', () => {
             orders_id: 55,
             customers_name: 'Erika Musterfrau',
             customers_email_address: 'kundin@example.org',
+            ...over,
           },
         ],
       },
@@ -423,6 +637,50 @@ describe('POST /admin/api/orders/[id]/status', () => {
       expect.anything(),
     )
     expect(dbInsert.mock.calls[0][2]).toMatchObject({ customer_notified: 1 })
+  })
+
+  it('mails an order whose customer columns are empty', async () => {
+    // Such orders exist in the legacy data; the mail then has no addressee and
+    // the send fails — but the status change itself must still go through.
+    statusDb({ customers_name: null, customers_email_address: null })
+
+    const result = await callHandler<{ notified: boolean }>(statusPost, {
+      method: 'POST',
+      params: { id: '55' },
+      headers: ADMIN_HEADER,
+      body: { statusId: 3, notifyCustomer: true },
+    })
+
+    expect(result.notified).toBe(true)
+    expect(sendAndLogOrderMail.mock.calls[0][1].recipient).toBe('')
+  })
+
+  it('records an anonymous operator and the forwarded address', async () => {
+    statusDb()
+
+    await callHandler(statusPost, {
+      method: 'POST',
+      params: { id: '55' },
+      headers: { 'x-forwarded-for': '203.0.113.7' },
+      body: { statusId: 3, notifyCustomer: true },
+    })
+
+    expect(sendAndLogOrderMail.mock.calls[0][1].sentBy).toBe('admin')
+    expect(dbUpdate.mock.calls[0].at(-1)).toMatchObject({ remoteIp: '203.0.113.7' })
+  })
+
+  it('leaves the address out when the request carries none', async () => {
+    statusDb()
+
+    await callHandler(statusPost, {
+      method: 'POST',
+      params: { id: '55' },
+      headers: ADMIN_HEADER,
+      body: { statusId: 3 },
+      remoteAddress: undefined,
+    })
+
+    expect(dbUpdate.mock.calls[0].at(-1).remoteIp).toBeUndefined()
   })
 
   it('accepts the notify flag as a string, as the form sends it', async () => {
@@ -544,6 +802,70 @@ describe('POST /admin/api/orders/[id]/notify', () => {
     await expect(
       callHandler(notify, { method: 'POST', params: { id: '55' }, headers: ADMIN_HEADER }),
     ).rejects.toMatchObject({ statusCode: 400 })
+  })
+
+  it.each([['abc'], ['0'], ['-1']])('rejects the invalid id %j', async (id) => {
+    notifyDb()
+
+    await expect(
+      callHandler(notify, { method: 'POST', params: { id }, headers: ADMIN_HEADER }),
+    ).rejects.toMatchObject({ statusCode: 400 })
+  })
+
+  it('survives a body that is not JSON', async () => {
+    // The comment is optional, so a broken body is no reason to refuse the resend.
+    notifyDb()
+
+    const result = await callHandler<{ ok: boolean }>(notify, {
+      method: 'POST',
+      params: { id: '55' },
+      headers: { ...ADMIN_HEADER, 'content-type': 'application/json' },
+      body: '{kaputt',
+    })
+
+    expect(result.ok).toBe(true)
+  })
+
+  it('records an anonymous operator when no one is signed in', async () => {
+    notifyDb()
+
+    await callHandler(notify, { method: 'POST', params: { id: '55' } })
+
+    // The mail log must name someone; "admin" beats an empty column.
+    expect(sendAndLogOrderMail.mock.calls[0][1].sentBy).toBe('admin')
+  })
+
+  it('logs the forwarded client address', async () => {
+    notifyDb()
+
+    await callHandler(notify, {
+      method: 'POST',
+      params: { id: '55' },
+      headers: { ...ADMIN_HEADER, 'x-forwarded-for': '203.0.113.7' },
+    })
+
+    expect(sendAndLogOrderMail.mock.calls[0][2]).toMatchObject({ remoteIp: '203.0.113.7' })
+  })
+
+  it('leaves the address out when the request carries none', async () => {
+    notifyDb()
+
+    await callHandler(notify, {
+      method: 'POST',
+      params: { id: '55' },
+      headers: ADMIN_HEADER,
+      remoteAddress: undefined,
+    })
+
+    expect(sendAndLogOrderMail.mock.calls[0][2].remoteIp).toBeUndefined()
+  })
+
+  it('addresses a customer whose name the shop never stored', async () => {
+    notifyDb({ customers_name: null })
+
+    await callHandler(notify, { method: 'POST', params: { id: '55' }, headers: ADMIN_HEADER })
+
+    expect(sendAndLogOrderMail.mock.calls[0][1].subject).toBeDefined()
   })
 
   it('reports a failed send as not ok', async () => {

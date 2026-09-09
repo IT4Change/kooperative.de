@@ -155,8 +155,9 @@
     const currentIdx = findTierIndex(props.item.product.variants, props.item.quantity)
     const nextTier = props.item.product.variants[currentIdx + 1]
     if (!nextTier || !nextTier.minQty) return null
+    // findTierIndex returns the last tier the quantity reaches, so the tier
+    // after it is always still out of reach — the difference is positive.
     const diff = nextTier.minQty - props.item.quantity
-    if (diff <= 0) return null
     return `Noch ${diff} mehr für ${nextTier.price.toFixed(2)} €/Stk (${nextTier.size})`
   })
 

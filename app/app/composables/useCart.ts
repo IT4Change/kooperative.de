@@ -15,7 +15,6 @@ const shippingMethod = ref<ShippingMethod | null>(null)
 const paymentMethod = ref<PaymentMethod | null>(null)
 const bankAccountHolder = ref('')
 const bankIban = ref('')
-const lastOrderId = ref<number | null>(null)
 const submitting = ref(false)
 const submitError = ref('')
 
@@ -221,7 +220,6 @@ export function useCart() {
         method: 'POST',
         body: payload,
       })
-      lastOrderId.value = null
       checkoutStep.value = 'success'
       clearCart()
       orderNotes.value = ''
@@ -255,7 +253,6 @@ export function useCart() {
     paymentMethod,
     bankAccountHolder,
     bankIban,
-    lastOrderId: readonly(lastOrderId),
     submitting: readonly(submitting),
     submitError: readonly(submitError),
     totalItems,

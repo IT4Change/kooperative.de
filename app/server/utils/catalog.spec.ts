@@ -136,6 +136,22 @@ describe('getCatalog', () => {
     )
   })
 
+  it('logs a rejection that is not an Error at all', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-01-01T00:00:00Z'))
+
+    const db = loadedDb()
+    await getCatalog(db.pool)
+
+    // mysql2 can reject with a plain string from some driver paths.
+    db.stub({ match: 'FROM categories', error: 'db down' as unknown as Error })
+    vi.setSystemTime(new Date('2026-01-01T00:01:01Z'))
+    await getCatalog(db.pool)
+
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('serving snapshot from'), 'db down')
+  })
+
   it('backs off instead of hammering a struggling database', async () => {
     vi.spyOn(console, 'warn').mockImplementation(() => undefined)
     vi.useFakeTimers()

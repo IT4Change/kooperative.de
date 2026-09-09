@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { createHash } from 'node:crypto'
+import { createHash, createHmac } from 'node:crypto'
 
 import { createEvent } from 'h3'
 import { describe, it, expect, vi, afterEach } from 'vitest'
@@ -69,6 +69,15 @@ describe('password hashing', () => {
     expect(verifyPassword('wrong', hashPassword('supersecret'))).toBe(false)
   })
 
+  it.each([
+    ['an empty hash half', ':ab'],
+    ['an empty salt half', 'd41d8cd98f00b204e9800998ecf8427e:'],
+  ])('rejects a stored password with %s', (_label, stored) => {
+    // Truncated rows like these exist in the legacy table; treating the empty
+    // half as a match would let anyone into those accounts.
+    expect(verifyPassword('geheim', stored)).toBe(false)
+  })
+
   it('accepts a hash written by the old shop', () => {
     // Built here with plain crypto, not with hashPassword — this is the actual
     // compatibility claim: accounts created by osCommerce must still log in.
@@ -133,10 +142,15 @@ describe('session tokens', () => {
   })
 
   it('rejects a correctly signed token whose body is not JSON', () => {
-    // Sign garbage with the real secret to isolate the parse failure.
-    const token = signSession({ customerId: 1, email: 'a@b.c' })
-    const [, sig] = token.split('.')
-    expect(verifySession(`not-base64-json.${sig}`)).toBeNull()
+    // Signed with the real secret, so the HMAC check passes and the token gets
+    // as far as JSON.parse — which is the branch under test here.
+    vi.stubEnv('SESSION_SECRET', 'für-diesen-test')
+    const body = Buffer.from('kein json').toString('base64url')
+    const sig = createHmac('sha256', Buffer.from('für-diesen-test', 'utf8'))
+      .update(body)
+      .digest('base64url')
+
+    expect(verifySession(`${body}.${sig}`)).toBeNull()
   })
 
   it('rejects an expired token', () => {

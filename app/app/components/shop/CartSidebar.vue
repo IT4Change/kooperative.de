@@ -116,11 +116,7 @@
                     </svg>
                   </div>
                   <h3 class="text-lg font-semibold mb-1">Vielen Dank!</h3>
-                  <p class="text-sm text-gray-600">
-                    Ihre Bestellung wurde an uns übermittelt<span v-if="lastOrderId">
-                      (Nr. {{ lastOrderId }})</span
-                    >.
-                  </p>
+                  <p class="text-sm text-gray-600">Ihre Bestellung wurde an uns übermittelt.</p>
                 </div>
                 <div
                   class="rounded-lg bg-amber-50 border border-amber-200 p-4 mb-5 text-sm text-amber-900"
@@ -185,7 +181,6 @@
     isEmpty,
     submitting,
     submitError,
-    lastOrderId,
     closeCart,
     goToAuth,
     goToDetails,

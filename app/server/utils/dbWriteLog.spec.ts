@@ -133,6 +133,22 @@ describe('logDbWrite', () => {
     ])
   })
 
+  it('masks a before-snapshot that is a single row', async () => {
+    // dbUpdate hands over one row for a single-row update and an array for a
+    // batch; both have to be masked.
+    logDbWrite({
+      op: 'UPDATE',
+      table: 'customers',
+      before: { customers_password: 'a:b', customers_firstname: 'Erika' },
+    })
+    await flush()
+
+    expect(lastEntry().before).toStrictEqual({
+      customers_password: '***',
+      customers_firstname: 'Erika',
+    })
+  })
+
   it('keeps an absent before-snapshot absent', async () => {
     logDbWrite({ op: 'INSERT', table: 'orders', after: { a: 1 } })
     await flush()

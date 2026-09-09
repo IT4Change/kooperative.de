@@ -103,6 +103,8 @@ interface ParsedVariant {
   amount: number
   unit: string
   type: 'size' | 'quantity'
+  /** Only for `type: 'quantity'` — the tier threshold read off the "N+" suffix. */
+  minQty?: number
 }
 
 function parseVariant(name: string): ParsedVariant | null {
@@ -139,7 +141,14 @@ function parseVariant(name: string): ParsedVariant | null {
   if (qtyMatch) {
     const baseName = qtyMatch[1].trim()
     const minQty = parseInt(qtyMatch[2])
-    return { baseName, size: `ab ${minQty} Stk.`, amount: 1, unit: 'Stk', type: 'quantity' }
+    return {
+      baseName,
+      size: `ab ${minQty} Stk.`,
+      amount: 1,
+      unit: 'Stk',
+      type: 'quantity',
+      minQty,
+    }
   }
 
   return null
@@ -284,9 +293,12 @@ export function groupProducts(rows: DbProduct[], paths: Map<number, CategoryPath
       }
       const fallbackImage = allGroupImages[0] ?? ''
 
-      // Determine variant type from the first parsed variant
-      const firstParsed = sorted.map((r) => parseVariant(r.products_name)).find((p) => p !== null)
-      const variantType = firstParsed?.type ?? 'size'
+      // Determine variant type from the first parsed variant. A group only ever
+      // forms because one of its names parsed (see the first pass above), so
+      // there is always one to read the type from.
+      const variantType = sorted
+        .map((r) => parseVariant(r.products_name))
+        .find((p) => p !== null)!.type
 
       const variants: ProductVariant[] = sorted.map((row) => {
         const parsed = parseVariant(row.products_name)
@@ -299,9 +311,8 @@ export function groupProducts(rows: DbProduct[], paths: Map<number, CategoryPath
             amount: parsed.amount,
             referenceUnit: parsed.unit,
             image: rowImages[0] ?? fallbackImage,
-            ...(parsed.type === 'quantity'
-              ? { minQty: parseInt(/(\d+)\+/.exec(row.products_name)?.[1] ?? '1') }
-              : {}),
+            // parseVariant already read the threshold off the name.
+            ...(parsed.minQty !== undefined ? { minQty: parsed.minQty } : {}),
           }
         }
         // Base product without suffix (e.g. single unit for quantity tiers)

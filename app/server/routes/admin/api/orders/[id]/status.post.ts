@@ -23,7 +23,7 @@ export default defineEventHandler(async (event) => {
 
   const db = useDB()
   const operator = getAdminUser(event) || 'admin'
-  const remoteIp = getRequestIP(event, { xForwardedFor: true }) ?? undefined
+  const remoteIp = getRequestIP(event, { xForwardedFor: true })
 
   const [stRows] = await db.execute<RowDataPacket[]>(
     'SELECT orders_status_name FROM orders_status WHERE orders_status_id = ? AND language_id = 2 LIMIT 1',

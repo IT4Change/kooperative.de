@@ -351,8 +351,6 @@ describe('submitting the order', () => {
     })
     expect(cart.checkoutStep.value).toBe('success')
     expect(cart.isEmpty.value).toBe(true)
-    // No osCommerce number exists yet — the order is only pending.
-    expect(cart.lastOrderId.value).toBeNull()
   })
 
   it('resets the checkout fields afterwards', async () => {
