@@ -44,7 +44,10 @@
             <p class="text-xs text-gray-500 mt-0.5">{{ opt.description }}</p>
           </div>
         </label>
-        <div v-if="opt.id === 'lastschrift' && paymentModel === 'lastschrift'" class="mt-2 mb-1 ml-6 pl-2 border-l-2 border-[#00af8c]/30 space-y-2">
+        <div
+          v-if="opt.id === 'lastschrift' && paymentModel === 'lastschrift'"
+          class="mt-2 mb-1 ml-6 pl-2 border-l-2 border-[#00af8c]/30 space-y-2"
+        >
           <div>
             <label class="block text-xs font-medium text-gray-700 mb-1">Kontoinhaber *</label>
             <input
@@ -72,13 +75,21 @@
               ✓ {{ ibanInfo.bankName }}
               <span v-if="ibanInfo.blz" class="text-gray-400">· BLZ {{ ibanInfo.blz }}</span>
             </p>
-            <p v-else-if="ibanInfo && ibanInfo.blz && !ibanInfo.bankName" class="mt-1 text-xs text-gray-500">
+            <p
+              v-else-if="ibanInfo && ibanInfo.blz && !ibanInfo.bankName"
+              class="mt-1 text-xs text-gray-500"
+            >
               BLZ {{ ibanInfo.blz }} (Bank nicht in der Bundesbank-Liste)
             </p>
-            <p v-else-if="ibanInfo && !ibanInfo.valid && ibanLong" class="mt-1 text-xs text-red-600">
+            <p
+              v-else-if="ibanInfo && !ibanInfo.valid && ibanLong"
+              class="mt-1 text-xs text-red-600"
+            >
               IBAN ungültig — bitte prüfen
             </p>
-            <p v-else class="mt-1 text-xs text-gray-500">DE/AT/CH/LI. Wir buchen den Betrag nach der Bestellung ab.</p>
+            <p v-else class="mt-1 text-xs text-gray-500">
+              DE/AT/CH/LI. Wir buchen den Betrag nach der Bestellung ab.
+            </p>
           </div>
         </div>
       </template>
@@ -111,77 +122,100 @@
 </template>
 
 <script setup lang="ts">
-import { SHIPPING_OPTIONS, PAYMENT_OPTIONS, type ShippingMethod, type PaymentMethod } from '~/data/checkoutOptions'
+  import type { ShippingMethod, PaymentMethod } from '~/data/checkoutOptions'
 
-const props = defineProps<{
-  shipping: ShippingMethod | null
-  payment: PaymentMethod | null
-  notes: string
-  accountHolder: string
-  iban: string
-}>()
+  import { SHIPPING_OPTIONS, PAYMENT_OPTIONS } from '~/data/checkoutOptions'
 
-const emit = defineEmits<{
-  back: []
-  next: []
-  'update:shipping': [ShippingMethod]
-  'update:payment': [PaymentMethod]
-  'update:notes': [string]
-  'update:accountHolder': [string]
-  'update:iban': [string]
-}>()
+  const props = defineProps<{
+    shipping: ShippingMethod | null
+    payment: PaymentMethod | null
+    notes: string
+    accountHolder: string
+    iban: string
+  }>()
 
-const shippingModel = computed({
-  get: () => props.shipping,
-  set: (v) => v && emit('update:shipping', v),
-})
-const paymentModel = computed({
-  get: () => props.payment,
-  set: (v) => v && emit('update:payment', v),
-})
-const notesModel = computed({
-  get: () => props.notes,
-  set: (v) => emit('update:notes', v),
-})
-const accountHolderModel = computed({
-  get: () => props.accountHolder,
-  set: (v) => emit('update:accountHolder', v),
-})
-const ibanModel = computed({
-  get: () => props.iban,
-  set: (v) => emit('update:iban', v),
-})
+  const emit = defineEmits<{
+    back: []
+    next: []
+    'update:shipping': [ShippingMethod]
+    'update:payment': [PaymentMethod]
+    'update:notes': [string]
+    'update:accountHolder': [string]
+    'update:iban': [string]
+  }>()
 
-// Live IBAN info (debounced): hits server when user has typed enough characters
-interface IbanInfoResponse { ok: boolean, country?: string, blz?: string, bankName?: string, valid?: boolean }
-const ibanInfo = ref<IbanInfoResponse | null>(null)
-const ibanCleaned = computed(() => ibanModel.value.replace(/\s+/g, '').toUpperCase())
-const ibanLong = computed(() => ibanCleaned.value.length >= 15)
-let ibanFetchSeq = 0
-let ibanTimer: ReturnType<typeof setTimeout> | null = null
-watch(ibanCleaned, (val) => {
-  if (ibanTimer) clearTimeout(ibanTimer)
-  if (val.length < 6) { ibanInfo.value = null; return }
-  const mySeq = ++ibanFetchSeq
-  ibanTimer = setTimeout(async () => {
-    try {
-      const res = await $fetch<IbanInfoResponse>('/api/iban/info', { query: { iban: val } })
-      if (mySeq === ibanFetchSeq) ibanInfo.value = res
-    } catch {
-      if (mySeq === ibanFetchSeq) ibanInfo.value = null
-    }
-  }, 250)
-})
+  const shippingModel = computed({
+    get: () => props.shipping,
+    set: (v) => {
+      if (v) emit('update:shipping', v)
+    },
+  })
+  const paymentModel = computed({
+    get: () => props.payment,
+    set: (v) => {
+      if (v) emit('update:payment', v)
+    },
+  })
+  const notesModel = computed({
+    get: () => props.notes,
+    set: (v) => {
+      emit('update:notes', v)
+    },
+  })
+  const accountHolderModel = computed({
+    get: () => props.accountHolder,
+    set: (v) => {
+      emit('update:accountHolder', v)
+    },
+  })
+  const ibanModel = computed({
+    get: () => props.iban,
+    set: (v) => {
+      emit('update:iban', v)
+    },
+  })
 
-const canProceed = computed(() => {
-  if (!shippingModel.value || !paymentModel.value) return false
-  if (paymentModel.value === 'lastschrift') {
-    if (!accountHolderModel.value.trim()) return false
-    if (!ibanLong.value) return false
-    // If we have a server response, require validity. Otherwise let server validate on submit.
-    if (ibanInfo.value && !ibanInfo.value.valid) return false
-    return true
+  // Live IBAN info (debounced): hits server when user has typed enough characters
+  interface IbanInfoResponse {
+    ok: boolean
+    country?: string
+    blz?: string
+    bankName?: string
+    valid?: boolean
   }
-  return true
-})
+  const ibanInfo = ref<IbanInfoResponse | null>(null)
+  const ibanCleaned = computed(() => ibanModel.value.replace(/\s+/g, '').toUpperCase())
+  const ibanLong = computed(() => ibanCleaned.value.length >= 15)
+  let ibanFetchSeq = 0
+  let ibanTimer: ReturnType<typeof setTimeout> | null = null
+  watch(ibanCleaned, (val) => {
+    if (ibanTimer) clearTimeout(ibanTimer)
+    if (val.length < 6) {
+      ibanInfo.value = null
+      return
+    }
+    const mySeq = ++ibanFetchSeq
+    ibanTimer = setTimeout(() => {
+      void (async () => {
+        try {
+          const res = await $fetch<IbanInfoResponse>('/api/iban/info', { query: { iban: val } })
+          if (mySeq === ibanFetchSeq) ibanInfo.value = res
+        } catch {
+          if (mySeq === ibanFetchSeq) ibanInfo.value = null
+        }
+      })()
+    }, 250)
+  })
+
+  const canProceed = computed(() => {
+    if (!shippingModel.value || !paymentModel.value) return false
+    if (paymentModel.value === 'lastschrift') {
+      if (!accountHolderModel.value.trim()) return false
+      if (!ibanLong.value) return false
+      // If we have a server response, require validity. Otherwise let server validate on submit.
+      if (ibanInfo.value && !ibanInfo.value.valid) return false
+      return true
+    }
+    return true
+  })
 </script>

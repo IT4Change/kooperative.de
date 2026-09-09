@@ -49,6 +49,11 @@ export function buildStatusFlow(
     if (id === currentStatusId) state = 'current'
     else if (currentIndex >= 0 && i < currentIndex) state = 'done'
     else state = 'upcoming'
-    return { id, name: statusNames.get(id) ?? `Status ${id}`, state, visitedAt: firstVisit.get(id) ?? null }
+    return {
+      id,
+      name: statusNames.get(id) ?? `Status ${id}`,
+      state,
+      visitedAt: firstVisit.get(id) ?? null,
+    }
   })
 }

@@ -11,8 +11,19 @@ Neue Website der Kooperative Dürnau eG -- Leben und Arbeiten in Gemeinschaft se
 | Nuxt | 4.3 | Framework (SPA, Static Generation) |
 | Vue | 3.5 | UI-Komponenten |
 | Tailwind CSS | via @nuxtjs/tailwindcss 6.14 | Styling |
+| ESLint | 10 + eslint-config-it4c | Linting (typgestützt) |
+| Vitest | 5 via @nuxt/test-utils | Unit-Tests + Coverage |
 | GitHub Pages | - | Hosting (Static) |
 | GitHub Actions | - | CI/CD (Auto-Deploy bei Push auf master) |
+
+## Qualitätssicherung
+
+Alles in `app/`: `npm run test:lint` (ESLint + `vue-tsc`) und `npm run test:unit`
+(Vitest inkl. Coverage-Gate). In der CI läuft jedes Gate als eigener Workflow
+(`.github/workflows/app.test.*.yml`).
+
+Details — Aufbau der ESLint-Config, Test-Setup für Server-Module und das
+Coverage-Ratchet — stehen in [docs/testing.md](docs/testing.md).
 
 ## Projektstruktur
 
@@ -38,14 +49,22 @@ kooperative.de/
 │   │   ├── favicon.ico
 │   │   ├── robots.txt
 │   │   └── .nojekyll
+│   ├── test/                    # Geteiltes Test-Setup (Specs liegen bei der Quelle)
+│   ├── eslint.config.ts         # ESLint (Nuxt-Flat-Config + eslint-config-it4c)
+│   ├── prettier.config.ts       # Re-Export aus eslint-config-it4c/prettier
+│   ├── vitest.config.ts         # Vitest + Coverage-Schwellen
 │   ├── nuxt.config.ts           # Nuxt-Konfiguration
 │   └── package.json
 ├── docs/
 │   ├── wwweb.pdf                # Original-Sitemap
 │   ├── PROJECT.md               # Projektdefinition
+│   ├── testing.md               # Lint- und Test-Setup
 │   ├── IMG.md                   # Bildübersicht
 │   └── img/                     # Alle heruntergeladenen Bilder
 ├── .github/workflows/
+│   ├── app.test.lint.code.yml       # CI-Gate: ESLint
+│   ├── app.test.typecheck.code.yml  # CI-Gate: vue-tsc
+│   ├── app.test.unit.code.yml       # CI-Gate: Vitest + Coverage
 │   └── deploy.yml               # GitHub Pages Deployment
 └── README.md
 ```

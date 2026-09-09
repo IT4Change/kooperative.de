@@ -1,6 +1,5 @@
-import { getRouterParam } from 'h3'
-import { getPendingById } from '../../../../../utils/pendingOrder'
 import { confirmPending } from '../../../../../utils/pendingConfirm'
+import { getPendingById } from '../../../../../utils/pendingOrder'
 
 /**
  * Operator confirms a pending order manually (e.g. after the customer replied to
@@ -9,7 +8,8 @@ import { confirmPending } from '../../../../../utils/pendingConfirm'
  */
 export default defineEventHandler(async (event) => {
   const id = Number(getRouterParam(event, 'id'))
-  if (!Number.isInteger(id) || id <= 0) throw createError({ statusCode: 400, statusMessage: 'Ungültige ID' })
+  if (!Number.isInteger(id) || id <= 0)
+    throw createError({ statusCode: 400, statusMessage: 'Ungültige ID' })
 
   const db = useDB()
   const remoteIp = getRequestIP(event, { xForwardedFor: true }) ?? undefined

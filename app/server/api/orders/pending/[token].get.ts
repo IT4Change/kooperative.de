@@ -1,4 +1,3 @@
-import { getRouterParam } from 'h3'
 import { getPendingByToken } from '../../../utils/pendingOrder'
 
 /**
@@ -11,7 +10,7 @@ export default defineEventHandler(async (event) => {
 
   const db = useDB()
   const pending = await getPendingByToken(db, token)
-  if (!pending || !pending.payload?.comp) {
+  if (!pending?.payload.comp) {
     throw createError({ statusCode: 404, statusMessage: 'Bestellung nicht gefunden' })
   }
   const comp = pending.payload.comp
@@ -27,7 +26,7 @@ export default defineEventHandler(async (event) => {
       city: comp.customer.city,
       country: comp.customer.country,
     },
-    items: comp.lines.map(l => ({
+    items: comp.lines.map((l) => ({
       name: l.name,
       quantity: l.quantity,
       unitPrice: l.unitGross,
@@ -35,7 +34,10 @@ export default defineEventHandler(async (event) => {
     })),
     subtotal: comp.subtotalGross,
     shipping: { label: comp.shipping.module, price: comp.shipping.gross },
-    taxRows: comp.taxRows.map(t => ({ description: t.description, total: Math.round(t.total * 100) / 100 })),
+    taxRows: comp.taxRows.map((t) => ({
+      description: t.description,
+      total: Math.round(t.total * 100) / 100,
+    })),
     payment: comp.payment.label,
     notes: comp.notes ?? '',
     total: comp.total,

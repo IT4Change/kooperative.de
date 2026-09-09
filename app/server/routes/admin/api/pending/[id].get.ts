@@ -1,6 +1,6 @@
-import type { RowDataPacket } from 'mysql2/promise'
-import { getRouterParam } from 'h3'
 import { getPendingById } from '../../../../utils/pendingOrder'
+
+import type { RowDataPacket } from 'mysql2/promise'
 
 /**
  * Admin detail of a pending (unconfirmed) order: pinned content from the payload,
@@ -8,11 +8,13 @@ import { getPendingById } from '../../../../utils/pendingOrder'
  */
 export default defineEventHandler(async (event) => {
   const id = Number(getRouterParam(event, 'id'))
-  if (!Number.isInteger(id) || id <= 0) throw createError({ statusCode: 400, statusMessage: 'Ungültige ID' })
+  if (!Number.isInteger(id) || id <= 0)
+    throw createError({ statusCode: 400, statusMessage: 'Ungültige ID' })
 
   const db = useDB()
   const pending = await getPendingById(db, id)
-  if (!pending || !pending.payload?.comp) throw createError({ statusCode: 404, statusMessage: 'Nicht gefunden' })
+  if (!pending?.payload.comp)
+    throw createError({ statusCode: 404, statusMessage: 'Nicht gefunden' })
   const comp = pending.payload.comp
 
   const [mailRows] = await db.execute<RowDataPacket[]>(
@@ -26,11 +28,23 @@ export default defineEventHandler(async (event) => {
   const [flowStatusRows] = await db.execute<RowDataPacket[]>(
     'SELECT orders_status_id, orders_status_name FROM orders_status WHERE language_id = 2',
   )
-  const statusNames = new Map<number, string>(flowStatusRows.map(r => [Number(r.orders_status_id), String(r.orders_status_name)]))
+  const statusNames = new Map<number, string>(
+    flowStatusRows.map((r) => [Number(r.orders_status_id), String(r.orders_status_name)]),
+  )
   const confirmState = pending.status === 'materialized' ? 'done' : 'current'
   const statusFlow = [
-    { id: -1, name: 'Bestätigung ausstehend', state: confirmState, visitedAt: pending.confirmedAt ?? null },
-    ...ORDER_STATUS_FLOW.map(sid => ({ id: sid, name: statusNames.get(sid) ?? `Status ${sid}`, state: 'upcoming', visitedAt: null })),
+    {
+      id: -1,
+      name: 'Bestätigung ausstehend',
+      state: confirmState,
+      visitedAt: pending.confirmedAt ?? null,
+    },
+    ...ORDER_STATUS_FLOW.map((sid) => ({
+      id: sid,
+      name: statusNames.get(sid) ?? `Status ${sid}`,
+      state: 'upcoming',
+      visitedAt: null,
+    })),
   ]
 
   return {
@@ -55,14 +69,22 @@ export default defineEventHandler(async (event) => {
       city: comp.customer.city,
       country: comp.customer.country,
     },
-    items: comp.lines.map(l => ({ name: l.name, quantity: l.quantity, unitPrice: l.unitGross, lineTotal: l.lineGross })),
+    items: comp.lines.map((l) => ({
+      name: l.name,
+      quantity: l.quantity,
+      unitPrice: l.unitGross,
+      lineTotal: l.lineGross,
+    })),
     subtotal: comp.subtotalGross,
     shipping: { label: comp.shipping.module, price: comp.shipping.gross },
-    taxRows: comp.taxRows.map(t => ({ description: t.description, total: Math.round(t.total * 100) / 100 })),
+    taxRows: comp.taxRows.map((t) => ({
+      description: t.description,
+      total: Math.round(t.total * 100) / 100,
+    })),
     payment: comp.payment.label,
     notes: comp.notes ?? '',
     total: comp.total,
-    mails: mailRows.map(r => ({
+    mails: mailRows.map((r) => ({
       id: Number(r.id),
       direction: String(r.direction),
       recipient: String(r.recipient || ''),

@@ -4,7 +4,7 @@ export interface CurrentUser {
   firstname: string
   lastname: string
   telephone: string
-  address: { street: string, postcode: string, city: string, countryId: number }
+  address: { street: string; postcode: string; city: string; countryId: number }
 }
 
 const user = ref<CurrentUser | null>(null)
@@ -62,7 +62,7 @@ async function logout() {
 
 export function useAuth() {
   if (import.meta.client && !loaded.value && !loading.value) {
-    refresh()
+    void refresh()
   }
   return {
     user: readonly(user),

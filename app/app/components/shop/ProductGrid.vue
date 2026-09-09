@@ -7,19 +7,17 @@
       @add="(p, vi, qty) => $emit('add', p, vi, qty)"
     />
   </div>
-  <p v-else class="text-center text-gray-400 py-12">
-    Keine Produkte in dieser Kategorie.
-  </p>
+  <p v-else class="text-center text-gray-400 py-12">Keine Produkte in dieser Kategorie.</p>
 </template>
 
 <script setup lang="ts">
-import type { Product } from '~/data/products'
+  import type { Product } from '~/data/products'
 
-defineProps<{
-  products: Product[]
-}>()
+  defineProps<{
+    products: Product[]
+  }>()
 
-defineEmits<{
-  add: [product: Product, variantIndex?: number, quantity?: number]
-}>()
+  defineEmits<{
+    add: [product: Product, variantIndex?: number, quantity?: number]
+  }>()
 </script>

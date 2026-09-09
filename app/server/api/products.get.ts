@@ -1,11 +1,22 @@
-import type { Product } from '~/data/products'
 import { getCatalog } from '../utils/catalog'
 
+import type { Product } from '~/data/products'
+
 /** Fields only the detail page needs — see GET /api/products/[id]. */
-export type ListProduct = Omit<Product, 'content' | 'details' | 'metaTitle' | 'metaDescription' | 'metaKeywords'>
+export type ListProduct = Omit<
+  Product,
+  'content' | 'details' | 'metaTitle' | 'metaDescription' | 'metaKeywords'
+>
 
 function toListProduct(p: Product): ListProduct {
-  const { content, details, metaTitle, metaDescription, metaKeywords, ...list } = p
+  const {
+    content: _content,
+    details: _details,
+    metaTitle: _metaTitle,
+    metaDescription: _metaDescription,
+    metaKeywords: _metaKeywords,
+    ...list
+  } = p
   return list
 }
 
@@ -14,7 +25,7 @@ export default defineEventHandler(async () => {
   const { products, categories } = await getCatalog(db)
 
   // Keep categories that either host products directly or have a descendant with products
-  const usedSlugs = new Set(products.map(p => p.category))
+  const usedSlugs = new Set(products.map((p) => p.category))
   const keep = new Set<string>()
   for (const used of usedSlugs) {
     let slug: string | undefined = used
@@ -24,7 +35,7 @@ export default defineEventHandler(async () => {
       slug = idx === -1 ? undefined : slug.slice(0, idx)
     }
   }
-  const activeCategories = categories.filter(c => keep.has(c.slug))
+  const activeCategories = categories.filter((c) => keep.has(c.slug))
 
   // The listing renders name, price, description and images; long-form and meta
   // text is dead weight in a payload that already carries the whole catalogue.

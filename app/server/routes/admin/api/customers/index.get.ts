@@ -1,5 +1,4 @@
 import type { RowDataPacket } from 'mysql2/promise'
-import { getQuery } from 'h3'
 
 /**
  * Customer list for the admin. Read-only in Phase 1 (editing comes later).
@@ -18,10 +17,14 @@ export default defineEventHandler(async (event) => {
   const params: unknown[] = []
   if (search) {
     if (/^\d+$/.test(search)) {
-      conditions.push('(c.customers_id = ? OR c.customers_email_address LIKE ? OR CONCAT(c.customers_firstname, \' \', c.customers_lastname) LIKE ?)')
+      conditions.push(
+        "(c.customers_id = ? OR c.customers_email_address LIKE ? OR CONCAT(c.customers_firstname, ' ', c.customers_lastname) LIKE ?)",
+      )
       params.push(Number(search), `%${search}%`, `%${search}%`)
     } else {
-      conditions.push('(c.customers_email_address LIKE ? OR CONCAT(c.customers_firstname, \' \', c.customers_lastname) LIKE ?)')
+      conditions.push(
+        "(c.customers_email_address LIKE ? OR CONCAT(c.customers_firstname, ' ', c.customers_lastname) LIKE ?)",
+      )
       params.push(`%${search}%`, `%${search}%`)
     }
   }
@@ -49,7 +52,7 @@ export default defineEventHandler(async (event) => {
     total,
     page,
     limit,
-    customers: rows.map(r => ({
+    customers: rows.map((r) => ({
       id: Number(r.customers_id),
       name: `${r.customers_firstname || ''} ${r.customers_lastname || ''}`.trim(),
       email: String(r.customers_email_address || ''),

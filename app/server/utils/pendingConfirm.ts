@@ -1,11 +1,12 @@
-import type { Pool } from 'mysql2/promise'
-import type { H3Event } from 'h3'
-import { materializePending } from './pendingOrder'
-import type { PendingRow } from './pendingOrder'
-import { sendAndLogOrderMail } from './orderMailLog'
-import { buildCustomerConfirmed, buildAdminConfirmed } from './pendingMail'
 import { reviewLink, adminOrderLink } from './links'
 import { MAIL_OPERATOR } from './mailer'
+import { sendAndLogOrderMail } from './orderMailLog'
+import { buildCustomerConfirmed, buildAdminConfirmed } from './pendingMail'
+import { materializePending } from './pendingOrder'
+
+import type { PendingRow } from './pendingOrder'
+import type { H3Event } from 'h3'
+import type { Pool } from 'mysql2/promise'
 
 /**
  * Confirm a pending order (materialize into osCommerce) and send the two
@@ -19,7 +20,7 @@ export async function confirmPending(
   pending: PendingRow,
   via: 'link' | 'reply' | 'admin',
   ctx: { remoteIp?: string } = {},
-): Promise<{ ordersId: number, alreadyDone: boolean }> {
+): Promise<{ ordersId: number; alreadyDone: boolean }> {
   const result = await materializePending(db, pending, via, ctx)
   if (result.alreadyDone) return result
 
@@ -27,18 +28,49 @@ export async function confirmPending(
   const comp = pending.payload.comp
   const sentBy = via === 'admin' ? 'admin' : 'system'
 
-  const cust = buildCustomerConfirmed({ orderId: ordersId, comp, reviewUrl: reviewLink(event, pending.token) })
-  await sendAndLogOrderMail(db, {
-    ordersId, pendingOrderId: pending.id, direction: 'to_customer', recipient: comp.customer.email,
-    mailType: 'order_confirmed', subject: cust.subject, text: cust.text, html: cust.html, sentBy,
-  }, ctx)
+  const cust = buildCustomerConfirmed({
+    orderId: ordersId,
+    comp,
+    reviewUrl: reviewLink(event, pending.token),
+  })
+  await sendAndLogOrderMail(
+    db,
+    {
+      ordersId,
+      pendingOrderId: pending.id,
+      direction: 'to_customer',
+      recipient: comp.customer.email,
+      mailType: 'order_confirmed',
+      subject: cust.subject,
+      text: cust.text,
+      html: cust.html,
+      sentBy,
+    },
+    ctx,
+  )
 
-  const adm = buildAdminConfirmed({ orderId: ordersId, comp, adminUrl: adminOrderLink(event, ordersId), via })
-  await sendAndLogOrderMail(db, {
-    ordersId, pendingOrderId: pending.id, direction: 'to_admin', recipient: MAIL_OPERATOR,
-    mailType: 'admin_order_confirmed', subject: adm.subject, text: adm.text, html: adm.html,
-    replyTo: comp.customer.email, sentBy,
-  }, ctx)
+  const adm = buildAdminConfirmed({
+    orderId: ordersId,
+    comp,
+    adminUrl: adminOrderLink(event, ordersId),
+    via,
+  })
+  await sendAndLogOrderMail(
+    db,
+    {
+      ordersId,
+      pendingOrderId: pending.id,
+      direction: 'to_admin',
+      recipient: MAIL_OPERATOR,
+      mailType: 'admin_order_confirmed',
+      subject: adm.subject,
+      text: adm.text,
+      html: adm.html,
+      replyTo: comp.customer.email,
+      sentBy,
+    },
+    ctx,
+  )
 
   return result
 }

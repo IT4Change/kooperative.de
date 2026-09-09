@@ -1,6 +1,6 @@
-import type { H3Event } from 'h3'
 import { timingSafeEqual } from 'node:crypto'
-import { getRequestHeader, setResponseHeader } from 'h3'
+
+import type { H3Event } from 'h3'
 
 /**
  * HTTP Basic Auth for the /admin area — replaces the old osCommerce
@@ -51,7 +51,7 @@ export function checkAdminAuth(event: H3Event): boolean {
   const header = getRequestHeader(event, 'authorization') || ''
   if (!header.startsWith('Basic ')) return false
 
-  let decoded = ''
+  let decoded: string
   try {
     decoded = Buffer.from(header.slice(6), 'base64').toString('utf8')
   } catch {
@@ -87,7 +87,10 @@ export function getAdminUser(event: H3Event): string | null {
 export function requireAdminAuth(event: H3Event): void {
   const { configured } = parseCredentials()
   if (!configured) {
-    throw createError({ statusCode: 503, statusMessage: 'Admin-Zugang nicht konfiguriert (ADMIN_USERS)' })
+    throw createError({
+      statusCode: 503,
+      statusMessage: 'Admin-Zugang nicht konfiguriert (ADMIN_USERS)',
+    })
   }
   if (!checkAdminAuth(event)) {
     setResponseHeader(event, 'WWW-Authenticate', `Basic realm="${REALM}", charset="UTF-8"`)

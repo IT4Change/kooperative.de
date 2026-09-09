@@ -2,23 +2,43 @@
   <div class="layout">
     <header ref="headerRef" class="header" :class="{ scrolled }">
       <div class="header-main">
-        <NuxtLink to="/" class="logo" :class="{ active: activeSection === 'hero' }" @click.prevent="scrollToTop">
+        <NuxtLink
+          to="/"
+          class="logo"
+          :class="{ active: activeSection === 'hero' }"
+          @click.prevent="scrollToTop"
+        >
           <img :src="`${baseURL}img/logo.svg`" alt="Kooperative Dürnau" class="logo-img" />
           <span class="logo-text">Kooperative Dürnau</span>
         </NuxtLink>
 
-        <button class="burger" :class="{ open: menuOpen }" aria-label="Menü" @click="menuOpen = !menuOpen">
+        <button
+          class="burger"
+          :class="{ open: menuOpen }"
+          aria-label="Menü"
+          @click="menuOpen = !menuOpen"
+        >
           <span /><span /><span />
         </button>
 
         <nav class="main-nav" :class="{ open: menuOpen }">
-          <NuxtLink to="/shop" :class="{ active: isShopActive }" @click="menuOpen = false">Bestellung</NuxtLink>
-          <a v-for="link in sectionLinks" :key="link.id" :href="link.href" @click="menuOpen = false">{{ link.label }}</a>
+          <NuxtLink to="/shop" :class="{ active: isShopActive }" @click="menuOpen = false"
+            >Bestellung</NuxtLink
+          >
+          <a
+            v-for="link in sectionLinks"
+            :key="link.id"
+            :href="link.href"
+            @click="menuOpen = false"
+            >{{ link.label }}</a
+          >
           <span class="nav-spacer" />
           <a :href="HISTORIE_URL" class="info-link" @click="menuOpen = false">Historie</a>
           <a :href="KONTAKT_URL" class="info-link" @click="menuOpen = false">Kontakt</a>
           <NuxtLink to="/impressum" class="info-link" @click="menuOpen = false">Impressum</NuxtLink>
-          <NuxtLink to="/datenschutz" class="info-link" @click="menuOpen = false">Datenschutz</NuxtLink>
+          <NuxtLink to="/datenschutz" class="info-link" @click="menuOpen = false"
+            >Datenschutz</NuxtLink
+          >
         </nav>
       </div>
     </header>
@@ -30,15 +50,21 @@
     <!-- Storage-Warnung (Cookies blockiert) -->
     <ClientOnly>
       <Teleport to="body">
-        <div v-if="showStorageWarning" class="fixed inset-0 z-[200] flex items-center justify-center p-4" @click.self="dismissStorageWarning">
+        <div
+          v-if="showStorageWarning"
+          class="fixed inset-0 z-[200] flex items-center justify-center p-4"
+          @click.self="dismissStorageWarning"
+        >
           <div class="absolute inset-0 bg-black/50" />
           <div class="relative bg-white rounded-xl shadow-2xl max-w-sm w-full p-6">
             <h2 class="text-lg font-bold mb-3">Cookies erforderlich</h2>
             <p class="text-sm text-gray-600 mb-4">
-              Um Artikel auf die Bestellliste setzen zu können, muss der lokale Speicher (Cookies/localStorage) in deinem Browser aktiviert sein.
+              Um Artikel auf die Bestellliste setzen zu können, muss der lokale Speicher
+              (Cookies/localStorage) in deinem Browser aktiviert sein.
             </p>
             <p class="text-sm text-gray-500 mb-5">
-              Bitte erlaube Cookies für diese Seite und versuche es erneut. Du wirst anschließend gebeten, der Verwendung technisch notwendiger Cookies zuzustimmen.
+              Bitte erlaube Cookies für diese Seite und versuche es erneut. Du wirst anschließend
+              gebeten, der Verwendung technisch notwendiger Cookies zuzustimmen.
             </p>
             <div class="flex justify-end">
               <KoopButton size="sm" @click="dismissStorageWarning">Verstanden</KoopButton>
@@ -51,16 +77,23 @@
     <!-- Cookie-Consent-Banner -->
     <ClientOnly>
       <Teleport to="body">
-        <div v-if="showConsentBanner" class="fixed inset-0 z-[200] flex items-end sm:items-center justify-center p-4">
+        <div
+          v-if="showConsentBanner"
+          class="fixed inset-0 z-[200] flex items-end sm:items-center justify-center p-4"
+        >
           <div class="absolute inset-0 bg-black/50" />
           <div class="relative bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
             <h2 class="text-lg font-bold mb-3">Cookie-Hinweis</h2>
             <p class="text-sm text-gray-600 mb-3">
-              Für den Warenkorb verwenden wir technisch notwendige Cookies bzw. lokalen Speicher. Diese sind erforderlich, damit deine Auswahl erhalten bleibt. Es findet kein Tracking und keine Weitergabe an Dritte statt.
+              Für den Warenkorb verwenden wir technisch notwendige Cookies bzw. lokalen Speicher.
+              Diese sind erforderlich, damit deine Auswahl erhalten bleibt. Es findet kein Tracking
+              und keine Weitergabe an Dritte statt.
             </p>
             <p class="text-sm text-gray-600 mb-5">
               Mehr Informationen findest du in unserer
-              <NuxtLink to="/datenschutz" class="text-[#00af8c] underline" @click="declineConsent">Datenschutzerklärung</NuxtLink>.
+              <NuxtLink to="/datenschutz" class="text-[#00af8c] underline" @click="declineConsent"
+                >Datenschutzerklärung</NuxtLink
+              >.
             </p>
             <div class="flex flex-col sm:flex-row gap-2 sm:justify-end">
               <KoopButton size="sm" variant="orange" @click="declineConsent">Ablehnen</KoopButton>
@@ -91,314 +124,328 @@
 </template>
 
 <script setup lang="ts">
-const { baseURL } = useRuntimeConfig().app
-const { showWarning: showStorageWarning, dismissWarning: dismissStorageWarning } = useStorage()
-const { showBanner: showConsentBanner, accept: acceptConsent, decline: declineConsent } = useConsent()
-const route = useRoute()
-const scrolled = ref(false)
-const menuOpen = ref(false)
-const activeSection = ref('')
-const headerRef = ref<HTMLElement>()
-let lastScrollY = 0
+  const { baseURL } = useRuntimeConfig().app
+  const { showWarning: showStorageWarning, dismissWarning: dismissStorageWarning } = useStorage()
+  const {
+    showBanner: showConsentBanner,
+    accept: acceptConsent,
+    decline: declineConsent,
+  } = useConsent()
+  const route = useRoute()
+  const scrolled = ref(false)
+  const menuOpen = ref(false)
+  const activeSection = ref('')
+  const headerRef = ref<HTMLElement>()
+  let lastScrollY = 0
 
-const router = useRouter()
-const isShopActive = computed(() => route.path.startsWith('/shop'))
-const sectionLinks = useSectionLinks()
+  const router = useRouter()
+  const isShopActive = computed(() => route.path.startsWith('/shop'))
+  const sectionLinks = useSectionLinks()
 
-function scrollToTop() {
-  if (route.path === '/') {
-    window.scrollTo({ top: 0, behavior: 'smooth' })
-  } else {
-    router.push('/')
+  function scrollToTop() {
+    if (route.path === '/') {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    } else {
+      void router.push('/')
+    }
   }
-}
 
-const sectionIds = ['hero']
-let observer: IntersectionObserver | null = null
+  const sectionIds = ['hero']
+  let observer: IntersectionObserver | null = null
 
-function observeSections() {
-  if (observer) observer.disconnect()
-  observer = new IntersectionObserver(
-    (entries) => {
-      for (const entry of entries) {
-        if (entry.isIntersecting) {
-          activeSection.value = entry.target.id
+  function observeSections() {
+    if (observer) observer.disconnect()
+    observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            activeSection.value = entry.target.id
+          }
         }
+      },
+      { threshold: 0.4 },
+    )
+    for (const id of sectionIds) {
+      const el = document.getElementById(id)
+      if (el) observer.observe(el)
+    }
+  }
+
+  watch(
+    () => route.fullPath,
+    () => {
+      if (route.path === '/') {
+        void nextTick(() => {
+          observeSections()
+        })
+      } else {
+        activeSection.value = ''
       }
     },
-    { threshold: 0.4 },
   )
-  for (const id of sectionIds) {
-    const el = document.getElementById(id)
-    if (el) observer.observe(el)
-  }
-}
 
-watch(() => route.fullPath, () => {
-  if (route.path === '/') {
-    nextTick(() => observeSections())
-  } else {
-    activeSection.value = ''
-  }
-})
+  onMounted(() => {
+    const onScroll = () => {
+      const currentY = window.scrollY
+      const scrollingUp = currentY < lastScrollY
 
-onMounted(() => {
-  const onScroll = () => {
-    const currentY = window.scrollY
-    const scrollingUp = currentY < lastScrollY
+      scrolled.value = !scrollingUp && currentY > 50
 
-    scrolled.value = !scrollingUp && currentY > 50
+      lastScrollY = currentY
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    onUnmounted(() => {
+      window.removeEventListener('scroll', onScroll)
+      observer?.disconnect()
+    })
 
-    lastScrollY = currentY
-  }
-  window.addEventListener('scroll', onScroll, { passive: true })
-  onUnmounted(() => {
-    window.removeEventListener('scroll', onScroll)
-    observer?.disconnect()
+    if (route.path === '/') observeSections()
   })
-
-  if (route.path === '/') observeSections()
-})
 </script>
 
 <style scoped>
-.layout {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  font-family: system-ui, -apple-system, sans-serif;
-  color: #333;
-}
-
-.header {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 100;
-  transition: all 0.3s ease;
-}
-
-.nav-spacer {
-  flex: 1;
-}
-
-.info-link {
-  font-size: 0.8rem !important;
-  color: #888 !important;
-  font-weight: 400 !important;
-}
-
-.info-link:hover {
-  color: #00af8c !important;
-}
-
-.header-main {
-  display: flex;
-  align-items: center;
-  gap: 2rem;
-  padding: 1rem 1.5rem;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(8px);
-  transition: all 0.3s ease;
-}
-
-.header.scrolled .header-main {
-  gap: 1rem;
-  padding: 0.3rem 1.5rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.logo {
-  text-decoration: none;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.logo-text {
-  font-weight: 600;
-  font-size: 1.1rem;
-  color: #333;
-  white-space: nowrap;
-  display: inline-block;
-  max-width: 200px;
-  overflow: hidden;
-  transition: max-width 0.4s ease, opacity 0.3s ease;
-}
-
-.logo-img {
-  height: 40px;
-  width: auto;
-  transition: height 0.3s ease;
-}
-
-.header.scrolled .logo-img {
-  height: 28px;
-}
-
-/* Burger Button */
-.burger {
-  display: none;
-  flex-direction: column;
-  gap: 5px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 4px;
-  margin-left: auto;
-}
-
-.burger span {
-  display: block;
-  width: 24px;
-  height: 2px;
-  background: #333;
-  transition: all 0.3s ease;
-  transform-origin: center;
-}
-
-.burger.open span:nth-child(1) {
-  transform: rotate(45deg) translate(5px, 5px);
-}
-
-.burger.open span:nth-child(2) {
-  opacity: 0;
-}
-
-.burger.open span:nth-child(3) {
-  transform: rotate(-45deg) translate(5px, -5px);
-}
-
-/* Desktop Nav */
-.main-nav {
-  display: flex;
-  gap: 1.5rem;
-  flex: 1;
-}
-
-.main-nav a {
-  color: #333;
-  text-decoration: none;
-  font-weight: 500;
-  padding: 0.25rem 0;
-  border-bottom: 2px solid transparent;
-  transition: all 0.3s ease;
-  font-size: 1rem;
-}
-
-.header.scrolled .main-nav a {
-  font-size: 0.9rem;
-}
-
-.main-nav a:hover {
-  color: #00af8c;
-}
-
-.main-nav a.active {
-  border-bottom-color: #00af8c;
-  color: #00af8c;
-}
-
-/* Main */
-.main {
-  flex: 1;
-}
-
-/* Footer */
-.footer {
-  background: #333;
-  color: #ddd;
-  padding: 2rem 1.5rem;
-  margin-top: auto;
-}
-
-.footer-content {
-  display: flex;
-  gap: 3rem;
-  flex-wrap: wrap;
-  max-width: 960px;
-  margin: 0 auto;
-}
-
-.footer-section nav {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-  margin-top: 0.5rem;
-}
-
-.footer-section a {
-  color: #aaa;
-  text-decoration: none;
-  font-size: 0.9rem;
-}
-
-.footer-section a:hover {
-  color: #fff;
-}
-
-.footer-section p {
-  margin: 0.5rem 0 0;
-  font-size: 0.9rem;
-  color: #aaa;
-}
-
-/* Mobile */
-@media (max-width: 768px) {
-  .burger {
+  .layout {
+    min-height: 100vh;
     display: flex;
+    flex-direction: column;
+    font-family:
+      system-ui,
+      -apple-system,
+      sans-serif;
+    color: #333;
   }
 
-  .logo-text {
-    display: inline-block;
-    max-width: 200px;
-    opacity: 1;
+  .header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    transition: all 0.3s ease;
   }
 
   .nav-spacer {
-    display: none;
-  }
-
-  .main-nav {
-    display: none;
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    flex-direction: column;
-    background: rgba(255, 255, 255, 0.98);
-    backdrop-filter: blur(8px);
-    padding: 1rem 1.5rem 1.5rem;
-    gap: 0;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  }
-
-  .main-nav.open {
-    display: flex;
-  }
-
-  .main-nav a {
-    padding: 0.75rem 0;
-    font-size: 1.1rem;
-    border-bottom: 1px solid #eee;
-  }
-
-  .main-nav a:last-of-type {
-    border-bottom: none;
+    flex: 1;
   }
 
   .info-link {
-    font-size: 0.9rem !important;
-    color: #666 !important;
-    border-bottom: none !important;
-    padding: 0.5rem 0 !important;
+    font-size: 0.8rem !important;
+    color: #888 !important;
+    font-weight: 400 !important;
+  }
+
+  .info-link:hover {
+    color: #00af8c !important;
+  }
+
+  .header-main {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    padding: 1rem 1.5rem;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(8px);
+    transition: all 0.3s ease;
+  }
+
+  .header.scrolled .header-main {
+    gap: 1rem;
+    padding: 0.3rem 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .logo {
+    text-decoration: none;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .logo-text {
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: #333;
+    white-space: nowrap;
+    display: inline-block;
+    max-width: 200px;
+    overflow: hidden;
+    transition:
+      max-width 0.4s ease,
+      opacity 0.3s ease;
+  }
+
+  .logo-img {
+    height: 40px;
+    width: auto;
+    transition: height 0.3s ease;
+  }
+
+  .header.scrolled .logo-img {
+    height: 28px;
+  }
+
+  /* Burger Button */
+  .burger {
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    margin-left: auto;
+  }
+
+  .burger span {
+    display: block;
+    width: 24px;
+    height: 2px;
+    background: #333;
+    transition: all 0.3s ease;
+    transform-origin: center;
+  }
+
+  .burger.open span:nth-child(1) {
+    transform: rotate(45deg) translate(5px, 5px);
+  }
+
+  .burger.open span:nth-child(2) {
+    opacity: 0;
+  }
+
+  .burger.open span:nth-child(3) {
+    transform: rotate(-45deg) translate(5px, -5px);
+  }
+
+  /* Desktop Nav */
+  .main-nav {
+    display: flex;
+    gap: 1.5rem;
+    flex: 1;
+  }
+
+  .main-nav a {
+    color: #333;
+    text-decoration: none;
+    font-weight: 500;
+    padding: 0.25rem 0;
+    border-bottom: 2px solid transparent;
+    transition: all 0.3s ease;
+    font-size: 1rem;
+  }
+
+  .header.scrolled .main-nav a {
+    font-size: 0.9rem;
+  }
+
+  .main-nav a:hover {
+    color: #00af8c;
+  }
+
+  .main-nav a.active {
+    border-bottom-color: #00af8c;
+    color: #00af8c;
+  }
+
+  /* Main */
+  .main {
+    flex: 1;
+  }
+
+  /* Footer */
+  .footer {
+    background: #333;
+    color: #ddd;
+    padding: 2rem 1.5rem;
+    margin-top: auto;
   }
 
   .footer-content {
-    flex-direction: column;
-    gap: 1.5rem;
+    display: flex;
+    gap: 3rem;
+    flex-wrap: wrap;
+    max-width: 960px;
+    margin: 0 auto;
   }
-}
+
+  .footer-section nav {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    margin-top: 0.5rem;
+  }
+
+  .footer-section a {
+    color: #aaa;
+    text-decoration: none;
+    font-size: 0.9rem;
+  }
+
+  .footer-section a:hover {
+    color: #fff;
+  }
+
+  .footer-section p {
+    margin: 0.5rem 0 0;
+    font-size: 0.9rem;
+    color: #aaa;
+  }
+
+  /* Mobile */
+  @media (max-width: 768px) {
+    .burger {
+      display: flex;
+    }
+
+    .logo-text {
+      display: inline-block;
+      max-width: 200px;
+      opacity: 1;
+    }
+
+    .nav-spacer {
+      display: none;
+    }
+
+    .main-nav {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      flex-direction: column;
+      background: rgba(255, 255, 255, 0.98);
+      backdrop-filter: blur(8px);
+      padding: 1rem 1.5rem 1.5rem;
+      gap: 0;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .main-nav.open {
+      display: flex;
+    }
+
+    .main-nav a {
+      padding: 0.75rem 0;
+      font-size: 1.1rem;
+      border-bottom: 1px solid #eee;
+    }
+
+    .main-nav a:last-of-type {
+      border-bottom: none;
+    }
+
+    .info-link {
+      font-size: 0.9rem !important;
+      color: #666 !important;
+      border-bottom: none !important;
+      padding: 0.5rem 0 !important;
+    }
+
+    .footer-content {
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+  }
 </style>

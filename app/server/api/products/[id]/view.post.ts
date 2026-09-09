@@ -13,7 +13,9 @@ export default defineEventHandler(async (event) => {
   // WHERE products_id = ? AND language_id = 2
   // (German is language 2 — same constant used in our products query)
   try {
-    const affected = await dbUpdateExpr(db, 'products_description',
+    const affected = await dbUpdateExpr(
+      db,
+      'products_description',
       { products_id: productId, language_id: 2 },
       'products_viewed = products_viewed + 1',
       [],

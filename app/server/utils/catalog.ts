@@ -1,7 +1,8 @@
+import { groupProducts, convertCategory, buildCategoryPaths } from './converter'
+
+import type { DbCategory, DbProduct } from './converter'
 import type { Pool, RowDataPacket } from 'mysql2/promise'
 import type { Product, Category } from '~/data/products'
-import { groupProducts, convertCategory, buildCategoryPaths } from './converter'
-import type { DbCategory, DbProduct } from './converter'
 
 /**
  * Loads the catalog (categories + grouped products) from the osCommerce DB.
@@ -10,7 +11,9 @@ import type { DbCategory, DbProduct } from './converter'
  *
  * Prefer getCatalog() — this runs the full query unconditionally.
  */
-export async function loadCatalog(db: Pool): Promise<{ products: Product[], categories: Category[] }> {
+export async function loadCatalog(
+  db: Pool,
+): Promise<{ products: Product[]; categories: Category[] }> {
   const [catRows] = await db.query<RowDataPacket[]>(`
     SELECT c.categories_id, c.parent_id, c.sort_order, cd.categories_name
     FROM categories c
@@ -19,7 +22,7 @@ export async function loadCatalog(db: Pool): Promise<{ products: Product[], cate
   `)
   const dbCategories = catRows as unknown as DbCategory[]
   const paths = buildCategoryPaths(dbCategories)
-  const categories = dbCategories.map(row => convertCategory(row, paths))
+  const categories = dbCategories.map((row) => convertCategory(row, paths))
 
   // SQL_BUFFER_RESULT materialises the result into a temporary table and lets
   // the server release the locks on products/products_description immediately,
@@ -84,11 +87,14 @@ export async function getCatalog(db: Pool): Promise<CatalogSnapshot> {
       snapshot = { products, categories, loadedAt: Date.now() }
       return snapshot
     })
-    .catch((err) => {
+    .catch((err: unknown) => {
       lastFailureAt = Date.now()
       if (snapshot) {
         const age = Math.round((Date.now() - snapshot.loadedAt) / 1000)
-        console.warn(`[catalog] refresh failed, serving snapshot from ${age}s ago:`, err?.message ?? err)
+        console.warn(
+          `[catalog] refresh failed, serving snapshot from ${age}s ago:`,
+          err?.message ?? err,
+        )
         return snapshot
       }
       throw err

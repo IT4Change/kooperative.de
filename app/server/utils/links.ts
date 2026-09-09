@@ -1,5 +1,4 @@
 import type { H3Event } from 'h3'
-import { getRequestURL } from 'h3'
 
 /**
  * Absolute URLs for links inside mails. Derived from the incoming request host

@@ -14,9 +14,9 @@ export default defineEventHandler(async (event) => {
   if (!ref) throw createError({ statusCode: 400, statusMessage: 'Kein Produkt angegeben' })
 
   const { products, categories } = await getCatalog(useDB())
-  const product = products.find(p => p.id === ref) ?? products.find(p => p.slug === ref)
+  const product = products.find((p) => p.id === ref) ?? products.find((p) => p.slug === ref)
   if (!product) throw createError({ statusCode: 404, statusMessage: 'Produkt nicht gefunden' })
 
-  const categoryName = categories.find(c => c.slug === product.category)?.name ?? product.category
+  const categoryName = categories.find((c) => c.slug === product.category)?.name ?? product.category
   return { product, categoryName }
 })

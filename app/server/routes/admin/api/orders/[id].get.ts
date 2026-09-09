@@ -1,5 +1,4 @@
 import type { RowDataPacket } from 'mysql2/promise'
-import { getRouterParam } from 'h3'
 
 /**
  * Full order detail for the admin (read-only): header (customer + addresses),
@@ -54,24 +53,29 @@ export default defineEventHandler(async (event) => {
     'SELECT orders_status_id, orders_status_name FROM orders_status WHERE language_id = 2 ORDER BY orders_status_id ASC',
   )
   const statusNames = new Map<number, string>(
-    statusRows.map(r => [Number(r.orders_status_id), String(r.orders_status_name)]),
+    statusRows.map((r) => [Number(r.orders_status_id), String(r.orders_status_name)]),
   )
   const statusFlow = buildStatusFlow(
     Number(h.orders_status),
     statusNames,
-    historyRows.map(r => ({ statusId: Number(r.orders_status_id), dateAdded: r.date_added })),
+    historyRows.map((r) => ({ statusId: Number(r.orders_status_id), dateAdded: r.date_added })),
   )
 
   // New-shop origin: if this order was materialized from a pending confirmation,
   // prepend a "Bestätigung ausstehend" (done) step and expose the confirmation info.
   let origin: 'alt' | 'neu' = 'alt'
-  let confirmation: { via: string | null, at: unknown } | null = null
+  let confirmation: { via: string | null; at: unknown } | null = null
   try {
     const pending = await getPendingByOrderId(db, id)
     if (pending) {
       origin = 'neu'
       confirmation = { via: pending.confirmedVia, at: pending.confirmedAt }
-      statusFlow.unshift({ id: -1, name: 'Bestätigung ausstehend', state: 'done', visitedAt: pending.confirmedAt as string | null })
+      statusFlow.unshift({
+        id: -1,
+        name: 'Bestätigung ausstehend',
+        state: 'done',
+        visitedAt: pending.confirmedAt as string | null,
+      })
     }
   } catch {
     // koop_pending_order may be absent on some environments
@@ -79,9 +83,15 @@ export default defineEventHandler(async (event) => {
 
   // Mail history (koop_order_mail_log). Tolerate the table being absent.
   let mails: {
-    id: number, direction: string, recipient: string, mailType: string,
-    relatedStatusId: number | null, subject: string, status: string,
-    sentBy: string | null, createdAt: unknown,
+    id: number
+    direction: string
+    recipient: string
+    mailType: string
+    relatedStatusId: number | null
+    subject: string
+    status: string
+    sentBy: string | null
+    createdAt: unknown
   }[] = []
   try {
     const [mailRows] = await db.execute<RowDataPacket[]>(
@@ -89,7 +99,7 @@ export default defineEventHandler(async (event) => {
        FROM koop_order_mail_log WHERE orders_id = ? ORDER BY created_at ASC, id ASC`,
       [id],
     )
-    mails = mailRows.map(r => ({
+    mails = mailRows.map((r) => ({
       id: Number(r.id),
       direction: String(r.direction),
       recipient: String(r.recipient || ''),
@@ -107,14 +117,19 @@ export default defineEventHandler(async (event) => {
   // Link to the same order in the legacy osCommerce admin (if configured). Every
   // osCommerce order (incl. materialized new-shop ones) is visible there via oID.
   const adminBase = process.env.ADMIN_BASE_URL
-  const oldAdminUrl = adminBase ? `${adminBase.replace(/\/$/, '')}/orders.php?oID=${id}&action=edit` : null
+  const oldAdminUrl = adminBase
+    ? `${adminBase.replace(/\/$/, '')}/orders.php?oID=${id}&action=edit`
+    : null
 
   return {
     statusFlow,
     origin,
     confirmation,
     oldAdminUrl,
-    availableStatuses: statusRows.map(r => ({ id: Number(r.orders_status_id), name: String(r.orders_status_name) })),
+    availableStatuses: statusRows.map((r) => ({
+      id: Number(r.orders_status_id),
+      name: String(r.orders_status_name),
+    })),
     mails,
     order: {
       id: Number(h.orders_id),
@@ -146,7 +161,7 @@ export default defineEventHandler(async (event) => {
         country: String(h.delivery_country || ''),
       },
     },
-    products: productRows.map(r => ({
+    products: productRows.map((r) => ({
       id: Number(r.products_id),
       model: String(r.products_model || ''),
       name: String(r.products_name || ''),
@@ -155,13 +170,13 @@ export default defineEventHandler(async (event) => {
       tax: Number(r.products_tax),
       quantity: Number(r.products_quantity),
     })),
-    totals: totalRows.map(r => ({
+    totals: totalRows.map((r) => ({
       title: String(r.title || ''),
       text: String(r.text || ''),
       value: r.value != null ? Number(r.value) : null,
       class: String(r.class || ''),
     })),
-    history: historyRows.map(r => ({
+    history: historyRows.map((r) => ({
       statusId: Number(r.orders_status_id),
       statusName: r.orders_status_name ? String(r.orders_status_name) : null,
       dateAdded: r.date_added,

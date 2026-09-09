@@ -1,10 +1,10 @@
-import { getRouterParam } from 'h3'
 import { getPendingById, cancelPending } from '../../../../../utils/pendingOrder'
 
 /** Operator cancels a pending order (never materialized into osCommerce). */
 export default defineEventHandler(async (event) => {
   const id = Number(getRouterParam(event, 'id'))
-  if (!Number.isInteger(id) || id <= 0) throw createError({ statusCode: 400, statusMessage: 'Ungültige ID' })
+  if (!Number.isInteger(id) || id <= 0)
+    throw createError({ statusCode: 400, statusMessage: 'Ungültige ID' })
 
   const db = useDB()
   const remoteIp = getRequestIP(event, { xForwardedFor: true }) ?? undefined

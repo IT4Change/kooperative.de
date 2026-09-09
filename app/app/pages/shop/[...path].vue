@@ -1,6 +1,9 @@
 <template>
   <div class="max-w-[1100px] mx-auto px-4 pt-24 pb-12 sm:px-6">
-    <NuxtLink to="/shop" class="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-[#00af8c] mb-6">
+    <NuxtLink
+      to="/shop"
+      class="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-[#00af8c] mb-6"
+    >
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
       </svg>
@@ -11,7 +14,9 @@
       <ShopProductGallery :images="displayImages" size="lg" />
 
       <div class="flex flex-col">
-        <span class="text-sm font-medium text-[#00af8c] bg-[#00af8c]/10 px-2.5 py-0.5 rounded-full w-fit mb-3">
+        <span
+          class="text-sm font-medium text-[#00af8c] bg-[#00af8c]/10 px-2.5 py-0.5 rounded-full w-fit mb-3"
+        >
           {{ categoryName }}
         </span>
 
@@ -47,7 +52,11 @@
             />
           </div>
           <div class="text-sm text-gray-500 space-y-0.5">
-            <div v-for="(v, idx) in product.variants" :key="idx" :class="{ 'text-[#00af8c] font-medium': idx === activeTierIndex }">
+            <div
+              v-for="(v, idx) in product.variants"
+              :key="idx"
+              :class="{ 'text-[#00af8c] font-medium': idx === activeTierIndex }"
+            >
               {{ v.size }}: {{ v.price.toFixed(2) }} €/Stk
             </div>
           </div>
@@ -68,9 +77,7 @@
           <span v-else-if="product.unit" class="text-sm text-gray-400">/ {{ product.unit }}</span>
         </div>
 
-        <KoopButton @click="handleAdd">
-          Auf die Bestellliste
-        </KoopButton>
+        <KoopButton @click="handleAdd"> Auf die Bestellliste </KoopButton>
       </div>
     </div>
 
@@ -80,93 +87,94 @@
 </template>
 
 <script setup lang="ts">
-import type { Product } from '~/data/products'
-import { unitPrice, findTierIndex } from '~/data/products'
+  import type { Product } from '~/data/products'
 
-const route = useRoute()
+  import { unitPrice, findTierIndex } from '~/data/products'
 
-// Parse path: /shop/747/bad-reiniger, /shop/747, or /shop/bad-reiniger.
-// The first segment identifies the product in every shape — as id or as slug.
-const segments = Array.isArray(route.params.path) ? route.params.path : [route.params.path]
-const productRef = segments[0]
+  const route = useRoute()
 
-// One product instead of the whole catalogue: the listing endpoint carries
-// every product, which is far too much to ship for a single detail view.
-const { data } = await useFetch<{ product: Product, categoryName: string }>(
-  `/api/products/${encodeURIComponent(productRef ?? '')}`,
-  { key: `product-${productRef}` },
-)
+  // Parse path: /shop/747/bad-reiniger, /shop/747, or /shop/bad-reiniger.
+  // The first segment identifies the product in every shape — as id or as slug.
+  const segments = Array.isArray(route.params.path) ? route.params.path : [route.params.path]
+  const productRef = segments[0]
 
-const product = data.value?.product
-if (!product) {
-  navigateTo('/shop')
-  throw new Error('Product not found')
-}
+  // One product instead of the whole catalogue: the listing endpoint carries
+  // every product, which is far too much to ship for a single detail view.
+  const { data } = await useFetch<{ product: Product; categoryName: string }>(
+    `/api/products/${encodeURIComponent(productRef ?? '')}`,
+    { key: `product-${productRef}` },
+  )
 
-// /shop/{id} and /shop/{slug} are aliases — send them to the canonical URL.
-if (segments.length === 1) {
-  await navigateTo(`/shop/${product.id}/${product.slug}`, { replace: true })
-}
-
-const categoryName = data.value?.categoryName ?? product.category
-
-useHead({
-  title: product.metaTitle
-    ? `${product.metaTitle} – Kooperative Dürnau`
-    : `${product.name} – Kooperative Dürnau`,
-  meta: [
-    ...(product.metaDescription ? [{ name: 'description', content: product.metaDescription }] : []),
-    ...(product.metaKeywords ? [{ name: 'keywords', content: product.metaKeywords }] : []),
-  ],
-})
-
-const { addToCart } = useCart()
-
-// Increment products_viewed counter once per page mount, like the alt-shop does
-// (product_info.php:103). Best-effort — failure must not affect the page.
-onMounted(() => {
-  $fetch(`/api/products/${product.id}/view`, { method: 'POST' }).catch(() => {})
-})
-
-const selectedVariant = ref(0)
-const quantity = ref(1)
-
-const activeVariant = computed(() =>
-  product.variants?.[selectedVariant.value],
-)
-
-const activeTierIndex = computed(() => {
-  if (product.variantType !== 'quantity' || !product.variants) return 0
-  return findTierIndex(product.variants, quantity.value)
-})
-
-const activeTierPrice = computed(() => {
-  if (!product.variants) return product.price
-  return product.variants[activeTierIndex.value].price
-})
-
-const displayPrice = computed(() => {
-  if (product.variantType === 'quantity') {
-    return activeTierPrice.value * quantity.value
+  const product = data.value?.product
+  if (!product) {
+    void navigateTo('/shop')
+    throw new Error('Product not found')
   }
-  return activeVariant.value?.price ?? product.price
-})
 
-const displayUnitPrice = computed(() =>
-  activeVariant.value ? unitPrice(activeVariant.value).toFixed(2) : '',
-)
-
-const displayImages = computed(() =>
-  activeVariant.value && product.variantType !== 'quantity'
-    ? [activeVariant.value.image]
-    : product.images,
-)
-
-function handleAdd() {
-  if (product.variantType === 'quantity') {
-    addToCart(product, activeTierIndex.value, quantity.value)
-  } else {
-    addToCart(product, product.variants ? selectedVariant.value : undefined)
+  // /shop/{id} and /shop/{slug} are aliases — send them to the canonical URL.
+  if (segments.length === 1) {
+    await navigateTo(`/shop/${product.id}/${product.slug}`, { replace: true })
   }
-}
+
+  const categoryName = data.value?.categoryName ?? product.category
+
+  useHead({
+    title: product.metaTitle
+      ? `${product.metaTitle} – Kooperative Dürnau`
+      : `${product.name} – Kooperative Dürnau`,
+    meta: [
+      ...(product.metaDescription
+        ? [{ name: 'description', content: product.metaDescription }]
+        : []),
+      ...(product.metaKeywords ? [{ name: 'keywords', content: product.metaKeywords }] : []),
+    ],
+  })
+
+  const { addToCart } = useCart()
+
+  // Increment products_viewed counter once per page mount, like the alt-shop does
+  // (product_info.php:103). Best-effort — failure must not affect the page.
+  onMounted(() => {
+    $fetch(`/api/products/${product.id}/view`, { method: 'POST' }).catch(() => {})
+  })
+
+  const selectedVariant = ref(0)
+  const quantity = ref(1)
+
+  const activeVariant = computed(() => product.variants?.[selectedVariant.value])
+
+  const activeTierIndex = computed(() => {
+    if (product.variantType !== 'quantity' || !product.variants) return 0
+    return findTierIndex(product.variants, quantity.value)
+  })
+
+  const activeTierPrice = computed(() => {
+    if (!product.variants) return product.price
+    return product.variants[activeTierIndex.value].price
+  })
+
+  const displayPrice = computed(() => {
+    if (product.variantType === 'quantity') {
+      return activeTierPrice.value * quantity.value
+    }
+    return activeVariant.value?.price ?? product.price
+  })
+
+  const displayUnitPrice = computed(() =>
+    activeVariant.value ? unitPrice(activeVariant.value).toFixed(2) : '',
+  )
+
+  const displayImages = computed(() =>
+    activeVariant.value && product.variantType !== 'quantity'
+      ? [activeVariant.value.image]
+      : product.images,
+  )
+
+  function handleAdd() {
+    if (product.variantType === 'quantity') {
+      addToCart(product, activeTierIndex.value, quantity.value)
+    } else {
+      addToCart(product, product.variants ? selectedVariant.value : undefined)
+    }
+  }
 </script>

@@ -1,9 +1,10 @@
-import type { Pool, RowDataPacket } from 'mysql2/promise'
-import { dbInsert, dbUpdate, dbUpdateExpr } from './dbWrite'
-import { countryName } from './orderMail'
 import { getCatalog } from './catalog'
 import { SHIPPING_OPTIONS, PAYMENT_OPTIONS } from './checkoutOptions'
+import { dbInsert, dbUpdate, dbUpdateExpr } from './dbWrite'
+import { countryName } from './orderMail'
+
 import type { ShippingMethod, PaymentMethod } from './checkoutOptions'
+import type { Pool, RowDataPacket } from 'mysql2/promise'
 import type { Product } from '~/data/products'
 
 /** Mirror of findTierIndex (app/data/products.ts) for quantity-tier products. */
@@ -23,11 +24,11 @@ function tierIndex(variants: readonly { minQty?: number }[], quantity: number): 
  */
 
 export interface OrderInput {
-  items: { productId: number | string, quantity: number, variantIndex?: number }[]
+  items: { productId: number | string; quantity: number; variantIndex?: number }[]
   shippingMethod: ShippingMethod
   paymentMethod: PaymentMethod
   notes?: string
-  bankDetails?: { accountHolder: string, iban: string }
+  bankDetails?: { accountHolder: string; iban: string }
 }
 
 export interface CompLine {
@@ -42,7 +43,12 @@ export interface CompLine {
   variantIndex?: number
 }
 
-export interface CompTaxRow { description: string, rate: number, total: number, sortOrder: number }
+export interface CompTaxRow {
+  description: string
+  rate: number
+  total: number
+  sortOrder: number
+}
 
 export interface OrderComputation {
   customer: {
@@ -63,9 +69,9 @@ export interface OrderComputation {
   lines: CompLine[]
   subtotalGross: number
   taxRows: CompTaxRow[]
-  shipping: { module: string, totalTitle: string, gross: number }
-  payment: { label: string, method: PaymentMethod }
-  bankDetails?: { accountHolder: string, iban: string }
+  shipping: { module: string; totalTitle: string; gross: number }
+  payment: { label: string; method: PaymentMethod }
+  bankDetails?: { accountHolder: string; iban: string }
   notes?: string
   total: number
 }
@@ -88,10 +94,12 @@ interface CustomerRow extends RowDataPacket {
 interface ProductRow extends RowDataPacket {
   products_id: number
   products_model: string | null
-  products_price: number
+  /** DECIMAL — mysql2 returns these as strings unless `decimalNumbers` is set. */
+  products_price: string
   products_name: string
   products_tax_class_id: number
-  tax_rate: number | null
+  /** DECIMAL — see products_price. */
+  tax_rate: string | null
   tax_description: string | null
 }
 
@@ -112,7 +120,11 @@ async function resolveTaxZone(db: Pool, countryId: number): Promise<number | nul
   return Number(rows[0].geo_zone_id)
 }
 
-async function loadTaxRate(db: Pool, taxClassId: number, taxZoneId: number | null): Promise<{ rate: number, description: string } | null> {
+async function loadTaxRate(
+  db: Pool,
+  taxClassId: number,
+  taxZoneId: number | null,
+): Promise<{ rate: number; description: string } | null> {
   if (!taxClassId || taxZoneId == null) return null
   const [rows] = await db.execute<RowDataPacket[]>(
     'SELECT tax_rate, tax_description FROM tax_rates WHERE tax_class_id = ? AND tax_zone_id = ? LIMIT 1',
@@ -120,7 +132,10 @@ async function loadTaxRate(db: Pool, taxClassId: number, taxZoneId: number | nul
   )
   const row = rows[0]
   if (!row) return null
-  return { rate: Number(row.tax_rate), description: String(row.tax_description || 'Mehrwertsteuer') }
+  return {
+    rate: Number(row.tax_rate),
+    description: String(row.tax_description || 'Mehrwertsteuer'),
+  }
 }
 
 /**
@@ -128,7 +143,11 @@ async function loadTaxRate(db: Pool, taxClassId: number, taxZoneId: number | nul
  * the customer's default address. Pure computation — performs no writes. The
  * result is JSON-serializable and gets stored as the pinned pending payload.
  */
-export async function computeOrder(db: Pool, customerId: number, input: OrderInput): Promise<OrderComputation> {
+export async function computeOrder(
+  db: Pool,
+  customerId: number,
+  input: OrderInput,
+): Promise<OrderComputation> {
   const [custRows] = await db.execute<CustomerRow[]>(
     `SELECT c.customers_id, c.customers_firstname, c.customers_lastname, c.customers_email_address, c.customers_telephone,
             ab.entry_company, ab.entry_street_address, ab.entry_suburb, ab.entry_postcode, ab.entry_city, ab.entry_state, ab.entry_country_id
@@ -138,7 +157,7 @@ export async function computeOrder(db: Pool, customerId: number, input: OrderInp
     [customerId],
   )
   const customer = custRows[0]
-  if (!customer || !customer.entry_street_address) {
+  if (!customer?.entry_street_address) {
     throw createError({ statusCode: 400, statusMessage: 'Kundendaten unvollständig' })
   }
 
@@ -154,21 +173,22 @@ export async function computeOrder(db: Pool, customerId: number, input: OrderInp
   // variant product. Prices and names are re-read from the DB below, so a
   // snapshot that is up to a minute old cannot affect what is charged.
   const catalog = await getCatalog(db)
-  const productByGroupId = new Map<string, Product>(catalog.products.map(p => [p.id, p]))
+  const productByGroupId = new Map<string, Product>(catalog.products.map((p) => [p.id, p]))
   const resolvedItems = input.items.map((item) => {
     const gp = productByGroupId.get(String(item.productId))
     let effId = Number(item.productId)
     if (gp?.variants && gp.variants.length > 0) {
-      const idx = gp.variantType === 'quantity'
-        ? tierIndex(gp.variants, item.quantity)
-        : Math.min(Math.max(item.variantIndex ?? 0, 0), gp.variants.length - 1)
+      const idx =
+        gp.variantType === 'quantity'
+          ? tierIndex(gp.variants, item.quantity)
+          : Math.min(Math.max(item.variantIndex ?? 0, 0), gp.variants.length - 1)
       const vid = gp.variants[idx]?.productId
       if (vid) effId = Number(vid)
     }
     return { item, effId }
   })
 
-  const productIds = resolvedItems.map(r => r.effId)
+  const productIds = resolvedItems.map((r) => r.effId)
   const placeholders = productIds.map(() => '?').join(',')
   const [prodRows] = await db.execute<ProductRow[]>(
     `SELECT p.products_id, p.products_model, p.products_price, pd.products_name,
@@ -179,10 +199,13 @@ export async function computeOrder(db: Pool, customerId: number, input: OrderInp
      WHERE p.products_id IN (${placeholders}) AND p.products_status = 1`,
     taxZoneId == null ? productIds : [taxZoneId, ...productIds],
   )
-  const productById = new Map(prodRows.map(r => [Number(r.products_id), r]))
+  const productById = new Map(prodRows.map((r) => [r.products_id, r]))
   for (const { item, effId } of resolvedItems) {
     if (!productById.has(effId)) {
-      throw createError({ statusCode: 400, statusMessage: `Artikel ${item.productId} nicht verfügbar` })
+      throw createError({
+        statusCode: 400,
+        statusMessage: `Artikel ${item.productId} nicht verfügbar`,
+      })
     }
   }
 
@@ -191,7 +214,7 @@ export async function computeOrder(db: Pool, customerId: number, input: OrderInp
   const lines: CompLine[] = resolvedItems.map(({ item, effId }, idx) => {
     const p = productById.get(effId)!
     const rate = Number(p.tax_rate ?? 0)
-    const description = String(p.tax_description ?? '')
+    const description = p.tax_description ?? ''
     const unit = gross(Number(p.products_price), rate)
     const lineGross = Math.round(unit * item.quantity * 100) / 100
     subtotalGross += lineGross
@@ -207,9 +230,9 @@ export async function computeOrder(db: Pool, customerId: number, input: OrderInp
       })
     }
     return {
-      productId: Number(p.products_id),
-      model: String(p.products_model ?? ''),
-      name: String(p.products_name),
+      productId: p.products_id,
+      model: p.products_model ?? '',
+      name: p.products_name,
       priceNet: Number(p.products_price),
       unitGross: unit,
       tax: rate,
@@ -220,8 +243,11 @@ export async function computeOrder(db: Pool, customerId: number, input: OrderInp
   })
 
   const shippingOpt = SHIPPING_OPTIONS[input.shippingMethod]
-  const shippingTax = shippingOpt.taxClassId > 0 ? await loadTaxRate(db, shippingOpt.taxClassId, taxZoneId) : null
-  const shippingGross = shippingTax ? gross(shippingOpt.net, shippingTax.rate) : Math.round(shippingOpt.net * 100) / 100
+  const shippingTax =
+    shippingOpt.taxClassId > 0 ? await loadTaxRate(db, shippingOpt.taxClassId, taxZoneId) : null
+  const shippingGross = shippingTax
+    ? gross(shippingOpt.net, shippingTax.rate)
+    : Math.round(shippingOpt.net * 100) / 100
   if (shippingTax && shippingGross > 0) {
     const shippingTaxAmount = shippingGross - shippingGross / (1 + shippingTax.rate / 100)
     const existing = taxByDescription.get(shippingTax.description)
@@ -239,24 +265,28 @@ export async function computeOrder(db: Pool, customerId: number, input: OrderInp
 
   return {
     customer: {
-      customerId: Number(customer.customers_id),
-      firstname: String(customer.customers_firstname || ''),
-      lastname: String(customer.customers_lastname || ''),
+      customerId: customer.customers_id,
+      firstname: customer.customers_firstname || '',
+      lastname: customer.customers_lastname || '',
       name: `${customer.customers_firstname} ${customer.customers_lastname}`.trim(),
       company: customer.entry_company ?? null,
-      street: String(customer.entry_street_address),
+      street: customer.entry_street_address,
       suburb: customer.entry_suburb ?? null,
-      city: String(customer.entry_city),
-      postcode: String(customer.entry_postcode),
+      city: customer.entry_city,
+      postcode: customer.entry_postcode,
       state: customer.entry_state ?? null,
       country,
-      telephone: String(customer.customers_telephone || ''),
-      email: String(customer.customers_email_address || ''),
+      telephone: customer.customers_telephone || '',
+      email: customer.customers_email_address || '',
     },
     lines,
     subtotalGross,
     taxRows: [...taxByDescription.values()].sort((a, b) => a.sortOrder - b.sortOrder),
-    shipping: { module: shippingOpt.module, totalTitle: shippingOpt.totalTitle, gross: shippingGross },
+    shipping: {
+      module: shippingOpt.module,
+      totalTitle: shippingOpt.totalTitle,
+      gross: shippingGross,
+    },
     payment: { label: paymentOpt.label, method: input.paymentMethod },
     bankDetails: input.bankDetails,
     notes: input.notes,
@@ -269,110 +299,191 @@ export async function computeOrder(db: Pool, customerId: number, input: OrderInp
  * normal Status-1 order — identical shape to what api/orders.post.ts produced
  * before. Returns the new orders_id. All writes go through dbWrite (audited).
  */
-export async function insertComputedOrder(db: Pool, comp: OrderComputation, ctx: { remoteIp?: string } = {}): Promise<number> {
+export async function insertComputedOrder(
+  db: Pool,
+  comp: OrderComputation,
+  ctx: { remoteIp?: string } = {},
+): Promise<number> {
   const c = comp.customer
   const now = new Date()
   const wc = { customerId: c.customerId, remoteIp: ctx.remoteIp }
 
-  const orderId = await dbInsert(db, 'orders', {
-    customers_id: c.customerId,
-    customers_name: c.name,
-    customers_company: c.company,
-    customers_street_address: c.street,
-    customers_suburb: c.suburb,
-    customers_city: c.city,
-    customers_postcode: c.postcode,
-    customers_state: c.state,
-    customers_country: c.country,
-    customers_telephone: c.telephone,
-    customers_email_address: c.email,
-    customers_address_format_id: 5,
-    delivery_name: c.name,
-    delivery_company: c.company,
-    delivery_street_address: c.street,
-    delivery_suburb: c.suburb,
-    delivery_city: c.city,
-    delivery_postcode: c.postcode,
-    delivery_state: c.state,
-    delivery_country: c.country,
-    delivery_address_format_id: 5,
-    billing_name: c.name,
-    billing_company: c.company,
-    billing_street_address: c.street,
-    billing_suburb: c.suburb,
-    billing_city: c.city,
-    billing_postcode: c.postcode,
-    billing_state: c.state,
-    billing_country: c.country,
-    billing_address_format_id: 5,
-    payment_method: comp.payment.label,
-    date_purchased: now,
-    orders_status: 1,
-    currency: 'EUR',
-    currency_value: 1.0,
-  }, wc)
+  const orderId = await dbInsert(
+    db,
+    'orders',
+    {
+      customers_id: c.customerId,
+      customers_name: c.name,
+      customers_company: c.company,
+      customers_street_address: c.street,
+      customers_suburb: c.suburb,
+      customers_city: c.city,
+      customers_postcode: c.postcode,
+      customers_state: c.state,
+      customers_country: c.country,
+      customers_telephone: c.telephone,
+      customers_email_address: c.email,
+      customers_address_format_id: 5,
+      delivery_name: c.name,
+      delivery_company: c.company,
+      delivery_street_address: c.street,
+      delivery_suburb: c.suburb,
+      delivery_city: c.city,
+      delivery_postcode: c.postcode,
+      delivery_state: c.state,
+      delivery_country: c.country,
+      delivery_address_format_id: 5,
+      billing_name: c.name,
+      billing_company: c.company,
+      billing_street_address: c.street,
+      billing_suburb: c.suburb,
+      billing_city: c.city,
+      billing_postcode: c.postcode,
+      billing_state: c.state,
+      billing_country: c.country,
+      billing_address_format_id: 5,
+      payment_method: comp.payment.label,
+      date_purchased: now,
+      orders_status: 1,
+      currency: 'EUR',
+      currency_value: 1.0,
+    },
+    wc,
+  )
 
   const oc = { customerId: c.customerId, orderId, remoteIp: ctx.remoteIp }
 
   for (const l of comp.lines) {
-    await dbInsert(db, 'orders_products', {
-      orders_id: orderId,
-      products_id: l.productId,
-      products_model: l.model,
-      products_name: l.name,
-      products_price: l.priceNet,
-      final_price: l.lineGross / l.quantity,
-      products_tax: l.tax,
-      products_quantity: l.quantity,
-    }, oc)
+    await dbInsert(
+      db,
+      'orders_products',
+      {
+        orders_id: orderId,
+        products_id: l.productId,
+        products_model: l.model,
+        products_name: l.name,
+        products_price: l.priceNet,
+        final_price: l.lineGross / l.quantity,
+        products_tax: l.tax,
+        products_quantity: l.quantity,
+      },
+      oc,
+    )
   }
 
-  await dbInsert(db, 'orders_total', {
-    orders_id: orderId, title: 'Zwischensumme:', text: fmt(comp.subtotalGross),
-    value: comp.subtotalGross, class: 'ot_subtotal', sort_order: 1,
-  }, oc)
-  await dbInsert(db, 'orders_total', {
-    orders_id: orderId, title: comp.shipping.totalTitle, text: fmt(comp.shipping.gross),
-    value: comp.shipping.gross, class: 'ot_shipping', sort_order: 2,
-  }, oc)
+  await dbInsert(
+    db,
+    'orders_total',
+    {
+      orders_id: orderId,
+      title: 'Zwischensumme:',
+      text: fmt(comp.subtotalGross),
+      value: comp.subtotalGross,
+      class: 'ot_subtotal',
+      sort_order: 1,
+    },
+    oc,
+  )
+  await dbInsert(
+    db,
+    'orders_total',
+    {
+      orders_id: orderId,
+      title: comp.shipping.totalTitle,
+      text: fmt(comp.shipping.gross),
+      value: comp.shipping.gross,
+      class: 'ot_shipping',
+      sort_order: 2,
+    },
+    oc,
+  )
   for (const t of comp.taxRows) {
     const value = Math.round(t.total * 100) / 100
     if (value === 0) continue
-    await dbInsert(db, 'orders_total', {
-      orders_id: orderId, title: `${t.description}:`, text: fmt(value),
-      value, class: 'ot_tax', sort_order: 3,
-    }, oc)
+    await dbInsert(
+      db,
+      'orders_total',
+      {
+        orders_id: orderId,
+        title: `${t.description}:`,
+        text: fmt(value),
+        value,
+        class: 'ot_tax',
+        sort_order: 3,
+      },
+      oc,
+    )
   }
-  await dbInsert(db, 'orders_total', {
-    orders_id: orderId, title: '<b>Summe</b>:', text: `<b>${fmt(comp.total)}</b>`,
-    value: comp.total, class: 'ot_total', sort_order: 4,
-  }, oc)
+  await dbInsert(
+    db,
+    'orders_total',
+    {
+      orders_id: orderId,
+      title: '<b>Summe</b>:',
+      text: `<b>${fmt(comp.total)}</b>`,
+      value: comp.total,
+      class: 'ot_total',
+      sort_order: 4,
+    },
+    oc,
+  )
 
   if (comp.payment.method === 'lastschrift' && comp.bankDetails) {
     const bd = comp.bankDetails
-    await dbInsert(db, 'banktransfer_iban', {
-      orders_id: orderId, banktransfer_owner: bd.accountHolder, banktransfer_number: bd.iban,
-      banktransfer_bankname: '', banktransfer_status: 0, banktransfer_prz: '00', banktransfer_fax: null,
-    }, oc)
+    await dbInsert(
+      db,
+      'banktransfer_iban',
+      {
+        orders_id: orderId,
+        banktransfer_owner: bd.accountHolder,
+        banktransfer_number: bd.iban,
+        banktransfer_bankname: '',
+        banktransfer_status: 0,
+        banktransfer_prz: '00',
+        banktransfer_fax: null,
+      },
+      oc,
+    )
     try {
-      await dbUpdate(db, 'customers', { customers_id: c.customerId }, {
-        customers_banktransfer_iban_owner: bd.accountHolder,
-        customers_banktransfer_iban_number: bd.iban,
-        customers_banktransfer_iban_bankname: '',
-      }, oc)
+      await dbUpdate(
+        db,
+        'customers',
+        { customers_id: c.customerId },
+        {
+          customers_banktransfer_iban_owner: bd.accountHolder,
+          customers_banktransfer_iban_number: bd.iban,
+          customers_banktransfer_iban_bankname: '',
+        },
+        oc,
+      )
     } catch (err) {
       console.warn('[order] customers IBAN update failed:', err)
     }
   }
 
-  await dbInsert(db, 'orders_status_history', {
-    orders_id: orderId, orders_status_id: 1, date_added: now,
-    customer_notified: 0, comments: comp.notes ?? '',
-  }, oc)
+  await dbInsert(
+    db,
+    'orders_status_history',
+    {
+      orders_id: orderId,
+      orders_status_id: 1,
+      date_added: now,
+      customer_notified: 0,
+      comments: comp.notes ?? '',
+    },
+    oc,
+  )
 
   for (const l of comp.lines) {
     try {
-      await dbUpdateExpr(db, 'products', { products_id: l.productId }, 'products_ordered = products_ordered + ?', [l.quantity], oc)
+      await dbUpdateExpr(
+        db,
+        'products',
+        { products_id: l.productId },
+        'products_ordered = products_ordered + ?',
+        [l.quantity],
+        oc,
+      )
     } catch (err) {
       console.warn(`[order] products_ordered update failed for ${l.productId}:`, err)
     }

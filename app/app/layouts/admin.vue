@@ -17,8 +17,16 @@
           :class="isActive(item) ? 'bg-[#00af8c] text-white font-medium' : 'text-gray-200'"
         >
           <span>{{ item.label }}</span>
-          <span v-if="item.badge && pendingCount > 0" class="ml-auto inline-flex items-center justify-center min-w-[20px] h-5 px-1 text-[11px] font-semibold bg-amber-400 text-amber-950 rounded-full leading-none">{{ pendingCount }}</span>
-          <span v-else-if="item.readonly" class="ml-auto text-[10px] uppercase text-gray-400 border border-gray-500 rounded px-1">nur Anzeige</span>
+          <span
+            v-if="item.badge && pendingCount > 0"
+            class="ml-auto inline-flex items-center justify-center min-w-[20px] h-5 px-1 text-[11px] font-semibold bg-amber-400 text-amber-950 rounded-full leading-none"
+            >{{ pendingCount }}</span
+          >
+          <span
+            v-else-if="item.readonly"
+            class="ml-auto text-[10px] uppercase text-gray-400 border border-gray-500 rounded px-1"
+            >nur Anzeige</span
+          >
         </NuxtLink>
       </nav>
       <div class="px-4 py-3 border-t border-white/10 text-[11px] text-gray-400">
@@ -39,28 +47,39 @@
 </template>
 
 <script setup lang="ts">
-interface NavItem { label: string, to: string, readonly?: boolean, badge?: boolean, match?: string[] }
+  interface NavItem {
+    label: string
+    to: string
+    readonly?: boolean
+    badge?: boolean
+    match?: string[]
+  }
 
-const nav: NavItem[] = [
-  { label: 'Übersicht', to: '/admin' },
-  // Pending orders are merged into the order list — the badge shows how many await confirmation.
-  { label: 'Bestellungen', to: '/admin/orders', match: ['/admin/orders', '/admin/pending'], badge: true },
-  { label: 'Produkte', to: '/admin/products', match: ['/admin/products'], readonly: true },
-  { label: 'Kunden', to: '/admin/customers', match: ['/admin/customers'], readonly: true },
-]
+  const nav: NavItem[] = [
+    { label: 'Übersicht', to: '/admin' },
+    // Pending orders are merged into the order list — the badge shows how many await confirmation.
+    {
+      label: 'Bestellungen',
+      to: '/admin/orders',
+      match: ['/admin/orders', '/admin/pending'],
+      badge: true,
+    },
+    { label: 'Produkte', to: '/admin/products', match: ['/admin/products'], readonly: true },
+    { label: 'Kunden', to: '/admin/customers', match: ['/admin/customers'], readonly: true },
+  ]
 
-// Badge: count of orders awaiting customer confirmation.
-const { data: dash } = await useFetch<{ pendingCount: number }>('/admin/api/dashboard')
-const pendingCount = computed(() => dash.value?.pendingCount ?? 0)
+  // Badge: count of orders awaiting customer confirmation.
+  const { data: dash } = await useFetch<{ pendingCount: number }>('/admin/api/dashboard')
+  const pendingCount = computed(() => dash.value?.pendingCount ?? 0)
 
-const route = useRoute()
-function isActive(item: NavItem): boolean {
-  if (item.match) return item.match.some(m => route.path.startsWith(m))
-  return route.path === item.to
-}
+  const route = useRoute()
+  function isActive(item: NavItem): boolean {
+    if (item.match) return item.match.some((m) => route.path.startsWith(m))
+    return route.path === item.to
+  }
 
-const pageTitle = computed(() => {
-  const active = nav.find(isActive)
-  return active?.label ?? 'Administration'
-})
+  const pageTitle = computed(() => {
+    const active = nav.find(isActive)
+    return active?.label ?? 'Administration'
+  })
 </script>

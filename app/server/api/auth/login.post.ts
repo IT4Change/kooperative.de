@@ -1,7 +1,8 @@
-import type { RowDataPacket } from 'mysql2/promise'
 import { verifyPassword, setSessionCookie } from '../../utils/auth'
-import { parseLogin } from '../../utils/validate'
 import { dbUpdateExpr } from '../../utils/dbWrite'
+import { parseLogin } from '../../utils/validate'
+
+import type { RowDataPacket } from 'mysql2/promise'
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
@@ -25,7 +26,9 @@ export default defineEventHandler(async (event) => {
 
   // Best-effort logon counter, exactly like the old shop
   try {
-    await dbUpdateExpr(db, 'customers_info',
+    await dbUpdateExpr(
+      db,
+      'customers_info',
       { customers_info_id: customerId },
       'customers_info_date_of_last_logon = NOW(), customers_info_number_of_logons = COALESCE(customers_info_number_of_logons, 0) + 1',
       [],

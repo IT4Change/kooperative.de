@@ -1,6 +1,7 @@
-import type { CartItem, Product } from '~/data/products'
-import { findTierIndex } from '~/data/products'
 import type { ShippingMethod, PaymentMethod } from '~/data/checkoutOptions'
+import type { CartItem, Product } from '~/data/products'
+
+import { findTierIndex } from '~/data/products'
 
 type CheckoutStep = 'cart' | 'auth' | 'details' | 'confirm' | 'success'
 
@@ -24,9 +25,14 @@ export function useCart() {
   const storage = useStorage()
   const consent = useConsent()
 
+  function openCart() {
+    checkoutStep.value = 'cart'
+    isOpen.value = true
+  }
+
   function persist() {
     if (!consent.consentGiven.value) return
-    const data = items.value.map(i => ({
+    const data = items.value.map((i) => ({
       productId: i.product.id,
       quantity: i.quantity,
       ...(i.variantIndex !== undefined && { variantIndex: i.variantIndex }),
@@ -41,11 +47,12 @@ export function useCart() {
     const raw = storage.get(STORAGE_KEY)
     if (!raw) return
     try {
-      const stored: { productId: string; quantity: number; variantIndex?: number }[] = JSON.parse(raw)
+      const stored: { productId: string; quantity: number; variantIndex?: number }[] =
+        JSON.parse(raw)
       const { products } = await $fetch<{ products: Product[] }>('/api/products')
       const restored: CartItem[] = []
       for (const entry of stored) {
-        const product = products.find(p => p.id === entry.productId)
+        const product = products.find((p) => p.id === entry.productId)
         if (product && entry.quantity > 0) {
           restored.push({
             product,
@@ -55,7 +62,9 @@ export function useCart() {
         }
       }
       items.value = restored
-    } catch { /* ignore malformed stored cart */ }
+    } catch {
+      /* ignore malformed stored cart */
+    }
   }
 
   function itemPrice(item: CartItem): number {
@@ -70,20 +79,22 @@ export function useCart() {
   }
 
   const totalItems = computed(() => items.value.reduce((sum, i) => sum + i.quantity, 0))
-  const totalPrice = computed(() => items.value.reduce((sum, i) => sum + itemPrice(i) * i.quantity, 0))
+  const totalPrice = computed(() =>
+    items.value.reduce((sum, i) => sum + itemPrice(i) * i.quantity, 0),
+  )
   const isEmpty = computed(() => items.value.length === 0)
 
   function doAddToCart(product: Product, variantIndex?: number, quantity?: number) {
     if (product.variantType === 'quantity') {
-      const existing = items.value.find(i => i.product.id === product.id)
+      const existing = items.value.find((i) => i.product.id === product.id)
       if (existing) {
-        existing.quantity += (quantity ?? 1)
+        existing.quantity += quantity ?? 1
       } else {
         items.value.push({ product, quantity: quantity ?? 1 })
       }
     } else {
-      const existing = items.value.find(i =>
-        i.product.id === product.id && i.variantIndex === variantIndex,
+      const existing = items.value.find(
+        (i) => i.product.id === product.id && i.variantIndex === variantIndex,
       )
       if (existing) {
         existing.quantity++
@@ -101,18 +112,18 @@ export function useCart() {
 
   function addToCart(product: Product, variantIndex?: number, quantity?: number) {
     if (!storage.require()) return
-    consent.require(() => doAddToCart(product, variantIndex, quantity))
+    consent.require(() => {
+      doAddToCart(product, variantIndex, quantity)
+    })
   }
 
   function findItem(productId: string, variantIndex?: number): CartItem | undefined {
-    return items.value.find(i =>
-      i.product.id === productId && i.variantIndex === variantIndex,
-    )
+    return items.value.find((i) => i.product.id === productId && i.variantIndex === variantIndex)
   }
 
   function removeFromCart(productId: string, variantIndex?: number) {
-    items.value = items.value.filter(i =>
-      !(i.product.id === productId && i.variantIndex === variantIndex),
+    items.value = items.value.filter(
+      (i) => !(i.product.id === productId && i.variantIndex === variantIndex),
     )
     persist()
   }
@@ -129,13 +140,17 @@ export function useCart() {
     }
   }
 
-  function updateVariant(productId: string, oldVariantIndex: number | undefined, newVariantIndex: number) {
+  function updateVariant(
+    productId: string,
+    oldVariantIndex: number | undefined,
+    newVariantIndex: number,
+  ) {
     const item = findItem(productId, oldVariantIndex)
     if (!item) return
     const existing = findItem(productId, newVariantIndex)
     if (existing) {
       existing.quantity += item.quantity
-      items.value = items.value.filter(i => i !== item)
+      items.value = items.value.filter((i) => i !== item)
     } else {
       item.variantIndex = newVariantIndex
     }
@@ -145,11 +160,6 @@ export function useCart() {
   function clearCart() {
     items.value = []
     persist()
-  }
-
-  function openCart() {
-    checkoutStep.value = 'cart'
-    isOpen.value = true
   }
 
   function closeCart() {
@@ -190,7 +200,7 @@ export function useCart() {
     submitError.value = ''
     try {
       const payload: Record<string, unknown> = {
-        items: items.value.map(i => ({
+        items: items.value.map((i) => ({
           productId: i.product.id,
           quantity: i.quantity,
           ...(i.variantIndex !== undefined && { variantIndex: i.variantIndex }),
@@ -207,7 +217,7 @@ export function useCart() {
       }
       // New flow: the order is stored as pending and a confirmation mail is sent.
       // No osCommerce order number exists yet (materialized only on confirmation).
-      await $fetch<{ ok: boolean, pendingId: number, total: number }>('/api/orders', {
+      await $fetch<{ ok: boolean; pendingId: number; total: number }>('/api/orders', {
         method: 'POST',
         body: payload,
       })
@@ -221,15 +231,20 @@ export function useCart() {
       bankIban.value = ''
       return true
     } catch (e: unknown) {
-      const obj = e as { statusMessage?: string, data?: { statusMessage?: string }, message?: string }
-      submitError.value = obj.data?.statusMessage || obj.statusMessage || obj.message || 'Fehler beim Absenden'
+      const obj = e as {
+        statusMessage?: string
+        data?: { statusMessage?: string }
+        message?: string
+      }
+      submitError.value =
+        obj.data?.statusMessage || obj.statusMessage || obj.message || 'Fehler beim Absenden'
       return false
     } finally {
       submitting.value = false
     }
   }
 
-  init()
+  void init()
 
   return {
     items: readonly(items),
