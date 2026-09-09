@@ -29,10 +29,13 @@ export default defineEventHandler(async (event) => {
   if (!order) throw createError({ statusCode: 404, statusMessage: 'Bestellung nicht gefunden' })
 
   const email = String(order.customers_email_address || '')
-  if (!email) throw createError({ statusCode: 400, statusMessage: 'Keine E-Mail-Adresse hinterlegt' })
+  if (!email)
+    throw createError({ statusCode: 400, statusMessage: 'Keine E-Mail-Adresse hinterlegt' })
 
   const statusId = Number(order.orders_status)
-  const statusName = order.orders_status_name ? String(order.orders_status_name) : `Status ${statusId}`
+  const statusName = order.orders_status_name
+    ? String(order.orders_status_name)
+    : `Status ${statusId}`
 
   const m = buildStatusMail({
     orderId: id,
@@ -40,17 +43,21 @@ export default defineEventHandler(async (event) => {
     statusName,
     comment,
   })
-  const mail = await sendAndLogOrderMail(db, {
-    ordersId: id,
-    direction: 'to_customer',
-    recipient: email,
-    mailType: 'status_notification_resend',
-    relatedStatusId: statusId,
-    subject: m.subject,
-    text: m.text,
-    html: m.html,
-    sentBy: operator,
-  }, { remoteIp })
+  const mail = await sendAndLogOrderMail(
+    db,
+    {
+      ordersId: id,
+      direction: 'to_customer',
+      recipient: email,
+      mailType: 'status_notification_resend',
+      relatedStatusId: statusId,
+      subject: m.subject,
+      text: m.text,
+      html: m.html,
+      sentBy: operator,
+    },
+    { remoteIp },
+  )
 
   return { ok: mail.status === 'sent', mail }
 })

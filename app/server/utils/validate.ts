@@ -8,7 +8,7 @@ export interface RegisterInput {
   gender: 'm' | 'f' | 'd'
   firstname: string
   lastname: string
-  dob: string         // ISO date YYYY-MM-DD
+  dob: string // ISO date YYYY-MM-DD
   email: string
   telephone: string
   password: string
@@ -24,24 +24,27 @@ export interface LoginInput {
 }
 
 export interface OrderInput {
-  items: { productId: string, quantity: number, variantIndex?: number }[]
+  items: { productId: string; quantity: number; variantIndex?: number }[]
   notes?: string
   shippingMethod: import('./checkoutOptions').ShippingMethod
   paymentMethod: import('./checkoutOptions').PaymentMethod
   /** Required when paymentMethod = 'lastschrift' */
-  bankDetails?: { accountHolder: string, iban: string }
+  bankDetails?: { accountHolder: string; iban: string }
 }
 
 function asTrimmedString(value: unknown, max: number, field: string): string {
-  if (typeof value !== 'string') throw createError({ statusCode: 400, statusMessage: `${field}: erwartet Text` })
+  if (typeof value !== 'string')
+    throw createError({ statusCode: 400, statusMessage: `${field}: erwartet Text` })
   const v = value.trim()
   if (!v) throw createError({ statusCode: 400, statusMessage: `${field}: darf nicht leer sein` })
-  if (v.length > max) throw createError({ statusCode: 400, statusMessage: `${field}: maximal ${max} Zeichen` })
+  if (v.length > max)
+    throw createError({ statusCode: 400, statusMessage: `${field}: maximal ${max} Zeichen` })
   return v
 }
 
 export function parseRegister(body: unknown): RegisterInput {
-  if (!body || typeof body !== 'object') throw createError({ statusCode: 400, statusMessage: 'Ungültige Daten' })
+  if (!body || typeof body !== 'object')
+    throw createError({ statusCode: 400, statusMessage: 'Ungültige Daten' })
   const b = body as Record<string, unknown>
   const gender = b.gender
   if (gender !== 'm' && gender !== 'f' && gender !== 'd') {
@@ -82,7 +85,8 @@ export function parseRegister(body: unknown): RegisterInput {
 }
 
 export function parseLogin(body: unknown): LoginInput {
-  if (!body || typeof body !== 'object') throw createError({ statusCode: 400, statusMessage: 'Ungültige Daten' })
+  if (!body || typeof body !== 'object')
+    throw createError({ statusCode: 400, statusMessage: 'Ungültige Daten' })
   const b = body as Record<string, unknown>
   const email = asTrimmedString(b.email, 96, 'E-Mail').toLowerCase()
   const password = b.password
@@ -93,7 +97,8 @@ export function parseLogin(body: unknown): LoginInput {
 }
 
 export function parseOrder(body: unknown): OrderInput {
-  if (!body || typeof body !== 'object') throw createError({ statusCode: 400, statusMessage: 'Ungültige Daten' })
+  if (!body || typeof body !== 'object')
+    throw createError({ statusCode: 400, statusMessage: 'Ungültige Daten' })
   const b = body as Record<string, unknown>
   if (!Array.isArray(b.items) || b.items.length === 0) {
     throw createError({ statusCode: 400, statusMessage: 'Bestellliste leer' })
@@ -117,15 +122,19 @@ export function parseOrder(body: unknown): OrderInput {
       }
       variantIndex = it.variantIndex as number
     }
-    return { productId: it.productId, quantity, ...(variantIndex !== undefined && { variantIndex }) }
+    return {
+      productId: it.productId,
+      quantity,
+      ...(variantIndex !== undefined && { variantIndex }),
+    }
   })
   const notes = typeof b.notes === 'string' ? b.notes.slice(0, 500) : undefined
   const allowedShipping = ['dpd', 'dhl', 'express', 'direkt', 'abholung'] as const
-  if (!allowedShipping.includes(b.shippingMethod as typeof allowedShipping[number])) {
+  if (!allowedShipping.includes(b.shippingMethod as (typeof allowedShipping)[number])) {
     throw createError({ statusCode: 400, statusMessage: 'Versandart: ungültig' })
   }
   const allowedPayment = ['vorkasse', 'rechnung', 'lastschrift'] as const
-  if (!allowedPayment.includes(b.paymentMethod as typeof allowedPayment[number])) {
+  if (!allowedPayment.includes(b.paymentMethod as (typeof allowedPayment)[number])) {
     throw createError({ statusCode: 400, statusMessage: 'Zahlungsart: ungültig' })
   }
   let bankDetails: OrderInput['bankDetails']
@@ -139,7 +148,10 @@ export function parseOrder(body: unknown): OrderInput {
     const ibanRaw = asTrimmedString(bd.iban, 64, 'IBAN')
     const iban = normalizeIban(ibanRaw)
     if (!isValidIban(iban)) {
-      throw createError({ statusCode: 400, statusMessage: 'IBAN: ungültig oder nicht unterstütztes Land (DE/AT/CH/LI)' })
+      throw createError({
+        statusCode: 400,
+        statusMessage: 'IBAN: ungültig oder nicht unterstütztes Land (DE/AT/CH/LI)',
+      })
     }
     bankDetails = { accountHolder, iban }
   }

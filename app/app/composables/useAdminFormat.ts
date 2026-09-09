@@ -10,28 +10,36 @@ export function useAdminFormat() {
   const dateTime = (v: string | null | undefined): string => {
     if (!v) return '–'
     const d = new Date(v)
-    if (Number.isNaN(d.getTime())) return String(v)
+    if (Number.isNaN(d.getTime())) return v
     return d.toLocaleString('de-DE', {
-      day: '2-digit', month: '2-digit', year: 'numeric',
-      hour: '2-digit', minute: '2-digit',
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
     })
   }
 
   const date = (v: string | null | undefined): string => {
     if (!v) return '–'
     const d = new Date(v)
-    if (Number.isNaN(d.getTime())) return String(v)
+    if (Number.isNaN(d.getTime())) return v
     return d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })
   }
 
   /** Tailwind classes for an orders_status id (matches osCommerce status ids). */
   const statusClass = (id: number): string => {
     switch (id) {
-      case 1: return 'bg-amber-100 text-amber-800'   // In Bearbeitung
-      case 2: return 'bg-blue-100 text-blue-800'     // Versandbereit
-      case 3: return 'bg-green-100 text-green-800'   // Versendet
-      case 4: return 'bg-purple-100 text-purple-800' // Vorkasse erwartet
-      default: return 'bg-gray-100 text-gray-700'
+      case 1:
+        return 'bg-amber-100 text-amber-800' // In Bearbeitung
+      case 2:
+        return 'bg-blue-100 text-blue-800' // Versandbereit
+      case 3:
+        return 'bg-green-100 text-green-800' // Versendet
+      case 4:
+        return 'bg-purple-100 text-purple-800' // Vorkasse erwartet
+      default:
+        return 'bg-gray-100 text-gray-700'
     }
   }
 

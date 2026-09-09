@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 /**
  * Aborts long-running queries on the configured database server.
  *
@@ -31,7 +30,8 @@
 import { readFileSync, existsSync } from 'node:fs'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import mysql from 'mysql2/promise'
+
+import { createConnection } from 'mysql2/promise'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const appRoot = join(__dirname, '..')
@@ -55,7 +55,7 @@ function arg(name, fallback) {
     ? process.argv[i + 1]
     : fallback
 }
-const flag = name => process.argv.includes(`--${name}`)
+const flag = (name) => process.argv.includes(`--${name}`)
 
 const CFG = {
   host: process.env.DB_HOST || 'localhost',
@@ -83,7 +83,9 @@ if (!Number.isFinite(MIN_AGE) || MIN_AGE < 0) {
   process.exit(3)
 }
 if (MIN_AGE < 10 && !flag('force')) {
-  console.error(`--min-age ${MIN_AGE}s would abort ordinary short queries too. Pass --force if you mean it.`)
+  console.error(
+    `--min-age ${MIN_AGE}s would abort ordinary short queries too. Pass --force if you mean it.`,
+  )
   process.exit(3)
 }
 let matcher = null
@@ -98,11 +100,16 @@ if (MATCH) {
 
 // ------------------------------------------------------------------ plumbing
 
-const WRITE_RE = /^\s*(insert|update|delete|replace|alter|drop|create|truncate|rename|grant|revoke|load\s+data)\b/i
+const WRITE_RE =
+  /^\s*(insert|update|delete|replace|alter|drop|create|truncate|rename|grant|revoke|load\s+data)\b/i
 const SELECT_RE = /^\s*(select|with|show|explain)\b/i
 
-const oneLine = s => String(s || '').replace(/\s+/g, ' ').trim()
-const age = t => (t >= 3600 ? `${(t / 3600).toFixed(1)}h` : t >= 60 ? `${(t / 60).toFixed(0)}m` : `${t}s`)
+const oneLine = (s) =>
+  String(s || '')
+    .replace(/\s+/g, ' ')
+    .trim()
+const age = (t) =>
+  t >= 3600 ? `${(t / 3600).toFixed(1)}h` : t >= 60 ? `${(t / 60).toFixed(0)}m` : `${t}s`
 const stamp = () => new Date().toISOString().replace('T', ' ').slice(0, 19)
 
 /** Threads that are candidates for killing, plus the ones we deliberately spare. */
@@ -136,7 +143,9 @@ async function findCandidates(conn) {
 async function pass(conn) {
   const { kill, spared, scanned } = await findCandidates(conn)
 
-  console.log(`\n[${stamp()}] ${scanned} active thread(s) older than ${MIN_AGE}s — ${kill.length} to abort, ${spared.length} spared`)
+  console.log(
+    `\n[${stamp()}] ${scanned} active thread(s) older than ${MIN_AGE}s — ${kill.length} to abort, ${spared.length} spared`,
+  )
 
   for (const t of spared) {
     console.log(`  · skip  id=${String(t.id).padEnd(9)} ${age(t.time).padStart(6)}  ${t.reason}`)
@@ -148,7 +157,9 @@ async function pass(conn) {
 
   const targets = kill.slice(0, MAX_KILLS)
   if (kill.length > targets.length) {
-    console.log(`  (capped at --max-kills ${MAX_KILLS}; ${kill.length - targets.length} left for the next pass)`)
+    console.log(
+      `  (capped at --max-kills ${MAX_KILLS}; ${kill.length - targets.length} left for the next pass)`,
+    )
   }
 
   let killed = 0
@@ -165,24 +176,30 @@ async function pass(conn) {
     } catch (err) {
       // ER_NO_SUCH_THREAD is normal: the query finished between listing and kill.
       const gone = err.errno === 1094
-      console.log(`  ${gone ? '·' : '✗'} ${gone ? 'gone       ' : 'FAILED     '} ${label}${gone ? '' : ` — ${err.code || err.message}`}`)
+      console.log(
+        `  ${gone ? '·' : '✗'} ${gone ? 'gone       ' : 'FAILED     '} ${label}${gone ? '' : ` — ${err.code || err.message}`}`,
+      )
       if (!gone && err.errno === 1095) {
-        console.log('      → not our thread and no PROCESS/SUPER privilege — cannot kill it from here')
+        console.log(
+          '      → not our thread and no PROCESS/SUPER privilege — cannot kill it from here',
+        )
       }
     }
   }
 
   if (!DO_KILL) {
-    console.log(`  DRY RUN — nothing was aborted. Re-run with --kill to actually abort these ${targets.length}.`)
+    console.log(
+      `  DRY RUN — nothing was aborted. Re-run with --kill to actually abort these ${targets.length}.`,
+    )
     return 0
   }
 
   // "KILL accepted" is not "thread gone". Verify, because a thread blocked in a
   // socket write survives KILL QUERY while happily reporting success.
-  await new Promise(r => setTimeout(r, 1500))
+  await new Promise((r) => setTimeout(r, 1500))
   const [still] = await conn.query(
     `SELECT id, time, state FROM information_schema.processlist WHERE id IN (?)`,
-    [targets.map(t => Number(t.id))],
+    [targets.map((t) => Number(t.id))],
   )
   if (!still.length) {
     console.log(`  aborted ${killed}/${targets.length}, all gone.`)
@@ -191,7 +208,9 @@ async function pass(conn) {
 
   console.log(`  ✗ ${still.length}/${targets.length} thread(s) SURVIVED the kill:`)
   for (const t of still) {
-    console.log(`      id=${String(t.id).padEnd(9)} still ${age(t.time).padStart(6)} in "${t.state || '-'}"`)
+    console.log(
+      `      id=${String(t.id).padEnd(9)} still ${age(t.time).padStart(6)} in "${t.state || '-'}"`,
+    )
   }
   if (!HARD) {
     console.log('      → KILL QUERY cannot stop a thread that is blocked writing to its client.')
@@ -207,13 +226,17 @@ async function pass(conn) {
 
 console.log('=== kooperative.de — long query killer ===')
 console.log(`target : ${CFG.user}@${CFG.host}:${CFG.port}/${CFG.database}`)
-console.log(`mode   : ${DO_KILL ? 'KILL' : 'dry run'}${LOOP ? `, loop every ${INTERVAL / 1000}s` : ''}`)
-console.log(`filter : age >= ${MIN_AGE}s, ${ALL_DBS ? 'all databases' : `database ${CFG.database}`}, `
-  + `${INCLUDE_WRITES ? 'reads and writes' : 'reads only'}${matcher ? `, matching /${MATCH}/i` : ''}`)
+console.log(
+  `mode   : ${DO_KILL ? 'KILL' : 'dry run'}${LOOP ? `, loop every ${INTERVAL / 1000}s` : ''}`,
+)
+console.log(
+  `filter : age >= ${MIN_AGE}s, ${ALL_DBS ? 'all databases' : `database ${CFG.database}`}, ` +
+    `${INCLUDE_WRITES ? 'reads and writes' : 'reads only'}${matcher ? `, matching /${MATCH}/i` : ''}`,
+)
 
 let conn
 try {
-  conn = await mysql.createConnection({ ...CFG, connectTimeout: 10000 })
+  conn = await createConnection({ ...CFG, connectTimeout: 10000 })
 } catch (err) {
   console.error(`\ncannot connect: ${err.code || ''} ${err.message}`)
   process.exit(1)
@@ -228,7 +251,10 @@ process.on('SIGINT', () => {
 try {
   do {
     await pass(conn)
-    if (LOOP && !stopping) await new Promise(r => setTimeout(r, INTERVAL))
+    if (LOOP && !stopping) await new Promise((r) => setTimeout(r, INTERVAL))
+    // `stopping` is flipped by the SIGINT handler above, which ESLint cannot see;
+    // `LOOP` is a fixed CLI flag that turns the single pass into a watch loop.
+    // eslint-disable-next-line no-unmodified-loop-condition
   } while (LOOP && !stopping)
 } catch (err) {
   console.error(`\naborted: ${err.code || ''} ${err.message}`)

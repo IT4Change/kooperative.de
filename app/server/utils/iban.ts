@@ -24,12 +24,15 @@ export function isValidIban(rawIban: string): boolean {
 
   // Move first 4 chars to end, replace letters with their digit pair, mod 97 == 1
   const rearranged = iban.slice(4) + iban.slice(0, 4)
-  const digits = rearranged.split('').map((ch) => {
-    const code = ch.charCodeAt(0)
-    if (code >= 48 && code <= 57) return ch          // 0-9
-    if (code >= 65 && code <= 90) return String(code - 55) // A=10 ... Z=35
-    return ''
-  }).join('')
+  const digits = rearranged
+    .split('')
+    .map((ch) => {
+      const code = ch.charCodeAt(0)
+      if (code >= 48 && code <= 57) return ch // 0-9
+      if (code >= 65 && code <= 90) return String(code - 55) // A=10 ... Z=35
+      return ''
+    })
+    .join('')
 
   // mod 97 on a long numeric string in chunks
   let remainder = 0

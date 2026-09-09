@@ -1,1 +1,9 @@
 old/
+
+# Server logs pulled in for analysis — never part of the repo
+logs/
+*.log
+*.log.gz
+
+# Guard: npm run from the repo root instead of app/ would land here
+node_modules/

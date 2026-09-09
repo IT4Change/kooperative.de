@@ -1,5 +1,6 @@
-import type { Pool, PoolConnection, ResultSetHeader, RowDataPacket } from 'mysql2/promise'
 import { logDbWrite } from './dbWriteLog'
+
+import type { Pool, PoolConnection, ResultSetHeader, RowDataPacket } from 'mysql2/promise'
 
 type Conn = Pool | PoolConnection
 
@@ -11,11 +12,11 @@ function assertWritesAllowed(): void {
   }
 }
 
-function buildWhere(where: Record<string, unknown>): { sql: string, params: unknown[] } {
+function buildWhere(where: Record<string, unknown>): { sql: string; params: unknown[] } {
   const keys = Object.keys(where)
   if (keys.length === 0) throw new Error('refusing to operate without WHERE clause')
-  const sql = keys.map(k => `\`${k}\` = ?`).join(' AND ')
-  const params = keys.map(k => where[k])
+  const sql = keys.map((k) => `\`${k}\` = ?`).join(' AND ')
+  const params = keys.map((k) => where[k])
   return { sql, params }
 }
 
@@ -35,11 +36,18 @@ export async function dbInsert(
   const cols = Object.keys(fields)
   if (cols.length === 0) throw new Error('refusing to INSERT empty row')
   const placeholders = cols.map(() => '?').join(', ')
-  const sql = `INSERT INTO \`${table}\` (${cols.map(c => `\`${c}\``).join(', ')}) VALUES (${placeholders})`
-  const params = cols.map(c => fields[c])
+  const sql = `INSERT INTO \`${table}\` (${cols.map((c) => `\`${c}\``).join(', ')}) VALUES (${placeholders})`
+  const params = cols.map((c) => fields[c])
   const [result] = await conn.execute<ResultSetHeader>(sql, params)
   const insertId = result.insertId
-  logDbWrite({ op: 'INSERT', table, id: insertId, after: fields, affected: result.affectedRows, context: ctx })
+  logDbWrite({
+    op: 'INSERT',
+    table,
+    id: insertId,
+    after: fields,
+    affected: result.affectedRows,
+    context: ctx,
+  })
   return insertId
 }
 
@@ -61,15 +69,15 @@ export async function dbUpdate(
     w.params,
   )
 
-  const setSql = cols.map(c => `\`${c}\` = ?`).join(', ')
+  const setSql = cols.map((c) => `\`${c}\` = ?`).join(', ')
   const sql = `UPDATE \`${table}\` SET ${setSql} WHERE ${w.sql}`
-  const params = [...cols.map(c => fields[c]), ...w.params]
+  const params = [...cols.map((c) => fields[c]), ...w.params]
   const [result] = await conn.execute<ResultSetHeader>(sql, params)
   logDbWrite({
     op: 'UPDATE',
     table,
     where,
-    before: beforeRows as Record<string, unknown>[],
+    before: beforeRows,
     after: fields,
     affected: result.affectedRows,
     context: ctx,
@@ -102,7 +110,7 @@ export async function dbUpdateExpr(
     op: 'UPDATE',
     table,
     where,
-    before: beforeRows as Record<string, unknown>[],
+    before: beforeRows,
     after: { _expr: setExpr, _params: setParams },
     affected: result.affectedRows,
     context: ctx,
@@ -128,7 +136,7 @@ export async function dbDelete(
     op: 'DELETE',
     table,
     where,
-    before: beforeRows as Record<string, unknown>[],
+    before: beforeRows,
     affected: result.affectedRows,
     context: ctx,
   })

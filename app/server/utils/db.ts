@@ -1,11 +1,13 @@
-import mysql from 'mysql2/promise'
+import { createPool } from 'mysql2/promise'
 
-export let pool: mysql.Pool | null = null
+import type { Pool } from 'mysql2/promise'
+
+let pool: Pool | null = null
 
 export function useDB() {
   if (!pool) {
     const config = useRuntimeConfig()
-    pool = mysql.createPool({
+    pool = createPool({
       host: config.db.host,
       port: config.db.port,
       user: config.db.user,
@@ -30,10 +32,18 @@ export function useDB() {
     // stalls every other reader and writer of that table (MyISAM locks whole
     // tables). This makes the server give up on a stalled transfer instead.
     pool.on('connection', (conn) => {
-      conn.query('SET SESSION net_write_timeout = 30', (err: unknown) => {
+      // Callback form of mysql2 — nothing to await, the result is not used.
+      void conn.query('SET SESSION net_write_timeout = 30', (err: unknown) => {
         if (err) console.warn('[db] could not set net_write_timeout:', err)
       })
     })
   }
   return pool
+}
+
+/** Closes the pool and drops it, so the next useDB() builds a fresh one. */
+export async function closeDB(): Promise<void> {
+  const current = pool
+  pool = null
+  await current?.end()
 }

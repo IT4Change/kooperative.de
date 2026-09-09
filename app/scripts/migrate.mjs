@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 /**
  * Idempotent DB migration runner. Applies database/migrations/*.sql in order,
  * once each, tracked in `koop_schema_migrations`. Safe to run on every deploy.
@@ -13,7 +12,8 @@
 import { readFileSync, readdirSync, existsSync } from 'node:fs'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import mysql from 'mysql2/promise'
+
+import { createConnection } from 'mysql2/promise'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const appRoot = join(__dirname, '..')
@@ -36,10 +36,10 @@ const TOLERATED = new Set([1050, 1060, 1061])
 function splitStatements(sql) {
   return sql
     .split('\n')
-    .filter(l => !l.trim().startsWith('--'))
+    .filter((l) => !l.trim().startsWith('--'))
     .join('\n')
     .split(';')
-    .map(s => s.trim())
+    .map((s) => s.trim())
     .filter(Boolean)
 }
 
@@ -48,7 +48,7 @@ const dbHost = process.env.DB_HOST || 'localhost'
 const dbUser = process.env.DB_USER || 'koop'
 console.log(`[migrate] target: ${dbUser}@${dbHost}/${dbName}`)
 
-const conn = await mysql.createConnection({
+const conn = await createConnection({
   host: dbHost,
   port: Number(process.env.DB_PORT) || 3306,
   user: dbUser,
@@ -58,14 +58,16 @@ const conn = await mysql.createConnection({
 
 try {
   await conn.query(
-    'CREATE TABLE IF NOT EXISTS `koop_schema_migrations` ('
-    + '`filename` VARCHAR(255) NOT NULL PRIMARY KEY, `applied_at` DATETIME NOT NULL) '
-    + 'ENGINE=InnoDB DEFAULT CHARSET=utf8mb4',
+    'CREATE TABLE IF NOT EXISTS `koop_schema_migrations` (' +
+      '`filename` VARCHAR(255) NOT NULL PRIMARY KEY, `applied_at` DATETIME NOT NULL) ' +
+      'ENGINE=InnoDB DEFAULT CHARSET=utf8mb4',
   )
   const [appliedRows] = await conn.query('SELECT filename FROM `koop_schema_migrations`')
-  const applied = new Set(appliedRows.map(r => r.filename))
+  const applied = new Set(appliedRows.map((r) => r.filename))
 
-  const files = readdirSync(migrationsDir).filter(f => f.endsWith('.sql')).sort()
+  const files = readdirSync(migrationsDir)
+    .filter((f) => f.endsWith('.sql'))
+    .sort()
   let ran = 0
   for (const file of files) {
     if (applied.has(file)) {
@@ -80,11 +82,14 @@ try {
         if (TOLERATED.has(err.errno)) {
           console.log(`[migrate]   • object already present (${err.code}) — ok`)
         } else {
-          throw new Error(`migration ${file} failed: ${err.message}`)
+          throw new Error(`migration ${file} failed: ${err.message}`, { cause: err })
         }
       }
     }
-    await conn.query('INSERT INTO `koop_schema_migrations` (`filename`, `applied_at`) VALUES (?, NOW())', [file])
+    await conn.query(
+      'INSERT INTO `koop_schema_migrations` (`filename`, `applied_at`) VALUES (?, NOW())',
+      [file],
+    )
     console.log(`[migrate] ${file} — applied`)
     ran++
   }

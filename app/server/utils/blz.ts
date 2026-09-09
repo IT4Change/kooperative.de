@@ -1,4 +1,5 @@
 import blzData from '../data/blz.json'
+
 import { normalizeIban } from './iban'
 
 const lookup = blzData as Record<string, string>

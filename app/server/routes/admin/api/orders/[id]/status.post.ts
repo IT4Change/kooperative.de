@@ -41,17 +41,28 @@ export default defineEventHandler(async (event) => {
 
   const now = new Date()
 
-  await dbUpdate(db, 'orders', { orders_id: id }, { orders_status: statusId, last_modified: now }, { orderId: id, remoteIp })
+  await dbUpdate(
+    db,
+    'orders',
+    { orders_id: id },
+    { orders_status: statusId, last_modified: now },
+    { orderId: id, remoteIp },
+  )
 
-  await dbInsert(db, 'orders_status_history', {
-    orders_id: id,
-    orders_status_id: statusId,
-    date_added: now,
-    customer_notified: notify ? 1 : 0,
-    comments: comment,
-  }, { orderId: id, remoteIp })
+  await dbInsert(
+    db,
+    'orders_status_history',
+    {
+      orders_id: id,
+      orders_status_id: statusId,
+      date_added: now,
+      customer_notified: notify ? 1 : 0,
+      comments: comment,
+    },
+    { orderId: id, remoteIp },
+  )
 
-  let mail: { status: 'sent' | 'failed', errorMessage: string | null } | null = null
+  let mail: { status: 'sent' | 'failed'; errorMessage: string | null } | null = null
   if (notify) {
     const m = buildStatusMail({
       orderId: id,
@@ -59,17 +70,21 @@ export default defineEventHandler(async (event) => {
       statusName,
       comment,
     })
-    mail = await sendAndLogOrderMail(db, {
-      ordersId: id,
-      direction: 'to_customer',
-      recipient: String(order.customers_email_address || ''),
-      mailType: 'status_notification',
-      relatedStatusId: statusId,
-      subject: m.subject,
-      text: m.text,
-      html: m.html,
-      sentBy: operator,
-    }, { remoteIp })
+    mail = await sendAndLogOrderMail(
+      db,
+      {
+        ordersId: id,
+        direction: 'to_customer',
+        recipient: String(order.customers_email_address || ''),
+        mailType: 'status_notification',
+        relatedStatusId: statusId,
+        subject: m.subject,
+        text: m.text,
+        html: m.html,
+        sentBy: operator,
+      },
+      { remoteIp },
+    )
   }
 
   return { ok: true, statusId, statusName, notified: notify, mail }

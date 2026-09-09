@@ -64,4 +64,3 @@ export function tierTotalPrice(variants: readonly ProductVariant[], quantity: nu
   const idx = findTierIndex(variants, quantity)
   return variants[idx].price * quantity
 }
-

@@ -1,10 +1,12 @@
-import nodemailer, { type Transporter } from 'nodemailer'
+import { createTransport } from 'nodemailer'
+
+import type { Transporter } from 'nodemailer'
 
 let cached: Transporter | null = null
 
 export function getMailer(): Transporter {
   if (cached) return cached
-  cached = nodemailer.createTransport({
+  cached = createTransport({
     host: process.env.SMTP_HOST || 'localhost',
     port: Number(process.env.SMTP_PORT || 1025),
     secure: process.env.SMTP_SECURE === 'true',

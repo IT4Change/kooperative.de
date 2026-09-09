@@ -2,7 +2,8 @@ import type { Product, ProductVariant, Category, CategorySlug } from '~/data/pro
 
 export interface DbProduct {
   products_id: number
-  products_price: number
+  /** DECIMAL — mysql2 returns these as strings unless `decimalNumbers` is set. */
+  products_price: string
   products_model: string | null
   products_image: string | null
   products_image_detail_1: string
@@ -11,7 +12,8 @@ export interface DbProduct {
   products_image_detail_4: string
   products_image_detail_5: string
   products_date_added: Date | string | null
-  tax_rate: number
+  /** DECIMAL — see products_price. */
+  tax_rate: string
   products_name: string
   products_description: string | null
   products_description2: string | null
@@ -36,6 +38,17 @@ export interface DbCategory {
   sort_order: number | null
 }
 
+function slugify(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/ä/g, 'ae')
+    .replace(/ö/g, 'oe')
+    .replace(/ü/g, 'ue')
+    .replace(/ß/g, 'ss')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '')
+}
+
 export interface CategoryPath {
   slug: CategorySlug
   parentSlug: CategorySlug | null
@@ -58,13 +71,13 @@ export function buildCategoryPaths(rows: DbCategory[]): Map<number, CategoryPath
     if (!row) return null
     const self = slugify(row.categories_name)
     if (row.parent_id === 0) {
-      const path: CategoryPath = { slug: self as CategorySlug, parentSlug: null }
+      const path: CategoryPath = { slug: self, parentSlug: null }
       cache.set(id, path)
       return path
     }
     const parent = resolve(row.parent_id)
     const parentSlug = parent?.slug ?? null
-    const slug = (parentSlug ? `${parentSlug}/${self}` : self) as CategorySlug
+    const slug = parentSlug ? `${parentSlug}/${self}` : self
     const path: CategoryPath = { slug, parentSlug }
     cache.set(id, path)
     return path
@@ -75,6 +88,10 @@ export function buildCategoryPaths(rows: DbCategory[]): Map<number, CategoryPath
 }
 
 // Matches size suffixes like "0,5 Liter", "10 Liter", "1 kg", "450 g"
+// safe-regex's star-height heuristic flags the nested `(\d+(?:[,.]\d+)?)` group, but
+// the alternatives are mutually exclusive and the input is our own catalog's product
+// names (VARCHAR, never user-supplied) — no backtracking blowup is reachable here.
+// eslint-disable-next-line security/detect-unsafe-regex
 const SIZE_REGEX = /^(.+?)\s+(\d+(?:[,.]\d+)?)\s*(Liter|l|L|ml|kg|g)\s*$/
 
 // Matches quantity tier suffixes like "10+", "50+", "800+"
@@ -90,7 +107,7 @@ interface ParsedVariant {
 
 function parseVariant(name: string): ParsedVariant | null {
   // Try size first
-  const sizeMatch = name.match(SIZE_REGEX)
+  const sizeMatch = SIZE_REGEX.exec(name)
   if (sizeMatch) {
     const baseName = sizeMatch[1].trim()
     const numStr = sizeMatch[2].replace(',', '.')
@@ -105,14 +122,20 @@ function parseVariant(name: string): ParsedVariant | null {
 
     const size = `${sizeMatch[2]} ${unit}`
     let refAmount = amount
-    if (unit === 'ml') { refAmount = amount / 1000; unit = 'L' }
-    if (unit === 'g') { refAmount = amount / 1000; unit = 'kg' }
+    if (unit === 'ml') {
+      refAmount = amount / 1000
+      unit = 'L'
+    }
+    if (unit === 'g') {
+      refAmount = amount / 1000
+      unit = 'kg'
+    }
 
     return { baseName, size, amount: refAmount, unit, type: 'size' }
   }
 
   // Try quantity tier
-  const qtyMatch = name.match(QUANTITY_REGEX)
+  const qtyMatch = QUANTITY_REGEX.exec(name)
   if (qtyMatch) {
     const baseName = qtyMatch[1].trim()
     const minQty = parseInt(qtyMatch[2])
@@ -120,17 +143,6 @@ function parseVariant(name: string): ParsedVariant | null {
   }
 
   return null
-}
-
-function slugify(name: string): string {
-  return name
-    .toLowerCase()
-    .replace(/ä/g, 'ae')
-    .replace(/ö/g, 'oe')
-    .replace(/ü/g, 'ue')
-    .replace(/ß/g, 'ss')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)/g, '')
 }
 
 function stripHtml(html: string | null): string {
@@ -194,7 +206,7 @@ function extraFields(row: DbProduct, name: string) {
 export function convertCategory(row: DbCategory, paths: Map<number, CategoryPath>): Category {
   const path = paths.get(row.categories_id)
   return {
-    slug: (path?.slug ?? slugify(row.categories_name)) as CategorySlug,
+    slug: path?.slug ?? slugify(row.categories_name),
     name: row.categories_name,
     description: '',
     parentSlug: path?.parentSlug ?? null,
@@ -208,7 +220,7 @@ export function convertCategory(row: DbCategory, paths: Map<number, CategoryPath
  */
 export function groupProducts(rows: DbProduct[], paths: Map<number, CategoryPath>): Product[] {
   const categoryFor = (row: DbProduct): CategorySlug =>
-    (paths.get(row.category_id)?.slug ?? slugify(row.category_name)) as CategorySlug
+    paths.get(row.category_id)?.slug ?? slugify(row.category_name)
   // First pass: group variant rows by base name
   const groups = new Map<string, DbProduct[]>()
   const solos: DbProduct[] = []
@@ -246,10 +258,10 @@ export function groupProducts(rows: DbProduct[], paths: Map<number, CategoryPath
       products.push({
         id: String(row.products_id),
         name,
-        price: grossPrice(Number(row.products_price), row.tax_rate),
+        price: grossPrice(Number(row.products_price), Number(row.tax_rate)),
         description: stripHtml(row.products_description),
         category: categoryFor(row),
-        unit: parsed ? parsed.size : (row.products_sizes ? stripHtml(row.products_sizes) : undefined),
+        unit: parsed ? parsed.size : row.products_sizes ? stripHtml(row.products_sizes) : undefined,
         images: collectImages(row),
         ...extraFields(row, name),
       })
@@ -273,7 +285,7 @@ export function groupProducts(rows: DbProduct[], paths: Map<number, CategoryPath
       const fallbackImage = allGroupImages[0] ?? ''
 
       // Determine variant type from the first parsed variant
-      const firstParsed = sorted.map(r => parseVariant(r.products_name)).find(p => p !== null)
+      const firstParsed = sorted.map((r) => parseVariant(r.products_name)).find((p) => p !== null)
       const variantType = firstParsed?.type ?? 'size'
 
       const variants: ProductVariant[] = sorted.map((row) => {
@@ -283,18 +295,20 @@ export function groupProducts(rows: DbProduct[], paths: Map<number, CategoryPath
           return {
             productId: String(row.products_id),
             size: parsed.size,
-            price: grossPrice(Number(row.products_price), row.tax_rate),
+            price: grossPrice(Number(row.products_price), Number(row.tax_rate)),
             amount: parsed.amount,
             referenceUnit: parsed.unit,
             image: rowImages[0] ?? fallbackImage,
-            ...(parsed.type === 'quantity' ? { minQty: parseInt(row.products_name.match(/(\d+)\+/)?.[1] ?? '1') } : {}),
+            ...(parsed.type === 'quantity'
+              ? { minQty: parseInt(/(\d+)\+/.exec(row.products_name)?.[1] ?? '1') }
+              : {}),
           }
         }
         // Base product without suffix (e.g. single unit for quantity tiers)
         return {
           productId: String(row.products_id),
           size: '1 Stk.',
-          price: grossPrice(Number(row.products_price), row.tax_rate),
+          price: grossPrice(Number(row.products_price), Number(row.tax_rate)),
           amount: 1,
           referenceUnit: 'Stk',
           image: rowImages[0] ?? fallbackImage,
@@ -335,7 +349,9 @@ export function groupProducts(rows: DbProduct[], paths: Map<number, CategoryPath
   }
 
   // Sort by viewCount (popularity) descending, then name
-  products.sort((a, b) => (b.viewCount ?? 0) - (a.viewCount ?? 0) || a.name.localeCompare(b.name, 'de'))
+  products.sort(
+    (a, b) => (b.viewCount ?? 0) - (a.viewCount ?? 0) || a.name.localeCompare(b.name, 'de'),
+  )
 
   // Ensure unique slugs
   const usedSlugs = new Set<string>()

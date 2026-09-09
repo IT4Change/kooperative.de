@@ -1,5 +1,4 @@
 import type { RowDataPacket } from 'mysql2/promise'
-import { getQuery } from 'h3'
 
 /**
  * Read-only product list for the admin. Name from products_description (German,
@@ -53,7 +52,7 @@ export default defineEventHandler(async (event) => {
     total,
     page,
     limit,
-    products: rows.map(r => ({
+    products: rows.map((r) => ({
       id: Number(r.products_id),
       model: String(r.products_model || ''),
       name: String(r.products_name || ''),

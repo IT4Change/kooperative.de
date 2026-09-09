@@ -9,9 +9,12 @@ const showWarning = ref(false)
 
 function check(): boolean {
   if (available.value !== null) return available.value
-  if (import.meta.server) { available.value = false; return false }
+  if (import.meta.server) {
+    available.value = false
+    return false
+  }
   // The head script sets this flag when localStorage was blocked and replaced with a fallback
-  available.value = !(window as any).__storageBlocked
+  available.value = !(window as unknown as { __storageBlocked?: boolean }).__storageBlocked
   return available.value
 }
 
@@ -24,17 +27,29 @@ function require(): boolean {
 
 function get(key: string): string | null {
   if (!check()) return null
-  try { return localStorage.getItem(key) } catch { return null }
+  try {
+    return localStorage.getItem(key)
+  } catch {
+    return null
+  }
 }
 
 function set(key: string, value: string): void {
   if (!check()) return
-  try { localStorage.setItem(key, value) } catch {}
+  try {
+    localStorage.setItem(key, value)
+  } catch {
+    // Quota or a blocked store — nothing to recover, the value is simply not persisted.
+  }
 }
 
 function remove(key: string): void {
   if (!check()) return
-  try { localStorage.removeItem(key) } catch {}
+  try {
+    localStorage.removeItem(key)
+  } catch {
+    // See set(): a failed removal is not actionable.
+  }
 }
 
 function dismissWarning() {

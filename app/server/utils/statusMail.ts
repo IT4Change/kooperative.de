@@ -12,7 +12,11 @@ export interface StatusMailContext {
   comment?: string
 }
 
-export function buildStatusMail(ctx: StatusMailContext): { subject: string, text: string, html: string } {
+export function buildStatusMail(ctx: StatusMailContext): {
+  subject: string
+  text: string
+  html: string
+} {
   const subject = `[Kooperative Dürnau] Bestellung #${ctx.orderId} – ${ctx.statusName}`
   const greeting = ctx.customerName ? `Hallo ${ctx.customerName},` : 'Hallo,'
 
@@ -28,9 +32,10 @@ export function buildStatusMail(ctx: StatusMailContext): { subject: string, text
     'Kooperative Dürnau eG',
     '',
     footerText(false),
-  ].filter(l => l !== null).join('\n')
+  ].join('\n')
 
-  const escape = (s: string) => s.replace(/[<>&"]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c]!))
+  const escape = (s: string) =>
+    s.replace(/[<>&"]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' })[c]!)
   const html = `<!DOCTYPE html><html><body style="font-family:system-ui,sans-serif;color:#222;max-width:640px">
     <div style="background:#00af8c;color:#fff;padding:12px 16px;border-radius:8px 8px 0 0">
       <strong>Kooperative Dürnau</strong> · Bestellung <strong>#${ctx.orderId}</strong>

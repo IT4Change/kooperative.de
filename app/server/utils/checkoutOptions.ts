@@ -35,7 +35,7 @@ export const SHIPPING_OPTIONS: Record<ShippingMethod, ShippingOption> = {
     module: 'Versand mit DHL',
     totalTitle: 'Versand mit DHL:',
     description: 'Versand mit DHL innerhalb Deutschlands. (Standard)',
-    net: 10.0840,
+    net: 10.084,
     taxClassId: 2,
     displayPrice: '12,00 EURO',
   },
@@ -68,12 +68,12 @@ export const SHIPPING_OPTIONS: Record<ShippingMethod, ShippingOption> = {
 export const SHIPPING_ORDER: ShippingMethod[] = ['dpd', 'dhl', 'express', 'direkt', 'abholung']
 
 export interface PaymentOption {
-  label: string  // stored in orders.payment_method, exactly as the old shop does
+  label: string // stored in orders.payment_method, exactly as the old shop does
 }
 
 export const PAYMENT_OPTIONS: Record<PaymentMethod, PaymentOption> = {
-  vorkasse:    { label: 'Bezahlung mit Vorkasse' },
-  rechnung:    { label: 'Bezahlung mit Rechnung' },
+  vorkasse: { label: 'Bezahlung mit Vorkasse' },
+  rechnung: { label: 'Bezahlung mit Rechnung' },
   lastschrift: { label: 'Lastschriftverfahren IBAN (DE)' },
 }
 

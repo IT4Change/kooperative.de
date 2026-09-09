@@ -36,10 +36,12 @@ function maskRow<T extends Record<string, unknown>>(row: T): T {
   return out as T
 }
 
-function maskMaybeRows<T extends Record<string, unknown> | Record<string, unknown>[] | undefined>(value: T): T {
+function maskMaybeRows<T extends Record<string, unknown> | Record<string, unknown>[] | undefined>(
+  value: T,
+): T {
   if (value === undefined) return value
   if (Array.isArray(value)) return value.map(maskRow) as T
-  return maskRow(value as Record<string, unknown>) as T
+  return maskRow(value) as T
 }
 
 export interface DbWriteLogEntry {
@@ -51,7 +53,7 @@ export interface DbWriteLogEntry {
   before?: Record<string, unknown> | Record<string, unknown>[]
   after?: Record<string, unknown>
   affected?: number
-  context?: { customerId?: number, orderId?: number, remoteIp?: string }
+  context?: { customerId?: number; orderId?: number; remoteIp?: string }
 }
 
 let writeQueue: Promise<void> = Promise.resolve()
@@ -69,11 +71,14 @@ export function logDbWrite(entry: Omit<DbWriteLogEntry, 'ts'>): void {
     after: entry.after ? maskRow(entry.after) : undefined,
   }
   const line = JSON.stringify(full) + '\n'
-  writeQueue = writeQueue.then(async () => {
-    const path = logPath()
-    await fs.mkdir(dirname(path), { recursive: true })
-    await fs.appendFile(path, line, 'utf8')
-  }).catch((err) => {
-    console.error('[dbWriteLog] failed to write entry:', err)
-  })
+  writeQueue = (async () => {
+    await writeQueue
+    try {
+      const path = logPath()
+      await fs.mkdir(dirname(path), { recursive: true })
+      await fs.appendFile(path, line, 'utf8')
+    } catch (err: unknown) {
+      console.error('[dbWriteLog] failed to write entry:', err)
+    }
+  })()
 }

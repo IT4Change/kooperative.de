@@ -1,5 +1,5 @@
-import { getPendingByToken } from '../../utils/pendingOrder'
 import { confirmPending } from '../../utils/pendingConfirm'
+import { getPendingByToken } from '../../utils/pendingOrder'
 
 /**
  * Public: customer confirms their order via the token link (review page button).

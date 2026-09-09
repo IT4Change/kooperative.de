@@ -1,5 +1,4 @@
 import type { Pool, RowDataPacket } from 'mysql2/promise'
-import { getQuery } from 'h3'
 
 /**
  * Unified order list: osCommerce orders AND new-shop orders still awaiting
@@ -34,15 +33,19 @@ export default defineEventHandler(async (event) => {
   // Status filter — supports combining multiple statuses:
   //   absent → default: active only (hides completed = Versendet/status 3)
   //   'all' → everything · 'none' → nothing · 'pending,1,4' → those
-  const raw = q.status != null ? String(q.status).trim() : ''
+  const raw = typeof q.status === 'string' ? q.status.trim() : ''
   const showAll = raw === 'all'
   let tokens: string[]
   if (showAll || raw === 'none') tokens = []
   else if (raw === '') tokens = ['pending', '1', '4', '2']
-  else tokens = raw.split(',').map(s => s.trim()).filter(Boolean)
+  else
+    tokens = raw
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean)
 
   const includePending = koopReady && (showAll || tokens.includes('pending'))
-  const numericStatuses = tokens.filter(t => /^\d+$/.test(t)).map(Number)
+  const numericStatuses = tokens.filter((t) => /^\d+$/.test(t)).map(Number)
   const includeOrders = showAll || numericStatuses.length > 0
 
   const search = typeof q.q === 'string' ? q.q.trim() : ''
@@ -60,7 +63,9 @@ export default defineEventHandler(async (event) => {
   }
   if (search) {
     if (numeric) {
-      oConds.push('(o.orders_id = ? OR o.customers_name LIKE ? OR o.customers_email_address LIKE ?)')
+      oConds.push(
+        '(o.orders_id = ? OR o.customers_name LIKE ? OR o.customers_email_address LIKE ?)',
+      )
       oParams.push(Number(search), `%${search}%`, `%${search}%`)
     } else {
       oConds.push('(o.customers_name LIKE ? OR o.customers_email_address LIKE ?)')
@@ -81,7 +86,9 @@ export default defineEventHandler(async (event) => {
   // origin ('neu' if the order is linked to a pending record) is only computable
   // when the koop table exists; otherwise every order is treated as old-shop.
   const originExpr = koopReady ? "IF(kpo.id IS NULL, 'alt', 'neu')" : "'alt'"
-  const originJoin = koopReady ? 'LEFT JOIN koop_pending_order kpo ON kpo.orders_id = o.orders_id' : ''
+  const originJoin = koopReady
+    ? 'LEFT JOIN koop_pending_order kpo ON kpo.orders_id = o.orders_id'
+    : ''
 
   const ordersSelect = `
     SELECT 'order' AS kind, o.orders_id AS id, o.date_purchased AS \`date\`,
@@ -105,8 +112,14 @@ export default defineEventHandler(async (event) => {
 
   const parts: string[] = []
   const params: unknown[] = []
-  if (includeOrders) { parts.push(ordersSelect); params.push(...oParams) }
-  if (includePending) { parts.push(pendingSelect); params.push(...pParams) }
+  if (includeOrders) {
+    parts.push(ordersSelect)
+    params.push(...oParams)
+  }
+  if (includePending) {
+    parts.push(pendingSelect)
+    params.push(...pParams)
+  }
 
   // Nothing selected → empty result (avoids an empty UNION / invalid SQL).
   if (parts.length === 0) {
@@ -116,11 +129,17 @@ export default defineEventHandler(async (event) => {
   // --- counts ---
   let total = 0
   if (includeOrders) {
-    const [c] = await db.execute<RowDataPacket[]>(`SELECT COUNT(*) AS c FROM orders o ${oWhere}`, oParams)
+    const [c] = await db.execute<RowDataPacket[]>(
+      `SELECT COUNT(*) AS c FROM orders o ${oWhere}`,
+      oParams,
+    )
     total += Number(c[0]?.c || 0)
   }
   if (includePending) {
-    const [c] = await db.execute<RowDataPacket[]>(`SELECT COUNT(*) AS c FROM koop_pending_order kp ${pWhere}`, pParams)
+    const [c] = await db.execute<RowDataPacket[]>(
+      `SELECT COUNT(*) AS c FROM koop_pending_order kp ${pWhere}`,
+      pParams,
+    )
     total += Number(c[0]?.c || 0)
   }
 

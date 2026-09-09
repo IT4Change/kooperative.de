@@ -1,6 +1,7 @@
-import type { Pool } from 'mysql2/promise'
 import { dbInsert } from './dbWrite'
 import { getMailer, MAIL_FROM, MAIL_OPERATOR } from './mailer'
+
+import type { Pool } from 'mysql2/promise'
 
 /**
  * Central place to send a mail that belongs to an order AND record it in
@@ -27,7 +28,7 @@ export async function sendAndLogOrderMail(
   db: Pool,
   mail: OrderMailInput,
   ctx: { remoteIp?: string } = {},
-): Promise<{ status: 'sent' | 'failed', errorMessage: string | null }> {
+): Promise<{ status: 'sent' | 'failed'; errorMessage: string | null }> {
   let status: 'sent' | 'failed' = 'sent'
   let errorMessage: string | null = null
 
@@ -47,21 +48,26 @@ export async function sendAndLogOrderMail(
   }
 
   try {
-    await dbInsert(db, 'koop_order_mail_log', {
-      orders_id: mail.ordersId ?? null,
-      pending_order_id: mail.pendingOrderId ?? null,
-      direction: mail.direction,
-      recipient: mail.recipient,
-      mail_type: mail.mailType,
-      related_status_id: mail.relatedStatusId ?? null,
-      subject: mail.subject,
-      body_text: mail.text ?? null,
-      body_html: mail.html ?? null,
-      status,
-      error_message: errorMessage,
-      sent_by: mail.sentBy ?? 'system',
-      created_at: new Date(),
-    }, { orderId: mail.ordersId ?? undefined, remoteIp: ctx.remoteIp })
+    await dbInsert(
+      db,
+      'koop_order_mail_log',
+      {
+        orders_id: mail.ordersId ?? null,
+        pending_order_id: mail.pendingOrderId ?? null,
+        direction: mail.direction,
+        recipient: mail.recipient,
+        mail_type: mail.mailType,
+        related_status_id: mail.relatedStatusId ?? null,
+        subject: mail.subject,
+        body_text: mail.text ?? null,
+        body_html: mail.html ?? null,
+        status,
+        error_message: errorMessage,
+        sent_by: mail.sentBy ?? 'system',
+        created_at: new Date(),
+      },
+      { orderId: mail.ordersId ?? undefined, remoteIp: ctx.remoteIp },
+    )
   } catch (err) {
     console.error('[orderMail] log write failed:', err)
   }

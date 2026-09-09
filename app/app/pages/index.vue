@@ -1,13 +1,19 @@
 <template>
   <div>
     <!-- Hero -->
-    <section id="hero" class="h-screen flex flex-col items-center justify-center relative overflow-hidden" style="background-color: var(--koop-orange);">
+    <section
+      id="hero"
+      class="h-screen flex flex-col items-center justify-center relative overflow-hidden"
+      style="background-color: var(--koop-orange)"
+    >
       <div class="relative z-10 flex flex-col items-center px-4">
-        <img :src="`${baseURL}img/logo-schrift-braun.svg`" alt="Kooperative Dürnau" class="w-[340px] md:w-[480px] lg:w-[600px]" />
+        <img
+          :src="`${baseURL}img/logo-schrift-braun.svg`"
+          alt="Kooperative Dürnau"
+          class="w-[340px] md:w-[480px] lg:w-[600px]"
+        />
         <div class="flex items-center justify-center gap-3 md:gap-4 mt-10 md:mt-14">
-          <KoopButton to="/shop">
-            Bestellung
-          </KoopButton>
+          <KoopButton to="/shop"> Bestellung </KoopButton>
         </div>
       </div>
       <!-- Scroll-Hinweis -->
@@ -17,20 +23,44 @@
         @click="scrollToNext"
       >
         <span class="text-sm font-medium mb-1">Mehr</span>
-        <svg class="w-10 h-10 animate-bounce [animation-duration:2s]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <svg
+          class="w-10 h-10 animate-bounce [animation-duration:2s]"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="2"
+        >
           <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
         </svg>
       </button>
     </section>
 
     <!-- Übersicht -->
-    <section id="uebersicht" class="h-screen flex flex-col items-center justify-center relative overflow-hidden">
-      <NuxtImg src="/img/hero.jpg" alt="" sizes="sm:100vw md:100vw lg:100vw xl:100vw 2xl:100vw" format="webp" loading="lazy" class="absolute inset-0 w-full h-full object-cover" />
+    <section
+      id="uebersicht"
+      class="h-screen flex flex-col items-center justify-center relative overflow-hidden"
+    >
+      <NuxtImg
+        src="/img/hero.jpg"
+        alt=""
+        sizes="sm:100vw md:100vw lg:100vw xl:100vw 2xl:100vw"
+        format="webp"
+        loading="lazy"
+        class="absolute inset-0 w-full h-full object-cover"
+      />
       <div class="absolute inset-0 bg-black/40" />
-      <div class="relative z-10 flex flex-col items-center px-4 text-center text-white max-w-3xl [text-shadow:_0_1px_4px_rgba(0,0,0,0.5)]">
-        <h1 class="text-4xl md:text-6xl font-bold mb-3 [text-shadow:_0_2px_8px_rgba(0,0,0,0.5)]">Kooperative Dürnau</h1>
-        <p class="text-lg md:text-2xl mb-2 text-white/90">Leben und Arbeiten in Gemeinschaft seit 1980</p>
-        <p class="text-base md:text-lg mb-10 md:mb-14 text-white/80">Genossenschaft in Dürnau &mdash; Handwerk, Bildung, Kultur und Vertrieb unter einem Dach.</p>
+      <div
+        class="relative z-10 flex flex-col items-center px-4 text-center text-white max-w-3xl [text-shadow:_0_1px_4px_rgba(0,0,0,0.5)]"
+      >
+        <h1 class="text-4xl md:text-6xl font-bold mb-3 [text-shadow:_0_2px_8px_rgba(0,0,0,0.5)]">
+          Kooperative Dürnau
+        </h1>
+        <p class="text-lg md:text-2xl mb-2 text-white/90">
+          Leben und Arbeiten in Gemeinschaft seit 1980
+        </p>
+        <p class="text-base md:text-lg mb-10 md:mb-14 text-white/80">
+          Genossenschaft in Dürnau &mdash; Handwerk, Bildung, Kultur und Vertrieb unter einem Dach.
+        </p>
         <div class="grid grid-cols-2 gap-4 md:gap-6">
           <KoopButton v-for="link in sectionLinks" :key="link.id" variant="blue" :href="link.href">
             {{ link.label }}
@@ -148,150 +178,161 @@
       </div>
     </section>
     -->
-
   </div>
 </template>
 
 <script setup lang="ts">
-const { baseURL } = useRuntimeConfig().app
-const sectionLinks = useSectionLinks()
+  const { baseURL } = useRuntimeConfig().app
+  const sectionLinks = useSectionLinks()
 
-useHead({
-  title: 'Kooperative Dürnau',
-  meta: [
-    {
-      name: 'description',
-      content: 'Kooperative Dürnau eG – Leben und Arbeiten in Gemeinschaft seit 1980. Handwerk, Bildung, Kultur und Vertrieb.',
-    },
-  ],
-})
+  useHead({
+    title: 'Kooperative Dürnau',
+    meta: [
+      {
+        name: 'description',
+        content:
+          'Kooperative Dürnau eG – Leben und Arbeiten in Gemeinschaft seit 1980. Handwerk, Bildung, Kultur und Vertrieb.',
+      },
+    ],
+  })
 
-function scrollTo(id: string) {
-  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
-}
+  function scrollTo(id: string) {
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
+  }
 
-function scrollToNext() {
-  scrollTo('uebersicht')
-}
+  function scrollToNext() {
+    scrollTo('uebersicht')
+  }
 
-const sectionIds = ['', 'uebersicht']
-let isScrolling = false
+  const sectionIds = ['', 'uebersicht']
+  let isScrolling = false
 
-function getSections(): HTMLElement[] {
-  return sectionIds
-    .map((id) => id ? document.getElementById(id) : document.querySelector('section'))
-    .filter((el): el is HTMLElement => el !== null)
-}
+  function getSections(): HTMLElement[] {
+    return sectionIds
+      .map((id) => (id ? document.getElementById(id) : document.querySelector('section')))
+      .filter((el): el is HTMLElement => el !== null)
+  }
 
-function getTargetSection(direction: 'down' | 'up'): HTMLElement | null {
-  const sections = getSections()
-  const scrollY = window.scrollY
-  const threshold = 20
+  function getTargetSection(direction: 'down' | 'up'): HTMLElement | null {
+    const sections = getSections()
+    const scrollY = window.scrollY
+    const threshold = 20
 
-  if (direction === 'down') {
-    for (const section of sections) {
-      if (section.offsetTop > scrollY + threshold) {
-        return section
+    if (direction === 'down') {
+      for (const section of sections) {
+        if (section.offsetTop > scrollY + threshold) {
+          return section
+        }
+      }
+    } else {
+      // Beim Hochscrollen: nur zur Startseite (erste Sektion) einrasten
+      const hero = sections[0]
+      if (hero && scrollY > threshold && scrollY < hero.offsetHeight) {
+        return hero
       }
     }
-  } else {
-    // Beim Hochscrollen: nur zur Startseite (erste Sektion) einrasten
-    const hero = sections[0]
-    if (hero && scrollY > threshold && scrollY < hero.offsetHeight) {
-      return hero
-    }
+    return null
   }
-  return null
-}
 
-function onWheel(e: WheelEvent) {
-  if (isScrolling) return
+  function onWheel(e: WheelEvent) {
+    if (isScrolling) return
 
-  const direction = e.deltaY > 0 ? 'down' : 'up'
+    const direction = e.deltaY > 0 ? 'down' : 'up'
 
-  if (direction === 'up') {
-    const hero = getSections()[0]
-    if (!hero) return
+    if (direction === 'up') {
+      const hero = getSections()[0]
+      if (!hero) return
+      const scrollY = window.scrollY
+      if (scrollY > 0 && scrollY <= hero.offsetHeight) {
+        e.preventDefault()
+        isScrolling = true
+        hero.scrollIntoView({ behavior: 'smooth' })
+        setTimeout(() => {
+          isScrolling = false
+        }, 800)
+      }
+      return
+    }
+
+    const next = getTargetSection('down')
+    if (!next) return
+
     const scrollY = window.scrollY
-    if (scrollY > 0 && scrollY <= hero.offsetHeight) {
-      e.preventDefault()
-      isScrolling = true
-      hero.scrollIntoView({ behavior: 'smooth' })
-      setTimeout(() => { isScrolling = false }, 800)
-    }
-    return
+    const lastSection = getSections().at(-1)
+    if (
+      lastSection &&
+      scrollY >= lastSection.offsetTop + lastSection.offsetHeight - window.innerHeight
+    )
+      return
+
+    e.preventDefault()
+    isScrolling = true
+
+    next.scrollIntoView({ behavior: 'smooth' })
+
+    setTimeout(() => {
+      isScrolling = false
+    }, 800)
   }
 
-  const next = getTargetSection('down')
-  if (!next) return
+  let touchStartY = 0
 
-  const scrollY = window.scrollY
-  const lastSection = getSections().at(-1)
-  if (lastSection && scrollY >= lastSection.offsetTop + lastSection.offsetHeight - window.innerHeight) return
+  function onTouchStart(e: TouchEvent) {
+    touchStartY = e.touches[0].clientY
+  }
 
-  e.preventDefault()
-  isScrolling = true
+  function onTouchMove(e: TouchEvent) {
+    if (isScrolling) return
+    const deltaY = touchStartY - e.touches[0].clientY
 
-  next.scrollIntoView({ behavior: 'smooth' })
+    // Swipe nach unten (Inhalt nach oben) → zur Hero snappen
+    if (deltaY < -30) {
+      const hero = getSections()[0]
+      if (!hero) return
+      const scrollY = window.scrollY
+      if (scrollY > 0 && scrollY <= hero.offsetHeight) {
+        e.preventDefault()
+        isScrolling = true
+        hero.scrollIntoView({ behavior: 'smooth' })
+        setTimeout(() => {
+          isScrolling = false
+        }, 800)
+      }
+      return
+    }
 
-  setTimeout(() => {
-    isScrolling = false
-  }, 800)
-}
+    if (deltaY <= 30) return
 
-let touchStartY = 0
+    const next = getTargetSection('down')
+    if (!next) return
 
-function onTouchStart(e: TouchEvent) {
-  touchStartY = e.touches[0].clientY
-}
-
-function onTouchMove(e: TouchEvent) {
-  if (isScrolling) return
-  const deltaY = touchStartY - e.touches[0].clientY
-
-  // Swipe nach unten (Inhalt nach oben) → zur Hero snappen
-  if (deltaY < -30) {
-    const hero = getSections()[0]
-    if (!hero) return
     const scrollY = window.scrollY
-    if (scrollY > 0 && scrollY <= hero.offsetHeight) {
-      e.preventDefault()
-      isScrolling = true
-      hero.scrollIntoView({ behavior: 'smooth' })
-      setTimeout(() => { isScrolling = false }, 800)
-    }
-    return
+    const lastSection = getSections().at(-1)
+    if (
+      lastSection &&
+      scrollY >= lastSection.offsetTop + lastSection.offsetHeight - window.innerHeight
+    )
+      return
+
+    e.preventDefault()
+    isScrolling = true
+
+    next.scrollIntoView({ behavior: 'smooth' })
+
+    setTimeout(() => {
+      isScrolling = false
+    }, 800)
   }
 
-  if (deltaY <= 30) return
+  onMounted(() => {
+    window.addEventListener('wheel', onWheel, { passive: false })
+    window.addEventListener('touchstart', onTouchStart, { passive: true })
+    window.addEventListener('touchmove', onTouchMove, { passive: false })
+  })
 
-  const next = getTargetSection('down')
-  if (!next) return
-
-  const scrollY = window.scrollY
-  const lastSection = getSections().at(-1)
-  if (lastSection && scrollY >= lastSection.offsetTop + lastSection.offsetHeight - window.innerHeight) return
-
-  e.preventDefault()
-  isScrolling = true
-
-  next.scrollIntoView({ behavior: 'smooth' })
-
-  setTimeout(() => {
-    isScrolling = false
-  }, 800)
-}
-
-onMounted(() => {
-  window.addEventListener('wheel', onWheel, { passive: false })
-  window.addEventListener('touchstart', onTouchStart, { passive: true })
-  window.addEventListener('touchmove', onTouchMove, { passive: false })
-})
-
-onUnmounted(() => {
-  window.removeEventListener('wheel', onWheel)
-  window.removeEventListener('touchstart', onTouchStart)
-  window.removeEventListener('touchmove', onTouchMove)
-})
+  onUnmounted(() => {
+    window.removeEventListener('wheel', onWheel)
+    window.removeEventListener('touchstart', onTouchStart)
+    window.removeEventListener('touchmove', onTouchMove)
+  })
 </script>
-

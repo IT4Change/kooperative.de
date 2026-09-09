@@ -4,7 +4,10 @@
       <ShopProductGallery :images="displayImages" />
     </NuxtLink>
     <div class="p-5 flex flex-col flex-1">
-      <NuxtLink :to="`/shop/${product.id}/${product.slug}`" class="hover:text-[#00af8c] transition-colors">
+      <NuxtLink
+        :to="`/shop/${product.id}/${product.slug}`"
+        class="hover:text-[#00af8c] transition-colors"
+      >
         <h3 class="text-base font-semibold text-gray-900 mb-1">{{ product.name }}</h3>
       </NuxtLink>
       <NuxtLink :to="`/shop/${product.id}/${product.slug}`" class="block mb-3 flex-1">
@@ -24,7 +27,10 @@
       </div>
 
       <!-- Quantity tiers: quantity input + tier info side by side -->
-      <div v-else-if="product.variantType === 'quantity' && product.variants" class="mb-3 flex items-center gap-3">
+      <div
+        v-else-if="product.variantType === 'quantity' && product.variants"
+        class="mb-3 flex items-center gap-3"
+      >
         <div class="flex items-center gap-1.5">
           <label class="text-xs text-gray-500">Anz.</label>
           <input
@@ -35,7 +41,11 @@
           />
         </div>
         <div class="flex flex-col text-xs text-gray-400 text-right ml-auto">
-          <span v-for="(v, idx) in product.variants" :key="idx" :class="{ 'text-[#00af8c] font-medium': idx === activeTierIndex }">
+          <span
+            v-for="(v, idx) in product.variants"
+            :key="idx"
+            :class="{ 'text-[#00af8c] font-medium': idx === activeTierIndex }"
+          >
             {{ v.size }}: {{ v.price.toFixed(2) }} €
           </span>
         </div>
@@ -46,73 +56,75 @@
           <span class="text-lg font-bold text-[#00af8c]">
             {{ displayPrice.toFixed(2) }}&nbsp;€
           </span>
-          <span v-if="product.variants && product.variantType !== 'quantity'" class="block text-xs text-gray-400">
+          <span
+            v-if="product.variants && product.variantType !== 'quantity'"
+            class="block text-xs text-gray-400"
+          >
             {{ displayUnitPrice }} €/{{ activeVariant!.referenceUnit }}
           </span>
           <span v-else-if="product.variantType === 'quantity'" class="block text-xs text-gray-400">
             {{ quantity }} × {{ activeTierPrice.toFixed(2) }} €
           </span>
-          <span v-else-if="product.unit" class="text-xs font-normal text-gray-400">/ {{ product.unit }}</span>
+          <span v-else-if="product.unit" class="text-xs font-normal text-gray-400"
+            >/ {{ product.unit }}</span
+          >
         </div>
-        <KoopButton size="sm" @click="handleAdd">
-          Auf die Bestellliste
-        </KoopButton>
+        <KoopButton size="sm" @click="handleAdd"> Auf die Bestellliste </KoopButton>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import type { Product } from '~/data/products'
-import { unitPrice, findTierIndex } from '~/data/products'
+  import type { Product } from '~/data/products'
 
-const props = defineProps<{
-  product: Product
-}>()
+  import { unitPrice, findTierIndex } from '~/data/products'
 
-const emit = defineEmits<{
-  add: [product: Product, variantIndex?: number, quantity?: number]
-}>()
+  const props = defineProps<{
+    product: Product
+  }>()
 
-const selectedVariant = ref(0)
-const quantity = ref(1)
+  const emit = defineEmits<{
+    add: [product: Product, variantIndex?: number, quantity?: number]
+  }>()
 
-const activeVariant = computed(() =>
-  props.product.variants?.[selectedVariant.value],
-)
+  const selectedVariant = ref(0)
+  const quantity = ref(1)
 
-const activeTierIndex = computed(() => {
-  if (props.product.variantType !== 'quantity' || !props.product.variants) return 0
-  return findTierIndex(props.product.variants, quantity.value)
-})
+  const activeVariant = computed(() => props.product.variants?.[selectedVariant.value])
 
-const activeTierPrice = computed(() => {
-  if (!props.product.variants) return props.product.price
-  return props.product.variants[activeTierIndex.value].price
-})
+  const activeTierIndex = computed(() => {
+    if (props.product.variantType !== 'quantity' || !props.product.variants) return 0
+    return findTierIndex(props.product.variants, quantity.value)
+  })
 
-const displayPrice = computed(() => {
-  if (props.product.variantType === 'quantity') {
-    return activeTierPrice.value * quantity.value
+  const activeTierPrice = computed(() => {
+    if (!props.product.variants) return props.product.price
+    return props.product.variants[activeTierIndex.value].price
+  })
+
+  const displayPrice = computed(() => {
+    if (props.product.variantType === 'quantity') {
+      return activeTierPrice.value * quantity.value
+    }
+    return activeVariant.value?.price ?? props.product.price
+  })
+
+  const displayUnitPrice = computed(() =>
+    activeVariant.value ? unitPrice(activeVariant.value).toFixed(2) : '',
+  )
+
+  const displayImages = computed(() =>
+    activeVariant.value && props.product.variantType !== 'quantity'
+      ? [activeVariant.value.image]
+      : props.product.images,
+  )
+
+  function handleAdd() {
+    if (props.product.variantType === 'quantity') {
+      emit('add', props.product, activeTierIndex.value, quantity.value)
+    } else {
+      emit('add', props.product, props.product.variants ? selectedVariant.value : undefined)
+    }
   }
-  return activeVariant.value?.price ?? props.product.price
-})
-
-const displayUnitPrice = computed(() =>
-  activeVariant.value ? unitPrice(activeVariant.value).toFixed(2) : '',
-)
-
-const displayImages = computed(() =>
-  activeVariant.value && props.product.variantType !== 'quantity'
-    ? [activeVariant.value.image]
-    : props.product.images,
-)
-
-function handleAdd() {
-  if (props.product.variantType === 'quantity') {
-    emit('add', props.product, activeTierIndex.value, quantity.value)
-  } else {
-    emit('add', props.product, props.product.variants ? selectedVariant.value : undefined)
-  }
-}
 </script>

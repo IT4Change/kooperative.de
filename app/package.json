@@ -7,10 +7,14 @@
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "postinstall": "nuxt prepare",
+    "test:lint": "npm run test:lint:eslint && npm run test:lint:typecheck",
+    "test:lint:eslint": "eslint --max-warnings 0 .",
+    "test:lint:typecheck": "vue-tsc --noEmit",
+    "test:unit": "TZ=UTC vitest run --coverage",
+    "test:unit:dev": "TZ=UTC vitest"
   },
   "dependencies": {
-    "@nuxt/eslint": "^1.15.1",
     "@nuxt/image": "^2.0.0",
     "@nuxtjs/tailwindcss": "^6.14.0",
     "ipx": "^3.1.1",
@@ -21,7 +25,18 @@
     "vue-router": "^4.6.4"
   },
   "devDependencies": {
+    "@nuxt/eslint": "^1.15.1",
+    "@nuxt/test-utils": "^4.3.2",
+    "@testing-library/vue": "^8.1.0",
     "@types/nodemailer": "^8.0.0",
-    "node-gyp": "^12.2.0"
+    "@vitest/coverage-v8": "^5.0.0",
+    "@vue/test-utils": "^2.5.0",
+    "eslint": "^10.10.0",
+    "eslint-config-it4c": "^0.12.1",
+    "happy-dom": "^20.14.0",
+    "node-gyp": "^12.2.0",
+    "prettier": "^3.9.6",
+    "vitest": "^5.0.0",
+    "vue-tsc": "^3.3.11"
   }
 }

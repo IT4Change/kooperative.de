@@ -34,7 +34,11 @@ function require(action?: () => void): boolean {
 }
 
 function accept() {
-  try { localStorage.setItem(CONSENT_KEY, 'true') } catch {}
+  try {
+    localStorage.setItem(CONSENT_KEY, 'true')
+  } catch {
+    // Consent still applies to this session even if it cannot be persisted.
+  }
   consentGiven.value = true
   showBanner.value = false
   const action = pendingAction

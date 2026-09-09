@@ -1,6 +1,6 @@
 import { createHash, createHmac, randomBytes, timingSafeEqual } from 'node:crypto'
+
 import type { H3Event } from 'h3'
-import { getCookie, setCookie, deleteCookie } from 'h3'
 
 const SESSION_COOKIE = 'koop_session'
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30 // 30 days
@@ -25,6 +25,7 @@ export function verifyPassword(plain: string, stored: string): boolean {
   const parts = stored.split(':')
   if (parts.length !== 2) return false
   const [hash, salt] = parts
+  if (!hash || !salt) return false
   const expected = md5(salt + plain)
   if (expected.length !== hash.length) return false
   return timingSafeEqual(Buffer.from(expected), Buffer.from(hash))

@@ -2,7 +2,24 @@
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
-  modules: ['@nuxt/eslint', '@nuxtjs/tailwindcss', '@nuxt/image'],
+  modules: [
+    // tsconfigPath enables type-aware linting, which the it4c TypeScript rules require
+    ['@nuxt/eslint', { config: { typescript: { tsconfigPath: 'tsconfig.json' } } }],
+    '@nuxt/test-utils/module',
+    '@nuxtjs/tailwindcss',
+    '@nuxt/image',
+  ],
+  typescript: {
+    // Root-level tool configs are TypeScript too — pull them into the node project
+    // so type-aware linting can resolve them (paths are relative to .nuxt/).
+    nodeTsConfig: {
+      include: ['../eslint.config.ts', '../prettier.config.ts', '../vitest.config.ts'],
+    },
+    // Nuxt only picks up test/nuxt/**; our shared test setup lives in test/.
+    tsConfig: {
+      include: ['../test/**/*'],
+    },
+  },
   runtimeConfig: {
     db: {
       host: process.env.DB_HOST || 'localhost',

@@ -40,7 +40,7 @@ export default defineEventHandler(async () => {
   }
 
   return {
-    statuses: statusRows.map(r => ({
+    statuses: statusRows.map((r) => ({
       id: Number(r.id),
       name: String(r.name),
       count: Number(r.count),

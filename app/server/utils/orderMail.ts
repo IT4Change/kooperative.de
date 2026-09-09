@@ -27,12 +27,17 @@ export interface OrderMailContext {
   shippingMethod: string
   shippingPrice: number
   paymentMethod: string
-  bankDetails?: { accountHolder: string, iban: string }
+  bankDetails?: { accountHolder: string; iban: string }
   notes?: string
   adminBaseUrl?: string
 }
 
-export function buildOrderMail(ctx: OrderMailContext): { subject: string, text: string, html: string, replyTo: string } {
+export function buildOrderMail(ctx: OrderMailContext): {
+  subject: string
+  text: string
+  html: string
+  replyTo: string
+} {
   const subject = `[Koop · neuer Shop] Bestellung #${ctx.orderId} – ${ctx.customer.firstname} ${ctx.customer.lastname}`
 
   const adminLink = ctx.adminBaseUrl
@@ -56,22 +61,29 @@ export function buildOrderMail(ctx: OrderMailContext): { subject: string, text: 
     `  ${ctx.shipping.country}`,
     '',
     `Positionen:`,
-    ...ctx.items.map((it, i) =>
-      `  ${i + 1}. ${it.quantity}× ${it.name}${it.variantSize ? ` (${it.variantSize})` : ''}` +
-      `  ·  ${it.unitPrice.toFixed(2)} €/Stk  =  ${it.lineTotal.toFixed(2)} €`,
+    ...ctx.items.map(
+      (it, i) =>
+        `  ${i + 1}. ${it.quantity}× ${it.name}${it.variantSize ? ` (${it.variantSize})` : ''}` +
+        `  ·  ${it.unitPrice.toFixed(2)} €/Stk  =  ${it.lineTotal.toFixed(2)} €`,
     ),
     '',
     `Versand: ${ctx.shippingMethod}${ctx.shippingPrice > 0 ? ` (${ctx.shippingPrice.toFixed(2)} €)` : ' (nach Aufwand)'}`,
     `Zahlung: ${ctx.paymentMethod}`,
     ...(ctx.bankDetails
-      ? [`  Kontoinhaber: ${ctx.bankDetails.accountHolder}`, `  IBAN:         ${ctx.bankDetails.iban}`]
+      ? [
+          `  Kontoinhaber: ${ctx.bankDetails.accountHolder}`,
+          `  IBAN:         ${ctx.bankDetails.iban}`,
+        ]
       : []),
     '',
     `Gesamt: ${ctx.total.toFixed(2)} €`,
     ctx.notes ? `\nAnmerkungen:\n${ctx.notes}` : '',
-  ].filter(Boolean).join('\n')
+  ]
+    .filter(Boolean)
+    .join('\n')
 
-  const escape = (s: string) => s.replace(/[<>&"]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c]!))
+  const escape = (s: string) =>
+    s.replace(/[<>&"]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' })[c]!)
   const html = `<!DOCTYPE html><html><body style="font-family:system-ui,sans-serif;color:#222;max-width:640px">
     <div style="background:#00af8c;color:#fff;padding:12px 16px;border-radius:8px 8px 0 0">
       <strong>Neuer Shop</strong> · Bestellung <strong>#${ctx.orderId}</strong>
@@ -100,14 +112,18 @@ export function buildOrderMail(ctx: OrderMailContext): { subject: string, text: 
           <th style="padding:6px;border-bottom:1px solid #ddd;text-align:right">Summe</th>
         </tr></thead>
         <tbody>
-        ${ctx.items.map((it, i) => `
+        ${ctx.items
+          .map(
+            (it, i) => `
           <tr>
             <td style="padding:6px;border-bottom:1px solid #eee">${i + 1}</td>
             <td style="padding:6px;border-bottom:1px solid #eee">${escape(it.name)}${it.variantSize ? ` <span style="color:#888">(${escape(it.variantSize)})</span>` : ''}</td>
             <td style="padding:6px;border-bottom:1px solid #eee;text-align:right">${it.quantity}</td>
             <td style="padding:6px;border-bottom:1px solid #eee;text-align:right">${it.unitPrice.toFixed(2)} €</td>
             <td style="padding:6px;border-bottom:1px solid #eee;text-align:right">${it.lineTotal.toFixed(2)} €</td>
-          </tr>`).join('')}
+          </tr>`,
+          )
+          .join('')}
         </tbody>
         <tfoot>
           <tr>
