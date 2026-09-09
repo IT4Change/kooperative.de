@@ -8,7 +8,11 @@ export type ShippingMethod = 'dpd' | 'dhl' | 'express' | 'direkt' | 'abholung'
 export type PaymentMethod = 'vorkasse' | 'rechnung' | 'lastschrift'
 
 export interface ShippingOption {
-  /** Module heading (orders_total `text` prefix is taken from `title`) */
+  /**
+   * Label the customer reads — in the mails and in the confirmation views.
+   * Same wording as `totalTitle`, only without the colon; the client mirrors it
+   * in `app/data/checkoutOptions.ts`.
+   */
   module: string
   /** Title used in orders_total `title` (e.g. "Versand mit DPD:") */
   totalTitle: string
@@ -40,7 +44,12 @@ export const SHIPPING_OPTIONS: Record<ShippingMethod, ShippingOption> = {
     displayPrice: '12,00 EURO',
   },
   express: {
-    module: 'Versand mit Express',
+    // Upper case, and deliberately so: this is the only spelling that occurs in
+    // the shop's order data. The legacy module contradicts itself — its
+    // `$this->title` says "Versand mit Express", but the quote it hands to the
+    // checkout says "Versand mit EXPRESS", and only the latter is ever written.
+    // Every other module has both fields identical.
+    module: 'Versand mit EXPRESS',
     totalTitle: 'Versand mit EXPRESS:',
     description: 'Tatsächlich anfallende Versandkosten. (Ohne Aufschlag)',
     net: 0,
