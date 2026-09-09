@@ -188,6 +188,24 @@ export default withNuxt(
       'vitest/max-expects': 'off',
       'vitest/prefer-lowercase-title': 'off',
       'vitest/prefer-describe-function-title': 'off',
+      // Type parameters on a bare vi.fn() mock add noise without adding safety
+      'vitest/require-mock-type-parameters': 'off',
+      // Several specs share one beforeEach across sibling describe blocks
+      'vitest/require-top-level-describe': 'off',
+      // registerEndpoint() from @nuxt/test-utils registers on the shared mock
+      // server and has to run at module level, before any mount
+      'vitest/require-hook': 'off',
+      // happy-dom does not implement scrollIntoView, so there is nothing to spy on
+      'vitest/prefer-spy-on': 'off',
+      // Composable specs define throwaway host components next to each other
+      'vue/one-component-per-file': 'off',
+      // Fake timers and flush helpers legitimately construct promises
+      'promise/avoid-new': 'off',
+      // Its auto-fix rewrites toHaveBeenCalled() into toHaveBeenCalledWith(),
+      // which asserts "called with no arguments" — a different claim entirely
+      'vitest/prefer-called-with': 'off',
+      // Spies are passed around by reference on purpose
+      'vitest/unbound-method': 'off',
       // Tests deliberately set globals and env vars
       'n/no-process-env': 'off',
     },

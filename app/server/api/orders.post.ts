@@ -20,7 +20,7 @@ export default defineEventHandler(async (event) => {
   const session = requireSession(event)
   const body = await readBody(event)
   const input = parseOrder(body)
-  const remoteIp = getRequestIP(event, { xForwardedFor: true }) ?? undefined
+  const remoteIp = getRequestIP(event, { xForwardedFor: true })
   const db = useDB()
 
   const comp = await computeOrder(db, session.customerId, input)

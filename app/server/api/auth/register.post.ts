@@ -10,7 +10,7 @@ export default defineEventHandler(async (event) => {
   const input = parseRegister(body)
 
   const db = useDB()
-  const remoteIp = getRequestIP(event, { xForwardedFor: true }) ?? undefined
+  const remoteIp = getRequestIP(event, { xForwardedFor: true })
 
   // Email-uniqueness check (no DB constraint exists). Race-prone on MyISAM, but volume is low.
   const [existing] = await db.execute<RowDataPacket[]>(

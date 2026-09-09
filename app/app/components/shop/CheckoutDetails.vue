@@ -162,16 +162,18 @@
     'update:iban': [string]
   }>()
 
-  const shippingModel = computed({
+  // The getters may be null (nothing chosen yet), the setters cannot: v-model on
+  // a radio group only ever writes one of the rendered option ids.
+  const shippingModel = computed<ShippingMethod | null, ShippingMethod>({
     get: () => props.shipping,
     set: (v) => {
-      if (v) emit('update:shipping', v)
+      emit('update:shipping', v)
     },
   })
-  const paymentModel = computed({
+  const paymentModel = computed<PaymentMethod | null, PaymentMethod>({
     get: () => props.payment,
     set: (v) => {
-      if (v) emit('update:payment', v)
+      emit('update:payment', v)
     },
   })
   const notesModel = computed({

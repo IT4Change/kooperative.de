@@ -152,6 +152,63 @@ describe('useModal', () => {
     expect(active()).toBe('second')
   })
 
+  it('does nothing on Tab in a dialog whose panel is not mounted yet', async () => {
+    // The ref is only filled once the panel renders; a Tab arriving in that gap
+    // must not throw.
+    const isOpen = ref(false)
+    const wrapper = mount(
+      defineComponent({
+        setup() {
+          const panel = ref<HTMLElement>()
+          useModal(isOpen, panel, close)
+          return () => h('button', { id: 'outside' }, 'outside')
+        },
+      }),
+      { attachTo: document.body },
+    )
+    mounted.push(wrapper)
+    isOpen.value = true
+    await nextTick()
+
+    await press('Tab')
+
+    expect(close).not.toHaveBeenCalled()
+  })
+
+  it('keeps a hidden but focused control in the cycle', async () => {
+    // A control counts as focusable when it is laid out *or* currently focused.
+    // The second half matters for a control a transition has already taken out
+    // of the layout while the focus is still on it — without it the trap would
+    // find nothing and let the focus escape the dialog.
+    const { isOpen } = mountHost(['first', 'second'])
+    isOpen.value = true
+    await nextTick()
+    await nextTick()
+    for (const id of ['first', 'second']) {
+      Object.defineProperty(document.getElementById(id)!, 'offsetParent', {
+        value: null,
+        configurable: true,
+      })
+    }
+
+    document.getElementById('second')!.focus()
+    await press('Tab')
+
+    // Only the focused control is left in the cycle, so Tab stays on it.
+    expect(active()).toBe('second')
+  })
+
+  it('does nothing on Tab in a dialog without a single focusable control', async () => {
+    const { isOpen } = mountHost([])
+    isOpen.value = true
+    await nextTick()
+
+    await press('Tab')
+
+    // The panel itself holds the focus; there is nothing to cycle through.
+    expect(active()).toBe('panel')
+  })
+
   it('ignores unrelated keys', async () => {
     const { isOpen } = mountHost(['first'])
     isOpen.value = true

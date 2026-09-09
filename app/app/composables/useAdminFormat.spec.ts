@@ -75,3 +75,30 @@ describe('statusClass', () => {
     expect(statusClass(99)).toBe('bg-gray-100 text-gray-700')
   })
 })
+
+describe('errorMessage', () => {
+  const { errorMessage } = useAdminFormat()
+
+  it.each([
+    [
+      'what the handler said',
+      { data: { statusMessage: 'Status nicht erlaubt' } },
+      'Status nicht erlaubt',
+    ],
+    [
+      'a status message on the error itself',
+      { statusMessage: 'Kein Mailserver' },
+      'Kein Mailserver',
+    ],
+    ['the transport message', { message: '[POST] "/x": 500' }, '[POST] "/x": 500'],
+    ['a last resort for a value that says nothing', {}, 'unbekannt'],
+  ])('reports %s', (_label, error, expected) => {
+    expect(errorMessage(error)).toBe(expected)
+  })
+
+  it('prefers the handler message over the transport one', () => {
+    expect(
+      errorMessage({ data: { statusMessage: 'Schon bestätigt' }, message: '[POST] "/x": 409' }),
+    ).toBe('Schon bestätigt')
+  })
+})

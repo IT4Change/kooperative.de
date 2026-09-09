@@ -14,7 +14,7 @@
           >
         </header>
         <ul class="divide-y divide-gray-100">
-          <li v-if="(data?.pendingCount ?? 0) > 0">
+          <li v-if="pendingCount > 0">
             <NuxtLink
               to="/admin/orders?status=pending"
               class="flex items-center justify-between px-5 py-3 bg-amber-50/60 hover:bg-amber-100"
@@ -24,7 +24,7 @@
                 Bestätigung ausstehend
               </span>
               <span class="font-mono font-semibold tabular-nums text-amber-800">{{
-                (data?.pendingCount ?? 0).toLocaleString('de-DE')
+                pendingCount.toLocaleString('de-DE')
               }}</span>
             </NuxtLink>
           </li>
@@ -91,4 +91,5 @@
     stats: { customers: number; productsActive: number; reviews: number }
   }
   const { data, error } = await useFetch<Dashboard>('/admin/api/dashboard')
+  const pendingCount = computed(() => data.value?.pendingCount ?? 0)
 </script>

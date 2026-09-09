@@ -140,6 +140,11 @@
 </template>
 
 <script setup lang="ts">
+  // Imported rather than auto-imported: as a bare auto-import the two constants
+  // reach the template through a getter, which the coverage mapping then reads
+  // as an untaken branch on every `:href` that uses them.
+  import { HISTORIE_URL, KONTAKT_URL } from '~/composables/useSectionLinks'
+
   const { baseURL } = useRuntimeConfig().app
   const { showWarning: showStorageWarning, dismissWarning: dismissStorageWarning } = useStorage()
   const {

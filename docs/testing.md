@@ -65,32 +65,80 @@ import '../../test/setup-server'
 
 Die Suite läuft mit `TZ=UTC`, damit die Datumsformatierung deterministisch ist.
 
+### Komponenten und Seiten
+
+Komponenten- und Seiten-Specs mounten über `mountSuspended` aus
+`@nuxt/test-utils/runtime`; die Route setzt die Option `route`, z. B.
+`mountSuspended(Page, { route: '/shop?kategorie=alle' })`.
+
+HTTP beantwortet `registerEndpoint()` über einen echten h3-Server im Testprozess
+— kein `$fetch`-Mock. Drei Fallstricke:
+
+- `test/setup.ts` darf `globalThis.$fetch` nur setzen, wenn noch keins da ist.
+  Überschreibt es das von Nuxt installierte, laufen die Endpunkte ins Leere.
+- Die Methode wird gegen `event.method` verglichen, also **`method: 'POST'`**,
+  nicht `'post'`.
+- `getQuery`/`readBody` sind Nitro-Auto-Imports und in App-Specs nicht im Scope.
+  Query aus `event.path` parsen, `readBody` direkt aus `h3` importieren.
+
+`useFetch` cacht seinen Payload pro Key über die ganze Datei — Specs, die
+mehrfach mit unterschiedlichen Antworten mounten, brauchen `clearNuxtData()` im
+`beforeEach`. Wer nach `<body>` teleportiert (Dialoge), unmountet im `afterEach`,
+sonst steht der Inhalt im nächsten Test noch da.
+
+### Warten statt schlafen
+
+Navigationen laden das Chunk der Zielroute nach; wie viele Ticks das dauert,
+hängt von der Maschinenlast ab. Feste `setTimeout`-Wartezeiten sind deshalb
+Flakes mit Ansage. `test/helpers/wait.ts` bietet `waitFor(predicate)` und
+`waitForText(wrapper, text)`, die auf das Ergebnis pollen und mit lesbarer
+Meldung ablaufen. Das Timeout lässt sich über `TEST_WAIT_TIMEOUT` (ms) anheben.
+
 ## Coverage-Ratchet
 
-Die Schwellwerte in `vitest.config.ts` sind ein **Boden, der nur steigt**:
-
-- Die globalen Werte sind aktuell niedrig, weil `all: true` sämtliche noch
-  ungetesteten Vue-Seiten und API-Handler mitzählt. Sie verhindern, dass die
-  Abdeckung insgesamt zurückfällt.
-- Der Glob-Eintrag pinnt die Module der ersten Testwelle auf ~95–100 %, damit
-  diese nicht verrotten, während die globale Zahl klettert.
+Die Schwellwerte in `vitest.config.ts` sind ein **Boden, der nur steigt**. Es
+gibt genau einen globalen Satz Schwellen — keine pfadabhängigen Ausnahmen, damit
+nicht einzelne Ecken stillschweigend zurückfallen können.
 
 **Vorgehen beim Erweitern:** Tests schreiben → `npm run test:unit` → die
-erreichten Werte als neue Schwellen eintragen (globale Werte anheben, neu
-abgedeckte Dateien in den Glob aufnehmen). Schwellen werden nie gesenkt; wenn ein
-Wert fällt, fehlt ein Test.
+erreichten Werte als neue Schwellen eintragen. Schwellen werden nie gesenkt; wenn
+ein Wert fällt, fehlt ein Test.
 
-### Abgedeckt (erste Welle)
+Stand: 1024 Tests, **100 % in allen vier Maßen**.
 
-`server/utils/`: `iban`, `blz`, `converter`, `validate`, `mailFooter`,
-`orderStatus`, `checkoutOptions`, `countries`, `links` ·
-`app/composables/useAdminFormat`
+### Vue-SFCs und der v8-Provider
 
-### Noch offen
+Ein Fallstrick, falls die Branch-Zahl wieder abrutscht: Der v8-Provider rechnet
+seine Byte-Ranges über Sourcemaps auf die Quelle zurück, und bei einer
+Seitenkomponente mit `await` **und** `throw` im `setup` erfindet diese Umrechnung
+Branch-Zähler auf Template-Zeilen, die es im kompilierten Modul gar nicht gibt —
+sie stehen dann auf beiden Seiten dauerhaft bei 0 und sind durch keinen Test
+erreichbar.
 
-Composables mit State (`useCart`, `useAuth`, `useConsent`, `useStorage`),
-API-Handler mit gemocktem DB-Layer, `orderCompute`/`pendingOrder` (brauchen ein
-Pool-Mock), Komponenten-Rendering.
+Erkennbar ist der Fall daran, dass für dieselbe Template-Zeile ein `cond-expr`
+mit echten Zahlen *und* ein `if` mit `[0, 0]` im Report steht. Gegenmittel ist
+kein Test, sondern die Trennung: den darstellenden Teil in eine Komponente mit
+synchronem, prop-getriebenem `setup` ziehen und die Route-Komponente auf Laden,
+Weiterleiten und Metadaten beschränken. Genau das ist der Grund, warum
+`ShopProductDetail` neben `pages/shop/[...path].vue` steht — die Aufteilung ist
+ohnehin die klarere, und alle 25 Tests der Seite liefen danach unverändert durch.
+
+### Bewusst ausgenommener Code
+
+`/* v8 ignore start|stop */` steht an drei Stellen, jeweils mit Begründung im
+Code: die `import.meta.server`-Zweige in `useStorage`, `useConsent` und
+`useCart`. Das ist eine Build-Zeit-Konstante, im Client-Build — dem, den die Unit
+-Suite ausführt — immer `false`.
+
+### Was dabei am Produktivcode auffiel
+
+Der Weg auf 100 % hat mehr toten Code gefunden als Testlücken. Entfernt bzw.
+vereinfacht wurden unter anderem: neunmal ein wirkungsloses
+`getRequestIP(...) ?? undefined` (h3 liefert bereits `string | undefined`), zwei
+`catch`-Blöcke um `Buffer.from(..., 'base64')`, das nie wirft, der `lastOrderId`
+-Zustand des Warenkorbs (seit dem Pending-Flow immer `null`), die tote
+`'up'`-Richtung in `getTargetSection` der Startseite und mehrere Fallbacks, die
+hinter einer bereits prüfenden Bedingung standen.
 
 ## E2E-Tests (Full-Stack)
 

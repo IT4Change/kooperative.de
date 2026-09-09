@@ -22,7 +22,7 @@ export default defineEventHandler(async (event) => {
   if (!verifyPassword(input.password, String(row.customers_password))) throw fail()
 
   const customerId = row.customers_id as number
-  const remoteIp = getRequestIP(event, { xForwardedFor: true }) ?? undefined
+  const remoteIp = getRequestIP(event, { xForwardedFor: true })
 
   // Best-effort logon counter, exactly like the old shop
   try {

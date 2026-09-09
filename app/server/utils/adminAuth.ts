@@ -51,12 +51,10 @@ export function checkAdminAuth(event: H3Event): boolean {
   const header = getRequestHeader(event, 'authorization') || ''
   if (!header.startsWith('Basic ')) return false
 
-  let decoded: string
-  try {
-    decoded = Buffer.from(header.slice(6), 'base64').toString('utf8')
-  } catch {
-    return false
-  }
+  // No try/catch around the decode: Buffer.from(..., 'base64') skips characters
+  // it does not recognise instead of throwing, so garbage simply decodes to
+  // garbage and fails the credential comparison below.
+  const decoded = Buffer.from(header.slice(6), 'base64').toString('utf8')
   const i = decoded.indexOf(':')
   if (i === -1) return false
   const user = decoded.slice(0, i)
@@ -75,13 +73,9 @@ export function checkAdminAuth(event: H3Event): boolean {
 export function getAdminUser(event: H3Event): string | null {
   const header = getRequestHeader(event, 'authorization') || ''
   if (!header.startsWith('Basic ')) return null
-  try {
-    const decoded = Buffer.from(header.slice(6), 'base64').toString('utf8')
-    const i = decoded.indexOf(':')
-    return i === -1 ? null : decoded.slice(0, i)
-  } catch {
-    return null
-  }
+  const decoded = Buffer.from(header.slice(6), 'base64').toString('utf8')
+  const i = decoded.indexOf(':')
+  return i === -1 ? null : decoded.slice(0, i)
 }
 
 export function requireAdminAuth(event: H3Event): void {
