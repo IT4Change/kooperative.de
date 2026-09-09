@@ -63,8 +63,14 @@ test.describe('category filter', () => {
     await page.getByRole('button', { name: 'Alle Kategorien' }).click()
 
     await expect(page).toHaveURL(/\?kategorie=alle$/)
-    // Sorted by view count, then name — Karte and Olivenöl are both at zero.
-    await expect(shownProducts(page)).toHaveText(['Honig', 'Brot', 'Karte', 'Olivenöl'])
+    // Every category is represented, no longer just the preselected one. The
+    // list is not asserted in full because the grid paginates at 24 — that side
+    // of it belongs to lazy-load.spec.ts.
+    for (const name of ['Honig', 'Brot', 'Karte', 'Olivenöl']) {
+      await expect(productCard(page, name)).toHaveCount(1)
+    }
+    // Sorted by view count, then name.
+    await expect(shownProducts(page).first()).toHaveText('Honig')
   })
 
   test('the subcategory "Alle" falls back to the whole parent category', async ({ page }) => {
