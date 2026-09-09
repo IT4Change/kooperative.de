@@ -76,8 +76,8 @@ test.describe('admin', () => {
     const res = await page.request.get('/admin/api/dashboard')
     expect(res.ok()).toBe(true)
     const data = await res.json()
-    // Seven seeded products, six of them active (one has products_status = 0).
-    expect(data.stats.productsActive).toBe(6)
+    // Seven hand-written products (one inactive) plus 30 pagination fillers.
+    expect(data.stats.productsActive).toBe(36)
     expect(data.stats.customers).toBeGreaterThanOrEqual(1)
     expect(data.statuses.map((s: { id: number }) => s.id)).toEqual([1, 2, 3, 4])
   })

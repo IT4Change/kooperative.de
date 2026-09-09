@@ -148,6 +148,13 @@ Mengenstaffel (Karte 1 Stk. / ab 10 Stk.), ein inaktives Produkt, ein
 verschachtelter Kategoriebaum und ein Testkunde mit deutscher Adresse
 (Steuerzone 2).
 
+Dazu 30 Füll-Produkte („Zubehör 01…30"), damit das Grid überhaupt paginiert —
+die Seitengröße ist 24. Sie sind bewusst so benannt, dass sie **hinter** den
+handgeschriebenen Fixtures einsortieren: das Grid sortiert nach Aufrufzahl,
+dann Name, und die übrigen Specs erwarten Honig, Brot, Karte und Olivenöl auf
+der ersten Seite. Die 36 aktiven DB-Zeilen ergeben 34 Grid-Produkte, weil
+`groupProducts` die Varianten von Olivenöl und Karte je zusammenfasst.
+
 ### Zwei Stolpersteine, die dokumentiert bleiben sollten
 
 **Production-Build statt `nuxt dev`.** Der Dev-Server lädt Nuxt DevTools nach der
@@ -217,6 +224,23 @@ mehreren Stellen gleichzeitig hängt (URL, Suche, Zählwerte):
 Weil die Startseite nun gefiltert ist, landet `openShop()` aus den Helpern
 standardmäßig auf `?kategorie=alle`. Specs, die ein bestimmtes Fixture-Produkt
 brauchen, sollen sich nicht um Kategoriegrenzen kümmern müssen.
+
+### Nachladen beim Scrollen
+
+`e2e/lazy-load.spec.ts` sichert das Verhalten des Produktgrids ab. Wichtig für
+das Verständnis der Tests: es wird **nichts nachgeladen** — der Katalog liegt
+komplett in der Seite und wird nur zugeschnitten. „Geladen" heißt also
+„gerendert", es muss auf keinen Request gewartet werden.
+
+Zwei Fälle, die auf den ersten Blick widersprüchlich wirken und deshalb beide
+festgehalten sind:
+
+- Wird die Ansicht **vom Seitenanfang aus** eingeschränkt, bleibt es bei einer
+  Seite plus Button.
+- Wird sie eingeschränkt, **während der Nutzer unten steht**, füllt sich die
+  kürzere Trefferliste sofort wieder auf. Der Sentinel ist ja noch im Blick.
+  Das ist gewollt: sonst stünde man vor einem „Mehr anzeigen"-Button, an dem man
+  bereits vorbeigescrollt ist.
 
 ## Barrierefreiheit
 

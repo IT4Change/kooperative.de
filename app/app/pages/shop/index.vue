@@ -61,9 +61,16 @@
         :products="filteredProducts"
         @add="(p, vi, qty) => addToCart(p, vi, qty)"
       />
-      <div v-if="hasMore" class="flex justify-center mt-8">
+      <div v-if="hasMore" class="mt-8 flex flex-col items-center gap-3">
+        <!-- Watched by useInfiniteScroll; sits above the button so loading has
+             already started by the time the button would come into view. -->
+        <div ref="loadMoreSentinel" aria-hidden="true" class="h-px w-full" />
         <KoopButton @click="loadMore">Mehr anzeigen</KoopButton>
       </div>
+      <!-- Auto-loading is invisible without sight: announce the new count. -->
+      <p v-if="allFilteredProducts.length > 0" role="status" class="sr-only">
+        {{ filteredProducts.length }} von {{ allFilteredProducts.length }} Produkten angezeigt
+      </p>
     </section>
 
     <ShopCartButton />
@@ -352,6 +359,9 @@
   function loadMore() {
     visibleCount.value += PAGE_SIZE
   }
+
+  const loadMoreSentinel = ref<HTMLElement>()
+  useInfiniteScroll(loadMoreSentinel, loadMore)
 
   // Reset beim Filtern/Suchen
   watch([selectedCategory, searchQuery], () => {

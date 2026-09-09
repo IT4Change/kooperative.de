@@ -73,7 +73,24 @@ const CATEGORIES = [
   { id: 1, parent: 0, sort: 1, name: 'Lebensmittel' },
   { id: 2, parent: 1, sort: 1, name: 'Öle' },
   { id: 3, parent: 0, sort: 2, name: 'Papeterie' },
+  { id: 4, parent: 0, sort: 3, name: 'Zubehör' },
 ]
+
+/**
+ * Filler so the grid paginates at all (PAGE_SIZE is 24). Named to sort *after*
+ * the hand-written fixtures — the grid orders by view count, then name, and the
+ * other specs expect Honig, Brot, Karte and Olivenöl on the first page.
+ */
+const FILLER_COUNT = 30
+const FILLER = Array.from({ length: FILLER_COUNT }, (_, i) => ({
+  id: 100 + i,
+  category: 4,
+  name: `Zubehör ${String(i + 1).padStart(2, '0')}`,
+  model: `ZUB-${String(i + 1).padStart(2, '0')}`,
+  price: '1.0000',
+  taxClass: 2,
+  status: 1,
+}))
 
 const PRODUCTS = [
   // Plain product, 19 % → 11.90 gross
@@ -142,6 +159,7 @@ const PRODUCTS = [
     taxClass: 2,
     status: 0,
   },
+  ...FILLER,
 ]
 
 // ---------------------------------------------------------------- plumbing
