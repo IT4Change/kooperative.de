@@ -28,8 +28,13 @@ export function cart(page: Page) {
   return page.getByRole('dialog', { name: /Bestellliste|Anmelden|Versand|Übersicht|Bestellung/ })
 }
 
-export async function openShop(page: Page): Promise<void> {
-  await page.goto('/shop')
+/**
+ * Opens the shop showing the whole range. The storefront preselects a category
+ * (see filter.spec.ts), which most specs do not care about — they just need
+ * their fixture product to be on screen. Pass a slug to land on a category.
+ */
+export async function openShop(page: Page, category = 'alle'): Promise<void> {
+  await page.goto(`/shop?kategorie=${category}`)
   await expect(page.getByTestId('product-card').first()).toBeVisible()
   // The "how ordering works" dialog is opened from onMounted, so its appearance
   // is proof that the client took over — a stronger gate than any Vue internal.

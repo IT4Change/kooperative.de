@@ -223,13 +223,13 @@
     () => new Map(categories.value.map((c) => [c.slug, c.name.toLowerCase()])),
   )
 
+  /** Explicit URL value for "no category filter" — see selectedCategory. */
+  const ALL = 'alle'
+
   function parseCategory(value: unknown): CategorySlug | null {
     if (typeof value === 'string' && categorySlugs.value.has(value)) return value
     return null
   }
-
-  // Category: URL is the single source of truth
-  const selectedCategory = computed(() => parseCategory(route.query.kategorie))
 
   // Search: local ref for immediate input reactivity
   const searchQuery = ref(typeof route.query.q === 'string' ? route.query.q : '')
@@ -242,12 +242,28 @@
   }
 
   function selectCategory(slug: CategorySlug | null) {
-    replaceQuery({ kategorie: slug, q: searchQuery.value || null })
+    replaceQuery({ kategorie: slug ?? ALL, q: searchQuery.value || null })
   }
 
-  // Sync search → URL
-  watch(searchQuery, (q) => {
-    replaceQuery({ kategorie: selectedCategory.value, q: q || null })
+  // A running search covers the whole range: with a category preselected,
+  // scoping the search to it would report "nothing found" while matches sit one
+  // click away. The category in force when the search started is remembered
+  // verbatim, so clearing the search restores it — including the case where the
+  // customer had deliberately picked "Alle", and the case of no parameter at
+  // all, which brings the default category back.
+  let categoryBeforeSearch: string | null = null
+
+  watch(searchQuery, (q, previous) => {
+    if (q && !previous) {
+      const current = route.query.kategorie
+      categoryBeforeSearch = typeof current === 'string' ? current : null
+    }
+    if (q) {
+      replaceQuery({ kategorie: ALL, q })
+    } else {
+      replaceQuery({ kategorie: categoryBeforeSearch })
+      categoryBeforeSearch = null
+    }
   })
 
   // Sync URL → search (back/forward navigation)
@@ -284,6 +300,31 @@
       }
     }
     return counts
+  })
+
+  /**
+   * Where the shop lands when no category is in the URL: the first category
+   * that actually has products, and inside it the first such subcategory.
+   * Mirrors what CategoryFilter renders — a category it greys out as empty must
+   * not be the one we preselect.
+   */
+  const defaultCategory = computed<CategorySlug | null>(() => {
+    const hasProducts = (slug: string) => (categoryCounts.value[slug] ?? 0) > 0
+    const top = categories.value.find((c) => c.parentSlug === null && hasProducts(c.slug))
+    if (!top) return null
+    const child = categories.value.find((c) => c.parentSlug === top.slug && hasProducts(c.slug))
+    return child?.slug ?? top.slug
+  })
+
+  /**
+   * The URL stays the single source of truth, with one addition: an absent
+   * `kategorie` no longer means "everything", it means "the default". "Alle" is
+   * therefore an explicit value, so every state remains linkable and a plain
+   * /shop link keeps working.
+   */
+  const selectedCategory = computed(() => {
+    if (route.query.kategorie === ALL) return null
+    return parseCategory(route.query.kategorie) ?? defaultCategory.value
   })
 
   const PAGE_SIZE = 24

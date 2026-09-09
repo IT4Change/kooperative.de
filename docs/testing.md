@@ -198,6 +198,26 @@ also nebenbei mit, dass die Oberfläche mit Screenreader bedienbar bleibt.
 | `cart-sidebar` | wird auch für DOM-Prüfungen des Fokus gebraucht |
 | `cart-total`, `cart-success` | Zustandsanker im Warenkorb |
 
+### Kategoriefilter
+
+`e2e/filter.spec.ts` hält das Verhalten des Shop-Filters fest, weil es an
+mehreren Stellen gleichzeitig hängt (URL, Suche, Zählwerte):
+
+- Ohne `?kategorie` gilt die **erste Kategorie mit Produkten** und darin die
+  erste solche Unterkategorie. Leere Kategorien werden übersprungen — der Filter
+  graut sie aus, also darf keine davon vorausgewählt sein.
+- „Alle" steht am Ende beider Leisten und ist als `?kategorie=alle` explizit in
+  der URL. Ein Link auf `/shop` bleibt dadurch parameterfrei und ohne
+  Weiterleitung, und jeder Zustand ist teilbar.
+- Eine laufende **Suche schaltet auf „Alle"** um. Andernfalls meldet der Shop
+  „nichts gefunden", während Treffer eine Kategorie weiter liegen. Die vorher
+  aktive Kategorie wird gemerkt und beim Leeren des Suchfelds wiederhergestellt
+  — auch dann, wenn das ein bewusst gewähltes „Alle" war.
+
+Weil die Startseite nun gefiltert ist, landet `openShop()` aus den Helpern
+standardmäßig auf `?kategorie=alle`. Specs, die ein bestimmtes Fixture-Produkt
+brauchen, sollen sich nicht um Kategoriegrenzen kümmern müssen.
+
 ## Barrierefreiheit
 
 `e2e/a11y.spec.ts` hält den erreichten Stand fest.
