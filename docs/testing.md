@@ -52,6 +52,12 @@ Altlasten und sollen zurückgeholt werden, sobald Tests sie absichern:
 Vitest läuft über `defineVitestConfig` aus `@nuxt/test-utils`. Specs liegen als
 `*.spec.ts` neben der Quelle.
 
+Specs liegen damit auch innerhalb der Verzeichnisse, die Nitro scannt. Deshalb
+steht in der `nuxt.config.ts` ein `ignore: ['**/*.spec.ts']` — ohne das wird
+`server/plugins/*.spec.ts` als Plugin registriert (und bricht den Build mangels
+Default-Export), `server/middleware/*.spec.ts` liefe bei jedem Request mit, und
+jeder Spec unter `server/api/` würde ein Endpunkt.
+
 Server-Module nutzen Nitros Auto-Imports (`createError`, `getRequestURL`, …), die
 es unter Vitest nicht gibt. Specs für solche Module setzen deshalb oben:
 

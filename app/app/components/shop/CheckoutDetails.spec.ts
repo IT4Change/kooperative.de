@@ -157,6 +157,26 @@ describe('direct debit', () => {
   })
 })
 
+/**
+ * Hands out lookups whose answer the test decides, plus a way to wait until a
+ * given number of them has actually been dispatched. Advancing the debounce by
+ * a fixed amount is not enough: the request leaves in a microtask after the
+ * timer, and on a busy machine that lands a tick later.
+ */
+function deferredFetches() {
+  const calls: { resolve: (v: unknown) => void; reject: (e: unknown) => void }[] = []
+  fetchMock.mockImplementation(
+    async () => new Promise((resolve, reject) => calls.push({ resolve, reject })),
+  )
+  return {
+    at: (i: number) => calls[i],
+    async dispatched(n: number) {
+      for (let i = 0; i < 100 && calls.length < n; i++) await vi.advanceTimersByTimeAsync(10)
+      expect(calls).toHaveLength(n)
+    },
+  }
+}
+
 describe('live IBAN lookup', () => {
   it('resolves the bank once enough has been typed', async () => {
     vi.useFakeTimers()
@@ -289,21 +309,18 @@ describe('live IBAN lookup', () => {
 
   it('ignores an answer that a newer lookup has already overtaken', async () => {
     vi.useFakeTimers()
-    const deferred: { resolve: (v: unknown) => void; reject: (e: unknown) => void }[] = []
-    fetchMock.mockImplementation(
-      async () => new Promise((resolve, reject) => deferred.push({ resolve, reject })),
-    )
+    const deferred = deferredFetches()
     try {
       const wrapper = await mount({ shipping: 'abholung', payment: 'lastschrift' })
       await wrapper.setProps({ iban: 'DE89370400440532013000' })
-      await vi.advanceTimersByTimeAsync(300)
+      await deferred.dispatched(1)
       await wrapper.setProps({ iban: 'DE89100000000000000000' })
-      await vi.advanceTimersByTimeAsync(300)
+      await deferred.dispatched(2)
 
       // The second answer arrives first, the first one late.
-      deferred[1].resolve({ ok: true, valid: true, bankName: 'Zweite Bank' })
+      deferred.at(1).resolve({ ok: true, valid: true, bankName: 'Zweite Bank' })
       await vi.runAllTimersAsync()
-      deferred[0].resolve({ ok: true, valid: true, bankName: 'Erste Bank' })
+      deferred.at(0).resolve({ ok: true, valid: true, bankName: 'Erste Bank' })
       await vi.runAllTimersAsync()
       await wrapper.vm.$nextTick()
 
@@ -317,20 +334,17 @@ describe('live IBAN lookup', () => {
 
   it('ignores a late failure of a lookup that was overtaken', async () => {
     vi.useFakeTimers()
-    const deferred: { resolve: (v: unknown) => void; reject: (e: unknown) => void }[] = []
-    fetchMock.mockImplementation(
-      async () => new Promise((resolve, reject) => deferred.push({ resolve, reject })),
-    )
+    const deferred = deferredFetches()
     try {
       const wrapper = await mount({ shipping: 'abholung', payment: 'lastschrift' })
       await wrapper.setProps({ iban: 'DE89370400440532013000' })
-      await vi.advanceTimersByTimeAsync(300)
+      await deferred.dispatched(1)
       await wrapper.setProps({ iban: 'DE89100000000000000000' })
-      await vi.advanceTimersByTimeAsync(300)
+      await deferred.dispatched(2)
 
-      deferred[1].resolve({ ok: true, valid: true, bankName: 'Zweite Bank' })
+      deferred.at(1).resolve({ ok: true, valid: true, bankName: 'Zweite Bank' })
       await vi.runAllTimersAsync()
-      deferred[0].reject(new Error('offline'))
+      deferred.at(0).reject(new Error('offline'))
       await vi.runAllTimersAsync()
       await wrapper.vm.$nextTick()
 

@@ -86,12 +86,17 @@ export function clearSessionCookie(event: H3Event): void {
   deleteCookie(event, SESSION_COOKIE, { path: '/' })
 }
 
-export function getSession(event: H3Event): SessionPayload | null {
+/**
+ * The signed-in customer, or null. Deliberately not called `getSession`: h3
+ * auto-imports a function of that name for its own sealed sessions, and the
+ * collision would silently decide which one a server file gets.
+ */
+export function getCustomerSession(event: H3Event): SessionPayload | null {
   return verifySession(getCookie(event, SESSION_COOKIE))
 }
 
 export function requireSession(event: H3Event): SessionPayload {
-  const sess = getSession(event)
+  const sess = getCustomerSession(event)
   if (!sess) {
     throw createError({ statusCode: 401, statusMessage: 'Nicht eingeloggt' })
   }

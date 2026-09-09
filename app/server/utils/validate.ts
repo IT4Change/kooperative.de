@@ -4,6 +4,10 @@
  */
 import { isValidIban, normalizeIban } from './iban'
 
+// Imported, not declared a second time: two auto-import sources for one name
+// leave it to Nitro which of them a server file gets.
+import type { OrderInput } from './orderCompute'
+
 export interface RegisterInput {
   gender: 'm' | 'f' | 'd'
   firstname: string
@@ -21,15 +25,6 @@ export interface RegisterInput {
 export interface LoginInput {
   email: string
   password: string
-}
-
-export interface OrderInput {
-  items: { productId: string; quantity: number; variantIndex?: number }[]
-  notes?: string
-  shippingMethod: import('./checkoutOptions').ShippingMethod
-  paymentMethod: import('./checkoutOptions').PaymentMethod
-  /** Required when paymentMethod = 'lastschrift' */
-  bankDetails?: { accountHolder: string; iban: string }
 }
 
 function asTrimmedString(value: unknown, max: number, field: string): string {

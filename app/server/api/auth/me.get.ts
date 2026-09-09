@@ -1,9 +1,9 @@
-import { getSession, clearSessionCookie } from '../../utils/auth'
+import { getCustomerSession, clearSessionCookie } from '../../utils/auth'
 
 import type { RowDataPacket } from 'mysql2/promise'
 
 export default defineEventHandler(async (event) => {
-  const session = getSession(event)
+  const session = getCustomerSession(event)
   if (!session) return { authenticated: false }
 
   const db = useDB()
