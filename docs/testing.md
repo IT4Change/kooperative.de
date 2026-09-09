@@ -165,6 +165,23 @@ Dazu passend: `e2e/helpers/api.ts` ruft die API per `fetch` **innerhalb der
 Seite** auf. Das Session-Cookie ist im Production-Build `Secure`; Chromium
 akzeptiert das auf `127.0.0.1`, Playwrights eigenständiger Request-Context nicht.
 
+### Warum `/admin/api/**` den Accept-Header überschreibt
+
+Nitro entscheidet über `isJsonRequest()`, ob ein Fehler als JSON oder als
+gerenderte Nuxt-Fehlerseite rausgeht. Die Heuristik erkennt API-Routen unter
+anderem an `event.path.startsWith('/api/')` — die Admin-Endpunkte liegen aber
+absichtlich unter `/admin/api/`, damit sie sich den Basic-Auth-Realm mit den
+Admin-Seiten teilen. Folge: Jeder Client mit `Accept: text/html` bekam bei einem
+401 eine HTML-Fehlerseite statt JSON, und deren Rendering ließ den Vue-Router
+einen Pfad auflösen, für den es keine Seite gibt → zwei
+`[Vue Router warn] No match found` pro Request im Log, in Produktion bei jedem
+Bot-Zugriff.
+
+`server/middleware/admin-auth.ts` setzt für diese Pfade den Accept-Header auf
+`application/json`, bevor irgendein Handler läuft. Das korrigiert Content-Type
+und Log-Rauschen für *alle* Fehler auf dem Pfad, nicht nur für den 401. Zwei
+E2E-Tests halten das fest (JSON für die API, weiterhin HTML für `/admin`).
+
 ### Selektoren
 
 Die Suite greift ausschließlich über `data-testid` zu — Tailwind-Klassen und
