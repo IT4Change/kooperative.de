@@ -104,18 +104,24 @@ nicht einzelne Ecken stillschweigend zurückfallen können.
 erreichten Werte als neue Schwellen eintragen. Schwellen werden nie gesenkt; wenn
 ein Wert fällt, fehlt ein Test.
 
-Stand: 1024 Tests, **100 % Statements, Functions und Lines**, 99,46 % Branches.
+Stand: 1024 Tests, **100 % in allen vier Maßen**.
 
-### Warum Branches nicht bei 100 stehen
+### Vue-SFCs und der v8-Provider
 
-Zwölf Branch-Zähler in `app/pages/shop/[...path].vue` melden auf **beiden**
-Seiten den Stand 0 — sie werden also nie erreicht, obwohl die Specs beide
-Varianten rendern und prüfen (`Art.-Nr.` ist bei einem Produkt mit `model` da und
-bei einem ohne nicht). Das ist ein Artefakt der v8→istanbul-Umrechnung für dieses
-eine SFC-Template, keine Testlücke. Zwei Wege dorthin, falls die Zahl stören
-sollte: den Coverage-Provider auf `istanbul` umstellen (zusätzliche
-devDependency, alle Werte neu einmessen), oder die `throw`-im-`setup`-Behandlung
-der Seite umbauen.
+Ein Fallstrick, falls die Branch-Zahl wieder abrutscht: Der v8-Provider rechnet
+seine Byte-Ranges über Sourcemaps auf die Quelle zurück, und bei einer
+Seitenkomponente mit `await` **und** `throw` im `setup` erfindet diese Umrechnung
+Branch-Zähler auf Template-Zeilen, die es im kompilierten Modul gar nicht gibt —
+sie stehen dann auf beiden Seiten dauerhaft bei 0 und sind durch keinen Test
+erreichbar.
+
+Erkennbar ist der Fall daran, dass für dieselbe Template-Zeile ein `cond-expr`
+mit echten Zahlen *und* ein `if` mit `[0, 0]` im Report steht. Gegenmittel ist
+kein Test, sondern die Trennung: den darstellenden Teil in eine Komponente mit
+synchronem, prop-getriebenem `setup` ziehen und die Route-Komponente auf Laden,
+Weiterleiten und Metadaten beschränken. Genau das ist der Grund, warum
+`ShopProductDetail` neben `pages/shop/[...path].vue` steht — die Aufteilung ist
+ohnehin die klarere, und alle 25 Tests der Seite liefen danach unverändert durch.
 
 ### Bewusst ausgenommener Code
 
