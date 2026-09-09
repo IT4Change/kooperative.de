@@ -241,6 +241,7 @@
                 <label class="block text-xs font-medium text-gray-500 mb-1">Status setzen</label>
                 <select
                   v-model="form.statusId"
+                  data-testid="admin-status-select"
                   class="w-full px-3 py-2 border border-gray-300 rounded text-sm bg-white"
                 >
                   <option v-for="s in data.availableStatuses" :key="s.id" :value="String(s.id)">
@@ -263,12 +264,14 @@
                 <input
                   v-model="form.notify"
                   type="checkbox"
+                  data-testid="admin-status-notify"
                   class="rounded border-gray-300 text-[#00af8c] focus:ring-[#00af8c]"
                 />
                 Kunde per E-Mail benachrichtigen
               </label>
               <button
                 class="w-full px-3 py-2 bg-[#00af8c] text-white rounded text-sm font-medium hover:bg-[#009579] disabled:opacity-50"
+                data-testid="admin-status-submit"
                 :disabled="busy || form.statusId === ''"
                 @click="submitStatus"
               >

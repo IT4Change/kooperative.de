@@ -34,7 +34,14 @@
     <form v-if="mode === 'login'" class="space-y-3" @submit.prevent="onLogin">
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-1">E-Mail *</label>
-        <input v-model="loginEmail" type="email" required autocomplete="email" :class="inputCls" />
+        <input
+          v-model="loginEmail"
+          type="email"
+          required
+          autocomplete="email"
+          data-testid="login-email"
+          :class="inputCls"
+        />
       </div>
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-1">Passwort *</label>
@@ -43,6 +50,7 @@
           type="password"
           required
           autocomplete="current-password"
+          data-testid="login-password"
           :class="inputCls"
         />
         <p class="mt-1 text-xs text-gray-500">
@@ -53,7 +61,7 @@
       </div>
       <div class="flex gap-3 pt-2">
         <button type="button" :class="cancelCls" @click="$emit('back')">Zurück</button>
-        <KoopButton type="submit" size="sm" :disabled="busy">{{
+        <KoopButton type="submit" size="sm" data-testid="login-submit" :disabled="busy">{{
           busy ? '…' : 'Anmelden'
         }}</KoopButton>
       </div>

@@ -100,7 +100,7 @@
       >
         Zurück
       </button>
-      <KoopButton size="sm" :disabled="submitting" @click="$emit('send')">
+      <KoopButton size="sm" data-testid="order-send" :disabled="submitting" @click="$emit('send')">
         {{ submitting ? 'Sende…' : 'Bestellung absenden' }}
       </KoopButton>
     </div>

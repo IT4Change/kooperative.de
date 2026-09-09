@@ -12,7 +12,12 @@
     "test:lint:eslint": "eslint --max-warnings 0 .",
     "test:lint:typecheck": "vue-tsc --noEmit",
     "test:unit": "TZ=UTC vitest run --coverage",
-    "test:unit:dev": "TZ=UTC vitest"
+    "test:unit:dev": "TZ=UTC vitest",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "e2e:stack:up": "docker compose -f ../docker-compose.e2e.yml up -d --wait",
+    "e2e:stack:down": "docker compose -f ../docker-compose.e2e.yml down -v",
+    "e2e:seed": "node scripts/seed-e2e.mjs"
   },
   "dependencies": {
     "@nuxt/image": "^2.0.0",
@@ -27,10 +32,12 @@
   "devDependencies": {
     "@nuxt/eslint": "^1.15.1",
     "@nuxt/test-utils": "^4.3.2",
+    "@playwright/test": "^1.63.0",
     "@testing-library/vue": "^8.1.0",
     "@types/nodemailer": "^8.0.0",
     "@vitest/coverage-v8": "^5.0.0",
     "@vue/test-utils": "^2.5.0",
+    "dotenv": "^17.4.2",
     "eslint": "^10.10.0",
     "eslint-config-it4c": "^0.12.1",
     "happy-dom": "^20.14.0",

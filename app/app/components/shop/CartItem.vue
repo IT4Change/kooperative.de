@@ -1,8 +1,8 @@
 <template>
-  <div class="py-3 border-b border-gray-100">
+  <div class="py-3 border-b border-gray-100" data-testid="cart-item">
     <div class="flex items-start gap-3">
       <div class="flex-1 min-w-0">
-        <h4 class="text-sm font-medium text-gray-900 truncate">
+        <h4 class="text-sm font-medium text-gray-900 truncate" data-testid="cart-item-name">
           {{ item.product.name }}
           <span v-if="activeVariant && !isQuantityTier" class="font-normal text-gray-500"
             >&middot; {{ activeVariant.size }}</span
@@ -30,7 +30,9 @@
           class="w-14 text-center text-sm font-medium border border-gray-200 rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-[#00af8c]"
           @change="onQuantityInput(($event.target as HTMLInputElement).value)"
         />
-        <span v-else class="w-8 text-center text-sm font-medium">{{ item.quantity }}</span>
+        <span v-else class="w-8 text-center text-sm font-medium" data-testid="cart-item-qty">{{
+          item.quantity
+        }}</span>
         <button
           class="w-7 h-7 rounded bg-gray-100 hover:bg-gray-200 text-gray-700 flex items-center justify-center text-sm font-bold transition-colors"
           @click="$emit('update', item.product.id, item.quantity + 1, item.variantIndex)"
@@ -44,6 +46,7 @@
       <button
         class="text-gray-400 hover:text-red-500 transition-colors"
         aria-label="Entfernen"
+        data-testid="cart-item-remove"
         @click="$emit('remove', item.product.id, item.variantIndex)"
       >
         <svg
