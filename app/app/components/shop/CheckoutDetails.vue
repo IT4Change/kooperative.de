@@ -49,8 +49,14 @@
           class="mt-2 mb-1 ml-6 pl-2 border-l-2 border-[#00af8c]/30 space-y-2"
         >
           <div>
-            <label class="block text-xs font-medium text-gray-700 mb-1">Kontoinhaber *</label>
+            <label
+              :for="`${uid}-account-holder`"
+              class="block text-xs font-medium text-gray-700 mb-1"
+            >
+              Kontoinhaber *
+            </label>
             <input
+              :id="`${uid}-account-holder`"
               v-model="accountHolderModel"
               type="text"
               required
@@ -60,9 +66,13 @@
             />
           </div>
           <div>
-            <label class="block text-xs font-medium text-gray-700 mb-1">IBAN *</label>
+            <label :for="`${uid}-iban`" class="block text-xs font-medium text-gray-700 mb-1">
+              IBAN *
+            </label>
             <input
+              :id="`${uid}-iban`"
               v-model="ibanModel"
+              :aria-describedby="`${uid}-iban-hint`"
               type="text"
               required
               maxlength="34"
@@ -71,36 +81,40 @@
               class="w-full px-3 py-1.5 border border-gray-300 rounded text-sm font-mono focus:outline-none focus:border-[#00af8c]"
               :class="{ 'border-red-300': ibanInfo && !ibanInfo.valid && ibanLong }"
             />
-            <p v-if="ibanInfo?.bankName" class="mt-1 text-xs text-[#00af8c] font-medium">
-              ✓ {{ ibanInfo.bankName }}
-              <span v-if="ibanInfo.blz" class="text-gray-400">· BLZ {{ ibanInfo.blz }}</span>
-            </p>
-            <p
-              v-else-if="ibanInfo && ibanInfo.blz && !ibanInfo.bankName"
-              class="mt-1 text-xs text-gray-500"
-            >
-              BLZ {{ ibanInfo.blz }} (Bank nicht in der Bundesbank-Liste)
-            </p>
-            <p
-              v-else-if="ibanInfo && !ibanInfo.valid && ibanLong"
-              class="mt-1 text-xs text-red-600"
-            >
-              IBAN ungültig — bitte prüfen
-            </p>
-            <p v-else class="mt-1 text-xs text-gray-500">
-              DE/AT/CH/LI. Wir buchen den Betrag nach der Bestellung ab.
-            </p>
+            <div :id="`${uid}-iban-hint`" aria-live="polite">
+              <p v-if="ibanInfo?.bankName" class="mt-1 text-xs text-[#00af8c] font-medium">
+                ✓ {{ ibanInfo.bankName }}
+                <span v-if="ibanInfo.blz" class="text-gray-400">· BLZ {{ ibanInfo.blz }}</span>
+              </p>
+              <p
+                v-else-if="ibanInfo && ibanInfo.blz && !ibanInfo.bankName"
+                class="mt-1 text-xs text-gray-500"
+              >
+                BLZ {{ ibanInfo.blz }} (Bank nicht in der Bundesbank-Liste)
+              </p>
+              <p
+                v-else-if="ibanInfo && !ibanInfo.valid && ibanLong"
+                class="mt-1 text-xs text-red-600"
+              >
+                IBAN ungültig — bitte prüfen
+              </p>
+              <p v-else class="mt-1 text-xs text-gray-500">
+                DE/AT/CH/LI. Wir buchen den Betrag nach der Bestellung ab.
+              </p>
+            </div>
           </div>
         </div>
       </template>
     </div>
 
     <div class="mb-5">
-      <label class="block text-sm font-semibold text-gray-700 mb-1">Anmerkungen (optional)</label>
+      <label :for="`${uid}-notes`" class="block text-sm font-semibold text-gray-700 mb-1">
+        Anmerkungen (optional)
+      </label>
       <textarea
+        :id="`${uid}-notes`"
         v-model="notesModel"
         rows="3"
-        data-testid="details-notes"
         maxlength="500"
         class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-[#00af8c] resize-none"
         placeholder="z. B. Lieferzeit, Anlieferungswünsche…"
@@ -115,12 +129,7 @@
       >
         Zurück
       </button>
-      <KoopButton
-        size="sm"
-        data-testid="details-next"
-        :disabled="!canProceed"
-        @click="$emit('next')"
-      >
+      <KoopButton size="sm" :disabled="!canProceed" @click="$emit('next')">
         Weiter zur Übersicht
       </KoopButton>
     </div>
@@ -131,6 +140,9 @@
   import type { ShippingMethod, PaymentMethod } from '~/data/checkoutOptions'
 
   import { SHIPPING_OPTIONS, PAYMENT_OPTIONS } from '~/data/checkoutOptions'
+
+  // Unique per instance so the label/field pairs cannot collide.
+  const uid = useId()
 
   const props = defineProps<{
     shipping: ShippingMethod | null

@@ -107,7 +107,6 @@
         <p v-if="confirmError" class="text-red-600 text-sm mb-3">{{ confirmError }}</p>
         <button
           class="px-6 py-3 bg-[#00af8c] text-white rounded-lg font-semibold hover:bg-[#009579] disabled:opacity-50"
-          data-testid="pending-confirm"
           :disabled="confirming"
           @click="confirm"
         >

@@ -29,8 +29,11 @@
 
         <!-- Size variants: dropdown -->
         <div v-if="product.variants && product.variantType !== 'quantity'" class="mb-4">
-          <label class="block text-sm font-medium text-gray-700 mb-1">Gebindegröße</label>
+          <label :for="`${uid}-variant`" class="block text-sm font-medium text-gray-700 mb-1">
+            Gebindegröße
+          </label>
           <select
+            :id="`${uid}-variant`"
             v-model.number="selectedVariant"
             class="w-full sm:w-auto text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#00af8c]/40 focus:border-[#00af8c]"
           >
@@ -43,8 +46,11 @@
         <!-- Quantity tiers -->
         <div v-else-if="product.variantType === 'quantity' && product.variants" class="mb-4">
           <div class="flex items-center gap-3 mb-2">
-            <label class="text-sm font-medium text-gray-700">Anzahl:</label>
+            <label :for="`${uid}-quantity`" class="text-sm font-medium text-gray-700">
+              Anzahl:
+            </label>
             <input
+              :id="`${uid}-quantity`"
               v-model.number="quantity"
               type="number"
               min="1"
@@ -91,6 +97,7 @@
 
   import { unitPrice, findTierIndex } from '~/data/products'
 
+  const uid = useId()
   const route = useRoute()
 
   // Parse path: /shop/747/bad-reiniger, /shop/747, or /shop/bad-reiniger.

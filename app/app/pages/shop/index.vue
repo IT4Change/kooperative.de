@@ -35,6 +35,7 @@
         <input
           v-model="searchQuery"
           type="search"
+          aria-label="Produkte durchsuchen"
           placeholder="Produkte durchsuchen..."
           class="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#00af8c]/40 focus:border-[#00af8c]"
         />
@@ -77,9 +78,16 @@
       >
         <div class="absolute inset-0 bg-black/50" />
         <div
-          class="relative bg-white rounded-xl shadow-2xl max-w-lg w-full p-6 sm:p-8 max-h-[90vh] overflow-y-auto"
+          ref="welcomePanel"
+          role="dialog"
+          aria-modal="true"
+          :aria-labelledby="`${uid}-welcome-title`"
+          tabindex="-1"
+          class="relative bg-white rounded-xl shadow-2xl max-w-lg w-full p-6 sm:p-8 max-h-[90vh] overflow-y-auto focus:outline-none"
         >
-          <h2 class="text-xl font-bold mb-6">So funktioniert die Bestellung</h2>
+          <h2 :id="`${uid}-welcome-title`" class="text-xl font-bold mb-6">
+            So funktioniert die Bestellung
+          </h2>
           <div class="space-y-5">
             <div class="flex gap-4 items-start">
               <div
@@ -161,9 +169,7 @@
             Kein Online-Payment &mdash; alle Zahlungswege werden separat abgewickelt.
           </p>
           <div class="mt-6 flex justify-center">
-            <KoopButton data-testid="welcome-dismiss" @click="dismissWelcome">
-              Verstanden
-            </KoopButton>
+            <KoopButton @click="dismissWelcome">Verstanden</KoopButton>
           </div>
         </div>
       </div>
@@ -190,6 +196,10 @@
   })
 
   const showWelcome = ref(false)
+
+  const uid = useId()
+  const welcomePanel = ref<HTMLElement>()
+  useModal(showWelcome, welcomePanel, dismissWelcome)
 
   const storage = useStorage()
 

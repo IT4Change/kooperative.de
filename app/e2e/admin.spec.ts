@@ -23,7 +23,7 @@ async function confirmedOrder(page: import('@playwright/test').Page): Promise<nu
   await checkout(page, { shipping: 'abholung', payment: 'vorkasse' })
   const mail = await waitForMail(to(CUSTOMER.email), 'the confirmation request')
   await page.goto(confirmationLink(mail))
-  await page.getByTestId('pending-confirm').click()
+  await page.getByRole('button', { name: /verbindlich bestätigen/ }).click()
   await expect(page.getByRole('heading', { name: /bestätigt/i })).toBeVisible()
   const pending = await latestPending(CUSTOMER.email)
   return pending!.orders_id!
@@ -113,9 +113,9 @@ test.describe('admin', () => {
     await clearMails()
 
     await page.goto(`/admin/orders/${orderId}`)
-    await page.getByTestId('admin-status-select').selectOption('3') // Versendet
-    await page.getByTestId('admin-status-notify').check()
-    await page.getByTestId('admin-status-submit').click()
+    await page.getByLabel('Status setzen').selectOption('3') // Versendet
+    await page.getByLabel('Kunde per E-Mail benachrichtigen').check()
+    await page.getByRole('button', { name: 'Status aktualisieren' }).click()
 
     // The order row and its history must both reflect the new status.
     await expect
@@ -140,9 +140,9 @@ test.describe('admin', () => {
     await clearMails()
 
     await page.goto(`/admin/orders/${orderId}`)
-    await page.getByTestId('admin-status-select').selectOption('2') // Versandbereit
-    await page.getByTestId('admin-status-notify').uncheck()
-    await page.getByTestId('admin-status-submit').click()
+    await page.getByLabel('Status setzen').selectOption('2') // Versandbereit
+    await page.getByLabel('Kunde per E-Mail benachrichtigen').uncheck()
+    await page.getByRole('button', { name: 'Status aktualisieren' }).click()
 
     await expect
       .poll(async () => (await orderById(orderId))?.orders_status, {

@@ -184,6 +184,44 @@ E2E-Tests halten das fest (JSON für die API, weiterhin HTML für `/admin`).
 
 ### Selektoren
 
-Die Suite greift ausschließlich über `data-testid` zu — Tailwind-Klassen und
-deutsche UI-Texte sind als Selektoren zu brüchig. Die Hooks sind bewusst dünn
-gesät (Produktkarte, Warenkorb, Login, Checkout-Schritte, Admin-Statusformular).
+Formularfelder und Buttons werden über ihren **Accessible Name** angesprochen
+(`getByLabel`, `getByRole`). Das ist kein Stilentscheid: die Tests fallen damit
+um, sobald ein Label fehlt oder ein Button seinen Namen verliert — sie prüfen
+also nebenbei mit, dass die Oberfläche mit Screenreader bedienbar bleibt.
+
+`data-testid` bleibt nur für Anker ohne eigene Semantik. Aktuell sind das fünf:
+
+| Testid | Warum kein semantischer Selektor |
+| --- | --- |
+| `product-card` | Container ohne Rolle; dient dem Eingrenzen auf ein Produkt |
+| `product-price` | reine Zahl, kein Accessible Name |
+| `cart-sidebar` | wird auch für DOM-Prüfungen des Fokus gebraucht |
+| `cart-total`, `cart-success` | Zustandsanker im Warenkorb |
+
+## Barrierefreiheit
+
+`e2e/a11y.spec.ts` hält den erreichten Stand fest.
+
+**Labels.** Alle Formularelemente sind über `for`/`id` gekoppelt (IDs aus
+`useId()`, SSR-sicher und pro Komponenteninstanz eindeutig — wichtig für die
+Produktkarte, die pro Seite vielfach gerendert wird). Wo ein sichtbares Label
+Layout-Umbau bedeutet hätte (Suchfelder, Varianten-Dropdown der Karte), steht ein
+`aria-label`. Ein Placeholder zählt ausdrücklich nicht: er verschwindet beim
+Tippen.
+
+Der Test `every control … is labelled` prüft das **generisch** — er sammelt alle
+sichtbaren `input`/`select`/`textarea` ohne Accessible Name ein. Damit fällt auch
+ein künftig neu hinzugefügtes Feld auf, nicht nur die heute bekannten. Genau so
+kam beim Bau das Suchfeld auf der Shop-Seite ans Licht, das in der manuellen
+Bestandsaufnahme durchgerutscht war.
+
+**Dialoge.** Warenkorb, Cookie-Hinweis, Willkommens-Overlay und der
+Storage-Hinweis sind `role="dialog"` + `aria-modal` + `aria-labelledby`.
+Verhalten in `app/composables/useModal.ts`: Escape schließt, Fokus wandert beim
+Öffnen ins Panel und beim Schließen zum Auslöser zurück, Tab bleibt im Dialog.
+Beim Cookie-Dialog bedeutet Escape **Ablehnen** — jemanden ohne Tastaturausweg
+darin festzuhalten wäre schlechter, und Ablehnen ist die datensparsame Vorgabe.
+
+Der Login/Registrierungs-Umschalter ist ein `role="tablist"`. Das ist inhaltlich
+richtig und löst nebenbei die Doppeldeutigkeit zwischen dem Reiter „Anmelden" und
+dem gleichnamigen Absende-Button.

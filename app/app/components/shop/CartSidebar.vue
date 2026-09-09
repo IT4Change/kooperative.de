@@ -6,12 +6,17 @@
         <Transition name="slide">
           <div
             v-if="isOpen"
-            class="relative w-full max-w-md bg-white h-full shadow-xl flex flex-col overflow-hidden"
+            ref="panel"
+            role="dialog"
+            aria-modal="true"
+            :aria-labelledby="`${uid}-title`"
+            tabindex="-1"
+            class="relative w-full max-w-md bg-white h-full shadow-xl flex flex-col overflow-hidden focus:outline-none"
             data-testid="cart-sidebar"
           >
             <!-- Header -->
             <div class="flex items-center justify-between px-5 py-4 border-b border-gray-200">
-              <h2 class="text-lg font-semibold">
+              <h2 :id="`${uid}-title`" class="text-lg font-semibold">
                 <template v-if="checkoutStep === 'cart'">Bestellliste</template>
                 <template v-else-if="checkoutStep === 'auth'">Anmelden</template>
                 <template v-else-if="checkoutStep === 'details'">Versand &amp; Zahlung</template>
@@ -156,9 +161,7 @@
                 <span data-testid="cart-total">{{ totalPrice.toFixed(2) }} €</span>
               </div>
               <div class="flex justify-center">
-                <KoopButton data-testid="cart-proceed" @click="onProceed"
-                  >Zur Bestellung</KoopButton
-                >
+                <KoopButton @click="onProceed">Zur Bestellung</KoopButton>
               </div>
             </div>
           </div>
@@ -195,6 +198,10 @@
   } = useCart()
 
   const { user } = useAuth()
+
+  const uid = useId()
+  const panel = ref<HTMLElement>()
+  useModal(isOpen, panel, closeCart)
 
   function onProceed() {
     if (user.value) {

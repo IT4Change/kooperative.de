@@ -2,6 +2,15 @@ import { expect } from '@playwright/test'
 
 import type { Page } from '@playwright/test'
 
+/**
+ * Selector policy: form fields and buttons are addressed by their accessible
+ * name (getByLabel / getByRole). That way the suite fails when a label goes
+ * missing or a button loses its name — the tests double as a check that the UI
+ * stays operable with a screen reader. Only anchors with no meaningful
+ * accessible name of their own (a product card, the price element, the cart
+ * panel) keep a data-testid.
+ */
+
 /** Matches app/scripts/seed-e2e.mjs — kept here so specs read as prose. */
 export const CUSTOMER = {
   email: 'e2e@example.org',
@@ -15,28 +24,19 @@ export function productCard(page: Page, name: string) {
   return page.getByTestId('product-card').filter({ hasText: name })
 }
 
-/**
- * Pages are server-rendered, so elements are visible long before Vue has taken
- * over. Interacting in that window silently does nothing — no listener is
- * attached yet, and the test then fails on a confusingly unchanged value.
- *
- * Only `__vue_app__` is usable as a marker: Vue strips `app._instance` from
- * production builds (it lives behind __FEATURE_PROD_DEVTOOLS__), and the suite
- * deliberately runs against the production artifact.
- */
-export async function waitForHydration(page: Page): Promise<void> {
-  await page.waitForFunction(() => !!document.getElementById('__nuxt')?.__vue_app__)
+export function cart(page: Page) {
+  return page.getByRole('dialog', { name: /Bestellliste|Anmelden|Versand|Übersicht|Bestellung/ })
 }
 
 export async function openShop(page: Page): Promise<void> {
   await page.goto('/shop')
   await expect(page.getByTestId('product-card').first()).toBeVisible()
-  // The "how ordering works" modal is opened from onMounted, so its appearance
+  // The "how ordering works" dialog is opened from onMounted, so its appearance
   // is proof that the client took over — a stronger gate than any Vue internal.
   // It also covers the grid, so it has to go before anything can be clicked.
-  const welcome = page.getByTestId('welcome-dismiss')
+  const welcome = page.getByRole('dialog', { name: 'So funktioniert die Bestellung' })
   await welcome.waitFor({ state: 'visible' })
-  await welcome.click()
+  await welcome.getByRole('button', { name: 'Verstanden' }).click()
   await expect(welcome).toBeHidden()
 }
 
@@ -45,25 +45,28 @@ export async function openShop(page: Page): Promise<void> {
  * persisted with consent. Accept it and let the queued add-to-cart run.
  */
 export async function addToCart(page: Page, name: string): Promise<void> {
-  await productCard(page, name).getByTestId('product-add').click()
-  const accept = page.getByTestId('consent-accept')
-  if (await accept.isVisible().catch(() => false)) await accept.click()
-  await expect(accept).toBeHidden()
+  await productCard(page, name).getByRole('button', { name: 'Auf die Bestellliste' }).click()
+  const consent = page.getByRole('dialog', { name: 'Cookie-Hinweis' })
+  if (await consent.isVisible().catch(() => false)) {
+    await consent.getByRole('button', { name: 'Akzeptieren' }).click()
+  }
+  await expect(consent).toBeHidden()
 }
 
 /** Idempotent: adding an item already opens the sidebar (see useCart.addToCart). */
 export async function openCart(page: Page): Promise<void> {
   const sidebar = page.getByTestId('cart-sidebar')
   if (!(await sidebar.isVisible().catch(() => false))) {
-    await page.getByTestId('cart-button').click()
+    await page.getByRole('button', { name: 'Bestellliste öffnen' }).click()
   }
   await expect(sidebar).toBeVisible()
 }
 
 export async function login(page: Page): Promise<void> {
-  await page.getByTestId('login-email').fill(CUSTOMER.email)
-  await page.getByTestId('login-password').fill(CUSTOMER.password)
-  await page.getByTestId('login-submit').click()
+  await page.getByLabel('E-Mail *').fill(CUSTOMER.email)
+  await page.getByLabel('Passwort *').fill(CUSTOMER.password)
+  // The tab of the same name is a role="tab", so this resolves to the submit.
+  await page.getByRole('button', { name: 'Anmelden' }).click()
 }
 
 /**
@@ -78,13 +81,13 @@ export async function checkout(
   const { shipping = 'abholung', payment = 'vorkasse', notes } = opts
 
   await openCart(page)
-  await page.getByTestId('cart-proceed').click()
+  await page.getByRole('button', { name: 'Zur Bestellung' }).click()
 
   // The auth step is skipped when a session cookie is already present, so the
   // next screen is either the login form or already shipping/payment. Wait for
   // whichever arrives instead of probing — a bare isVisible() right after the
   // click races the step transition and silently takes the wrong branch.
-  const emailField = page.getByTestId('login-email')
+  const emailField = page.getByLabel('E-Mail *')
   const shippingRadio = page.locator('input[name="shipping"]').first()
   await expect(emailField.or(shippingRadio).first()).toBeVisible()
   if (await emailField.isVisible()) await login(page)
@@ -92,9 +95,9 @@ export async function checkout(
 
   await page.locator(`input[name="shipping"][value="${shipping}"]`).check()
   await page.locator(`input[name="payment"][value="${payment}"]`).check()
-  if (notes != null) await page.getByTestId('details-notes').fill(notes)
-  await page.getByTestId('details-next').click()
+  if (notes != null) await page.getByLabel('Anmerkungen (optional)').fill(notes)
+  await page.getByRole('button', { name: 'Weiter zur Übersicht' }).click()
 
-  await page.getByTestId('order-send').click()
+  await page.getByRole('button', { name: 'Bestellung absenden' }).click()
   await expect(page.getByTestId('cart-success')).toBeVisible()
 }

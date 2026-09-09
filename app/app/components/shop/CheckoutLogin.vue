@@ -1,8 +1,14 @@
 <template>
   <div>
-    <div class="flex border-b border-gray-200 mb-4">
+    <!-- Two panels behind two switches — that is a tablist. Saying so also keeps
+         the tab "Anmelden" distinguishable from the submit button of the same name. -->
+    <div class="flex border-b border-gray-200 mb-4" role="tablist">
       <button
+        :id="`${uid}-tab-login`"
         type="button"
+        role="tab"
+        :aria-selected="mode === 'login'"
+        :aria-controls="`${uid}-panel-login`"
         :class="[
           'flex-1 py-2 text-sm font-medium transition-colors',
           mode === 'login' ? 'text-[#00af8c] border-b-2 border-[#00af8c]' : 'text-gray-500',
@@ -12,7 +18,11 @@
         Anmelden
       </button>
       <button
+        :id="`${uid}-tab-register`"
         type="button"
+        role="tab"
+        :aria-selected="mode === 'register'"
+        :aria-controls="`${uid}-panel-register`"
         :class="[
           'flex-1 py-2 text-sm font-medium transition-colors',
           mode === 'register' ? 'text-[#00af8c] border-b-2 border-[#00af8c]' : 'text-gray-500',
@@ -25,32 +35,44 @@
 
     <p
       v-if="error"
+      role="alert"
       class="mb-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2"
     >
       {{ error }}
     </p>
 
     <!-- Login -->
-    <form v-if="mode === 'login'" class="space-y-3" @submit.prevent="onLogin">
+    <form
+      v-if="mode === 'login'"
+      :id="`${uid}-panel-login`"
+      role="tabpanel"
+      :aria-labelledby="`${uid}-tab-login`"
+      class="space-y-3"
+      @submit.prevent="onLogin"
+    >
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">E-Mail *</label>
+        <label :for="`${uid}-login-email`" class="block text-sm font-medium text-gray-700 mb-1">
+          E-Mail *
+        </label>
         <input
+          :id="`${uid}-login-email`"
           v-model="loginEmail"
           type="email"
           required
           autocomplete="email"
-          data-testid="login-email"
           :class="inputCls"
         />
       </div>
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Passwort *</label>
+        <label :for="`${uid}-login-password`" class="block text-sm font-medium text-gray-700 mb-1">
+          Passwort *
+        </label>
         <input
+          :id="`${uid}-login-password`"
           v-model="loginPassword"
           type="password"
           required
           autocomplete="current-password"
-          data-testid="login-password"
           :class="inputCls"
         />
         <p class="mt-1 text-xs text-gray-500">
@@ -61,17 +83,26 @@
       </div>
       <div class="flex gap-3 pt-2">
         <button type="button" :class="cancelCls" @click="$emit('back')">Zurück</button>
-        <KoopButton type="submit" size="sm" data-testid="login-submit" :disabled="busy">{{
+        <KoopButton type="submit" size="sm" :disabled="busy">{{
           busy ? '…' : 'Anmelden'
         }}</KoopButton>
       </div>
     </form>
 
     <!-- Register -->
-    <form v-else class="space-y-3" @submit.prevent="onRegister">
+    <form
+      v-else
+      :id="`${uid}-panel-register`"
+      role="tabpanel"
+      :aria-labelledby="`${uid}-tab-register`"
+      class="space-y-3"
+      @submit.prevent="onRegister"
+    >
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Anrede *</label>
-        <select v-model="reg.gender" required :class="inputCls">
+        <label :for="`${uid}-gender`" class="block text-sm font-medium text-gray-700 mb-1">
+          Anrede *
+        </label>
+        <select :id="`${uid}-gender`" v-model="reg.gender" required :class="inputCls">
           <option value="">Bitte wählen</option>
           <option value="f">Frau</option>
           <option value="m">Herr</option>
@@ -80,8 +111,11 @@
       </div>
       <div class="flex gap-3">
         <div class="flex-1">
-          <label class="block text-sm font-medium text-gray-700 mb-1">Vorname *</label>
+          <label :for="`${uid}-firstname`" class="block text-sm font-medium text-gray-700 mb-1">
+            Vorname *
+          </label>
           <input
+            :id="`${uid}-firstname`"
             v-model="reg.firstname"
             required
             maxlength="32"
@@ -90,8 +124,11 @@
           />
         </div>
         <div class="flex-1">
-          <label class="block text-sm font-medium text-gray-700 mb-1">Nachname *</label>
+          <label :for="`${uid}-lastname`" class="block text-sm font-medium text-gray-700 mb-1">
+            Nachname *
+          </label>
           <input
+            :id="`${uid}-lastname`"
             v-model="reg.lastname"
             required
             maxlength="32"
@@ -101,12 +138,24 @@
         </div>
       </div>
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Geburtsdatum *</label>
-        <input v-model="reg.dob" type="date" required autocomplete="bday" :class="inputCls" />
+        <label :for="`${uid}-dob`" class="block text-sm font-medium text-gray-700 mb-1">
+          Geburtsdatum *
+        </label>
+        <input
+          :id="`${uid}-dob`"
+          v-model="reg.dob"
+          type="date"
+          required
+          autocomplete="bday"
+          :class="inputCls"
+        />
       </div>
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Telefon *</label>
+        <label :for="`${uid}-telephone`" class="block text-sm font-medium text-gray-700 mb-1">
+          Telefon *
+        </label>
         <input
+          :id="`${uid}-telephone`"
           v-model="reg.telephone"
           type="tel"
           required
@@ -116,8 +165,11 @@
         />
       </div>
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Straße *</label>
+        <label :for="`${uid}-street`" class="block text-sm font-medium text-gray-700 mb-1">
+          Straße *
+        </label>
         <input
+          :id="`${uid}-street`"
           v-model="reg.street"
           required
           maxlength="64"
@@ -127,8 +179,11 @@
       </div>
       <div class="flex gap-3">
         <div class="w-1/3">
-          <label class="block text-sm font-medium text-gray-700 mb-1">PLZ *</label>
+          <label :for="`${uid}-postcode`" class="block text-sm font-medium text-gray-700 mb-1">
+            PLZ *
+          </label>
           <input
+            :id="`${uid}-postcode`"
             v-model="reg.postcode"
             required
             maxlength="10"
@@ -137,8 +192,11 @@
           />
         </div>
         <div class="flex-1">
-          <label class="block text-sm font-medium text-gray-700 mb-1">Ort *</label>
+          <label :for="`${uid}-city`" class="block text-sm font-medium text-gray-700 mb-1">
+            Ort *
+          </label>
           <input
+            :id="`${uid}-city`"
             v-model="reg.city"
             required
             maxlength="32"
@@ -148,16 +206,21 @@
         </div>
       </div>
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Land *</label>
-        <select v-model="reg.country" required :class="inputCls">
+        <label :for="`${uid}-country`" class="block text-sm font-medium text-gray-700 mb-1">
+          Land *
+        </label>
+        <select :id="`${uid}-country`" v-model="reg.country" required :class="inputCls">
           <option value="DE">Deutschland</option>
           <option value="AT">Österreich</option>
           <option value="CH">Schweiz</option>
         </select>
       </div>
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">E-Mail *</label>
+        <label :for="`${uid}-email`" class="block text-sm font-medium text-gray-700 mb-1">
+          E-Mail *
+        </label>
         <input
+          :id="`${uid}-email`"
           v-model="reg.email"
           type="email"
           required
@@ -167,16 +230,20 @@
         />
       </div>
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Passwort *</label>
+        <label :for="`${uid}-password`" class="block text-sm font-medium text-gray-700 mb-1">
+          Passwort *
+        </label>
         <input
+          :id="`${uid}-password`"
           v-model="reg.password"
           type="password"
           required
           minlength="8"
           autocomplete="new-password"
+          :aria-describedby="`${uid}-password-hint`"
           :class="inputCls"
         />
-        <p class="mt-1 text-xs text-gray-500">Mindestens 8 Zeichen.</p>
+        <p :id="`${uid}-password-hint`" class="mt-1 text-xs text-gray-500">Mindestens 8 Zeichen.</p>
       </div>
       <div class="flex gap-3 pt-2">
         <button type="button" :class="cancelCls" @click="$emit('back')">Zurück</button>
@@ -190,6 +257,9 @@
 
 <script setup lang="ts">
   const emit = defineEmits<{ back: []; success: [] }>()
+
+  // SSR-safe and unique per instance — the checkout can be mounted more than once.
+  const uid = useId()
 
   const inputCls =
     'w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-[#00af8c]'

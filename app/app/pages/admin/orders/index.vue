@@ -5,6 +5,7 @@
       <input
         v-model="search"
         type="search"
+        aria-label="Bestellungen durchsuchen"
         placeholder="Suche: Bestell-Nr., Name, E-Mail…"
         class="px-3 py-2 border border-gray-300 rounded text-sm w-72 focus:outline-none focus:ring-2 focus:ring-[#00af8c]/40 focus:border-[#00af8c]"
         @keyup.enter="pushQuery()"

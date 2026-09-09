@@ -238,10 +238,12 @@
             </header>
             <div class="px-5 py-4 space-y-3">
               <div>
-                <label class="block text-xs font-medium text-gray-500 mb-1">Status setzen</label>
+                <label :for="`${uid}-status`" class="block text-xs font-medium text-gray-500 mb-1">
+                  Status setzen
+                </label>
                 <select
+                  :id="`${uid}-status`"
                   v-model="form.statusId"
-                  data-testid="admin-status-select"
                   class="w-full px-3 py-2 border border-gray-300 rounded text-sm bg-white"
                 >
                   <option v-for="s in data.availableStatuses" :key="s.id" :value="String(s.id)">
@@ -250,10 +252,11 @@
                 </select>
               </div>
               <div>
-                <label class="block text-xs font-medium text-gray-500 mb-1"
-                  >Kommentar (optional)</label
-                >
+                <label :for="`${uid}-comment`" class="block text-xs font-medium text-gray-500 mb-1">
+                  Kommentar (optional)
+                </label>
                 <textarea
+                  :id="`${uid}-comment`"
                   v-model="form.comment"
                   rows="2"
                   class="w-full px-3 py-2 border border-gray-300 rounded text-sm resize-none"
@@ -264,14 +267,12 @@
                 <input
                   v-model="form.notify"
                   type="checkbox"
-                  data-testid="admin-status-notify"
                   class="rounded border-gray-300 text-[#00af8c] focus:ring-[#00af8c]"
                 />
                 Kunde per E-Mail benachrichtigen
               </label>
               <button
                 class="w-full px-3 py-2 bg-[#00af8c] text-white rounded text-sm font-medium hover:bg-[#009579] disabled:opacity-50"
-                data-testid="admin-status-submit"
                 :disabled="busy || form.statusId === ''"
                 @click="submitStatus"
               >
@@ -351,6 +352,7 @@
 <script setup lang="ts">
   definePageMeta({ layout: 'admin' })
 
+  const uid = useId()
   const { euro, dateTime, date, statusClass } = useAdminFormat()
   const route = useRoute()
 
