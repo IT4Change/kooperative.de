@@ -164,15 +164,36 @@ describe('direct debit', () => {
  * timer, and on a busy machine that lands a tick later.
  */
 function deferredFetches() {
-  const calls: { resolve: (v: unknown) => void; reject: (e: unknown) => void }[] = []
-  fetchMock.mockImplementation(
-    async () => new Promise((resolve, reject) => calls.push({ resolve, reject })),
-  )
+  interface Call {
+    promise: Promise<unknown>
+    resolve: (v: unknown) => void
+    reject: (e: unknown) => void
+  }
+  const calls: Call[] = []
+  fetchMock.mockImplementation(async () => {
+    const call = {} as Call
+    call.promise = new Promise((resolve, reject) => {
+      call.resolve = resolve
+      call.reject = reject
+    })
+    calls.push(call)
+    return call.promise
+  })
   return {
     at: (i: number) => calls[i],
     async dispatched(n: number) {
       for (let i = 0; i < 100 && calls.length < n; i++) await vi.advanceTimersByTimeAsync(10)
       expect(calls).toHaveLength(n)
+    },
+    /**
+     * Waits until the answer has reached the component. The component attached
+     * its handler to this promise before the test does, and promise callbacks
+     * run in the order they were attached — so once this resolves, the
+     * component has seen the answer. Advancing timers does not guarantee that.
+     */
+    async settled(i: number) {
+      await calls[i].promise.catch(() => undefined)
+      await nextTick()
     },
   }
 }
@@ -319,10 +340,9 @@ describe('live IBAN lookup', () => {
 
       // The second answer arrives first, the first one late.
       deferred.at(1).resolve({ ok: true, valid: true, bankName: 'Zweite Bank' })
-      await vi.runAllTimersAsync()
+      await deferred.settled(1)
       deferred.at(0).resolve({ ok: true, valid: true, bankName: 'Erste Bank' })
-      await vi.runAllTimersAsync()
-      await wrapper.vm.$nextTick()
+      await deferred.settled(0)
 
       // Otherwise the customer would see the bank of an IBAN they overwrote.
       expect(wrapper.text()).toContain('Zweite Bank')
@@ -343,10 +363,9 @@ describe('live IBAN lookup', () => {
       await deferred.dispatched(2)
 
       deferred.at(1).resolve({ ok: true, valid: true, bankName: 'Zweite Bank' })
-      await vi.runAllTimersAsync()
+      await deferred.settled(1)
       deferred.at(0).reject(new Error('offline'))
-      await vi.runAllTimersAsync()
-      await wrapper.vm.$nextTick()
+      await deferred.settled(0)
 
       // A stale failure must not wipe the result the customer is looking at.
       expect(wrapper.text()).toContain('Zweite Bank')
