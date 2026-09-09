@@ -3,7 +3,6 @@
     v-if="totalItems > 0"
     class="fixed bottom-6 right-6 z-50 w-14 h-14 bg-[#00af8c] text-white rounded-full shadow-lg hover:bg-[#008c70] transition-colors flex items-center justify-center"
     aria-label="Bestellliste öffnen"
-    data-testid="cart-button"
     @click="openCart"
   >
     <svg

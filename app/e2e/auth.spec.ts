@@ -21,8 +21,8 @@ async function reachAuthStep(page: import('@playwright/test').Page) {
   await openShop(page)
   await addToCart(page, 'Honig')
   await openCart(page)
-  await page.getByTestId('cart-proceed').click()
-  await expect(page.getByTestId('login-email')).toBeVisible()
+  await page.getByRole('button', { name: 'Zur Bestellung' }).click()
+  await expect(page.getByLabel('E-Mail *')).toBeVisible()
 }
 
 test.describe('authentication', () => {
@@ -35,9 +35,9 @@ test.describe('authentication', () => {
 
   test('rejects a wrong password without leaking whether the account exists', async ({ page }) => {
     await reachAuthStep(page)
-    await page.getByTestId('login-email').fill(CUSTOMER.email)
-    await page.getByTestId('login-password').fill('definitely-not-the-password')
-    await page.getByTestId('login-submit').click()
+    await page.getByLabel('E-Mail *').fill(CUSTOMER.email)
+    await page.getByLabel('Passwort *').fill('definitely-not-the-password')
+    await page.getByRole('button', { name: 'Anmelden' }).click()
 
     await expect(page.getByText(/E-Mail oder Passwort/i)).toBeVisible()
     await expect(page.locator('input[name="shipping"]')).toHaveCount(0)
@@ -45,9 +45,9 @@ test.describe('authentication', () => {
 
   test('rejects an unknown account with the same message', async ({ page }) => {
     await reachAuthStep(page)
-    await page.getByTestId('login-email').fill('nobody@example.org')
-    await page.getByTestId('login-password').fill('whatever-password')
-    await page.getByTestId('login-submit').click()
+    await page.getByLabel('E-Mail *').fill('nobody@example.org')
+    await page.getByLabel('Passwort *').fill('whatever-password')
+    await page.getByRole('button', { name: 'Anmelden' }).click()
 
     await expect(page.getByText(/E-Mail oder Passwort/i)).toBeVisible()
   })

@@ -56,8 +56,17 @@
           @click.self="dismissStorageWarning"
         >
           <div class="absolute inset-0 bg-black/50" />
-          <div class="relative bg-white rounded-xl shadow-2xl max-w-sm w-full p-6">
-            <h2 class="text-lg font-bold mb-3">Cookies erforderlich</h2>
+          <div
+            ref="storagePanel"
+            role="dialog"
+            aria-modal="true"
+            :aria-labelledby="`${uid}-storage-title`"
+            tabindex="-1"
+            class="relative bg-white rounded-xl shadow-2xl max-w-sm w-full p-6 focus:outline-none"
+          >
+            <h2 :id="`${uid}-storage-title`" class="text-lg font-bold mb-3">
+              Cookies erforderlich
+            </h2>
             <p class="text-sm text-gray-600 mb-4">
               Um Artikel auf die Bestellliste setzen zu können, muss der lokale Speicher
               (Cookies/localStorage) in deinem Browser aktiviert sein.
@@ -82,8 +91,15 @@
           class="fixed inset-0 z-[200] flex items-end sm:items-center justify-center p-4"
         >
           <div class="absolute inset-0 bg-black/50" />
-          <div class="relative bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
-            <h2 class="text-lg font-bold mb-3">Cookie-Hinweis</h2>
+          <div
+            ref="consentPanel"
+            role="dialog"
+            aria-modal="true"
+            :aria-labelledby="`${uid}-consent-title`"
+            tabindex="-1"
+            class="relative bg-white rounded-xl shadow-2xl max-w-md w-full p-6 focus:outline-none"
+          >
+            <h2 :id="`${uid}-consent-title`" class="text-lg font-bold mb-3">Cookie-Hinweis</h2>
             <p class="text-sm text-gray-600 mb-3">
               Für den Warenkorb verwenden wir technisch notwendige Cookies bzw. lokalen Speicher.
               Diese sind erforderlich, damit deine Auswahl erhalten bleibt. Es findet kein Tracking
@@ -97,9 +113,7 @@
             </p>
             <div class="flex flex-col sm:flex-row gap-2 sm:justify-end">
               <KoopButton size="sm" variant="orange" @click="declineConsent">Ablehnen</KoopButton>
-              <KoopButton size="sm" data-testid="consent-accept" @click="acceptConsent">
-                Akzeptieren
-              </KoopButton>
+              <KoopButton size="sm" @click="acceptConsent">Akzeptieren</KoopButton>
             </div>
           </div>
         </div>
@@ -133,6 +147,14 @@
     accept: acceptConsent,
     decline: declineConsent,
   } = useConsent()
+  const uid = useId()
+  const storagePanel = ref<HTMLElement>()
+  const consentPanel = ref<HTMLElement>()
+  useModal(showStorageWarning, storagePanel, dismissStorageWarning)
+  // Escape answers the consent dialog with "no" — leaving a keyboard user
+  // trapped in it would be worse, and declining is the conservative default.
+  useModal(showConsentBanner, consentPanel, declineConsent)
+
   const route = useRoute()
   const scrolled = ref(false)
   const menuOpen = ref(false)

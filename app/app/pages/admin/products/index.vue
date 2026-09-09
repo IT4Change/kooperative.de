@@ -4,6 +4,7 @@
       <input
         v-model="search"
         type="search"
+        aria-label="Produkte durchsuchen"
         placeholder="Suche: Nr., Name, Modell…"
         class="px-3 py-2 border border-gray-300 rounded text-sm w-72 focus:outline-none focus:ring-2 focus:ring-[#00af8c]/40 focus:border-[#00af8c]"
         @keyup.enter="pushQuery()"

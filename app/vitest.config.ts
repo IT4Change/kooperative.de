@@ -18,10 +18,10 @@ export default defineVitestConfig({
       // handlers; the per-glob entry pins the modules the first test wave covers
       // so they cannot rot while the global number climbs. See docs/testing.md.
       thresholds: {
-        statements: 13,
-        branches: 13,
-        functions: 8,
-        lines: 13,
+        statements: 17,
+        branches: 18,
+        functions: 12,
+        lines: 17,
         'server/utils/{iban,blz,converter,validate,mailFooter,orderStatus,checkoutOptions,countries,links}.ts':
           {
             statements: 95,
@@ -32,6 +32,12 @@ export default defineVitestConfig({
         'app/composables/useAdminFormat.ts': {
           statements: 100,
           branches: 100,
+          functions: 100,
+          lines: 100,
+        },
+        'app/composables/useModal.ts': {
+          statements: 94,
+          branches: 88,
           functions: 100,
           lines: 100,
         },

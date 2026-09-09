@@ -2,7 +2,6 @@
   <div
     class="bg-white border border-gray-200 rounded-lg flex flex-col overflow-hidden"
     data-testid="product-card"
-    :data-product-id="product.id"
   >
     <NuxtLink :to="`/shop/${product.id}/${product.slug}`">
       <ShopProductGallery :images="displayImages" />
@@ -21,8 +20,9 @@
       <!-- Size variants: dropdown -->
       <div v-if="product.variants && product.variantType !== 'quantity'" class="mb-3">
         <select
+          :id="`${uid}-variant`"
           v-model.number="selectedVariant"
-          data-testid="product-variant"
+          :aria-label="`Gebindegröße für ${product.name}`"
           class="w-full text-sm border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#00af8c] focus:border-[#00af8c]"
         >
           <option v-for="(v, idx) in product.variants" :key="idx" :value="idx">
@@ -37,12 +37,12 @@
         class="mb-3 flex items-center gap-3"
       >
         <div class="flex items-center gap-1.5">
-          <label class="text-xs text-gray-500">Anz.</label>
+          <label :for="`${uid}-quantity`" class="text-xs text-gray-500">Anz.</label>
           <input
+            :id="`${uid}-quantity`"
             v-model.number="quantity"
             type="number"
             min="1"
-            data-testid="product-quantity"
             class="w-16 text-sm border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[#00af8c] focus:border-[#00af8c]"
           />
         </div>
@@ -75,9 +75,7 @@
             >/ {{ product.unit }}</span
           >
         </div>
-        <KoopButton size="sm" data-testid="product-add" @click="handleAdd">
-          Auf die Bestellliste
-        </KoopButton>
+        <KoopButton size="sm" @click="handleAdd"> Auf die Bestellliste </KoopButton>
       </div>
     </div>
   </div>
@@ -95,6 +93,9 @@
   const emit = defineEmits<{
     add: [product: Product, variantIndex?: number, quantity?: number]
   }>()
+
+  // The grid renders this card many times — ids must not collide.
+  const uid = useId()
 
   const selectedVariant = ref(0)
   const quantity = ref(1)

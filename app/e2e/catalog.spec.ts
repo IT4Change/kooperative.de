@@ -34,7 +34,7 @@ test.describe('catalog', () => {
   test('merges size variants into a single product with a size picker', async ({ page }) => {
     const card = productCard(page, 'Olivenöl')
     await expect(card).toHaveCount(1)
-    const options = card.getByTestId('product-variant').locator('option')
+    const options = card.getByLabel(/Gebindegröße/).locator('option')
     await expect(options).toHaveCount(2)
     await expect(options.nth(0)).toContainText('0,5 L')
     await expect(options.nth(1)).toContainText('1 L')
@@ -44,7 +44,7 @@ test.describe('catalog', () => {
     const card = productCard(page, 'Olivenöl')
     // 8.00 net → 9.52 gross; 15.00 net → 17.85 gross
     await expect(card.getByTestId('product-price')).toHaveText(/9,?\.?52/)
-    await card.getByTestId('product-variant').selectOption({ index: 1 })
+    await card.getByLabel(/Gebindegröße/).selectOption({ index: 1 })
     await expect(card.getByTestId('product-price')).toHaveText(/17,?\.?85/)
   })
 
@@ -53,7 +53,7 @@ test.describe('catalog', () => {
     // 1 piece at 2.00 net → 2.38 gross
     await expect(card.getByTestId('product-price')).toHaveText(/2,?\.?38/)
     // From 10 pieces the 1.50 net tier applies → 1.79 gross each, 17.90 total
-    await card.getByTestId('product-quantity').fill('10')
+    await card.getByLabel('Anz.').fill('10')
     await expect(card.getByTestId('product-price')).toHaveText(/17,?\.?90/)
   })
 
