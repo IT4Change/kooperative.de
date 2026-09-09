@@ -2,18 +2,6 @@
   <div class="space-y-2">
     <div class="flex flex-wrap gap-2">
       <button
-        class="px-4 py-2 rounded-full text-sm font-medium transition-colors"
-        :class="
-          selected === null
-            ? 'bg-[#00af8c] text-white'
-            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-        "
-        @click="$emit('select', null)"
-      >
-        Alle
-        <span class="ml-1 opacity-70">{{ totalCount }}</span>
-      </button>
-      <button
         v-for="cat in topLevel"
         :key="cat.slug"
         class="px-4 py-2 rounded-full text-sm font-medium transition-colors"
@@ -31,20 +19,23 @@
         {{ cat.name }}
         <span class="ml-1 opacity-70">{{ counts[cat.slug] || 0 }}</span>
       </button>
-    </div>
-    <div v-if="children.length" class="flex flex-wrap gap-2 pl-3 border-l-2 border-[#00af8c]/30">
+      <!-- Last on purpose: a category is preselected, so "Alle" is the way out
+           of the filter rather than the starting point. -->
       <button
-        class="px-3 py-1.5 rounded-full text-xs font-medium transition-colors"
+        aria-label="Alle Kategorien"
+        class="px-4 py-2 rounded-full text-sm font-medium transition-colors"
         :class="
-          selected === selectedTopLevel
+          selected === null
             ? 'bg-[#00af8c] text-white'
             : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
         "
-        @click="selectedTopLevel && $emit('select', selectedTopLevel)"
+        @click="$emit('select', null)"
       >
         Alle
-        <span class="ml-1 opacity-70">{{ counts[selectedTopLevel ?? ''] || 0 }}</span>
+        <span class="ml-1 opacity-70">{{ total }}</span>
       </button>
+    </div>
+    <div v-if="children.length" class="flex flex-wrap gap-2 pl-3 border-l-2 border-[#00af8c]/30">
       <button
         v-for="cat in children"
         :key="cat.slug"
@@ -61,6 +52,21 @@
       >
         {{ cat.name }}
         <span class="ml-1 opacity-70">{{ counts[cat.slug] || 0 }}</span>
+      </button>
+      <!-- Selects the parent itself: everything in it, including any products
+           that hang directly off it rather than off one of the children. -->
+      <button
+        :aria-label="`Alle ${selectedTopLevelName}`"
+        class="px-3 py-1.5 rounded-full text-xs font-medium transition-colors"
+        :class="
+          selected === selectedTopLevel
+            ? 'bg-[#00af8c] text-white'
+            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+        "
+        @click="selectedTopLevel && $emit('select', selectedTopLevel)"
+      >
+        Alle
+        <span class="ml-1 opacity-70">{{ counts[selectedTopLevel ?? ''] || 0 }}</span>
       </button>
     </div>
   </div>
@@ -80,8 +86,6 @@
     select: [value: CategorySlug | null]
   }>()
 
-  const totalCount = computed(() => props.total)
-
   const topLevel = computed(() => props.categories.filter((c) => c.parentSlug === null))
 
   const selectedTopLevel = computed(() => {
@@ -89,6 +93,11 @@
     const idx = props.selected.indexOf('/')
     return idx === -1 ? props.selected : props.selected.slice(0, idx)
   })
+
+  // Both "Alle" buttons would otherwise be announced identically.
+  const selectedTopLevelName = computed(
+    () => props.categories.find((c) => c.slug === selectedTopLevel.value)?.name ?? 'Kategorien',
+  )
 
   function isSelected(slug: string) {
     return props.selected === slug || selectedTopLevel.value === slug
