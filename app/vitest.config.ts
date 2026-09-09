@@ -18,17 +18,18 @@ export default defineVitestConfig({
       // handlers; the per-glob entry pins the modules the first test wave covers
       // so they cannot rot while the global number climbs. See docs/testing.md.
       thresholds: {
-        statements: 18,
-        branches: 18,
-        functions: 13,
-        lines: 18,
-        'server/utils/{iban,blz,converter,validate,mailFooter,orderStatus,checkoutOptions,countries,links}.ts':
-          {
-            statements: 95,
-            branches: 90,
-            functions: 100,
-            lines: 95,
-          },
+        statements: 40,
+        branches: 35,
+        functions: 35,
+        lines: 39,
+        // The whole of server/utils is covered now — pricing, tax, auth and the
+        // write path. Pinned as a group so a new file there cannot slip in unseen.
+        'server/utils/**': {
+          statements: 98,
+          branches: 92,
+          functions: 98,
+          lines: 98,
+        },
         'app/composables/useAdminFormat.ts': {
           statements: 100,
           branches: 100,

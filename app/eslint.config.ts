@@ -188,6 +188,12 @@ export default withNuxt(
       'vitest/max-expects': 'off',
       'vitest/prefer-lowercase-title': 'off',
       'vitest/prefer-describe-function-title': 'off',
+      // Type parameters on a bare vi.fn() mock add noise without adding safety
+      'vitest/require-mock-type-parameters': 'off',
+      // Several specs share one beforeEach across sibling describe blocks
+      'vitest/require-top-level-describe': 'off',
+      // Fake timers and flush helpers legitimately construct promises
+      'promise/avoid-new': 'off',
       // Tests deliberately set globals and env vars
       'n/no-process-env': 'off',
     },
