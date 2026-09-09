@@ -44,6 +44,29 @@ test.describe('admin access', () => {
     expect(res.status()).toBe(401)
     await ctx.close()
   })
+
+  /**
+   * Nitro tells JSON clients from browsers by looking for a leading "/api/" in
+   * the path. The admin endpoints sit under "/admin/api/" so they can share the
+   * pages' Basic-Auth realm, which used to make Nitro answer HTML-accepting
+   * clients with the rendered Nuxt error page — wrong content type for an API,
+   * and two "[Vue Router warn] No match found" lines per request in the log.
+   * server/middleware/admin-auth.ts corrects the classification.
+   */
+  test('answers API errors with JSON even for an HTML-accepting client', async ({ page }) => {
+    const res = await page.request.get('/admin/api/dashboard', {
+      headers: { accept: 'text/html' },
+    })
+    expect(res.status()).toBe(401)
+    expect(res.headers()['content-type']).toContain('application/json')
+    expect(await res.json()).toMatchObject({ statusCode: 401 })
+  })
+
+  test('still renders the HTML error page for the admin pages themselves', async ({ page }) => {
+    const res = await page.request.get('/admin', { headers: { accept: 'text/html' } })
+    expect(res.status()).toBe(401)
+    expect(res.headers()['content-type']).toContain('text/html')
+  })
 })
 
 test.describe('admin', () => {
