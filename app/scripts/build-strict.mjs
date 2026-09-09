@@ -15,11 +15,7 @@
  */
 import { spawn } from 'node:child_process'
 
-/**
- * consola tags its lines with a padded level, e.g. "  WARN  Duplicated imports".
- * The timestamp Nuxt prepends in some terminals is allowed for in the prefix.
- */
-const LEVEL = /(?:^|\s)(WARN|ERROR)\s/
+import { isWarnOrError, stripAnsi } from './lib/log-levels.mjs'
 
 /**
  * Warnings that are accepted, with the reason. Keep this empty if you possibly
@@ -42,9 +38,10 @@ function watch(stream, sink) {
     const lines = (rest + String(chunk)).split('\n')
     rest = lines.pop() ?? ''
     for (const line of lines) {
-      if (!LEVEL.test(line)) continue
-      if (ACCEPTED.some((a) => a.match.test(line))) continue
-      offending.push(line.trim())
+      if (!isWarnOrError(line)) continue
+      const plain = stripAnsi(line).trim()
+      if (ACCEPTED.some((a) => a.match.test(plain))) continue
+      offending.push(plain)
     }
   })
 }
