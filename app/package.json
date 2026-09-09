@@ -8,6 +8,8 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
+    "test:build": "node scripts/build-strict.mjs",
+    "test:smoke": "node scripts/dev-smoke.mjs",
     "test:lint": "npm run test:lint:eslint && npm run test:lint:typecheck",
     "test:lint:eslint": "eslint --max-warnings 0 .",
     "test:lint:typecheck": "vue-tsc --noEmit",

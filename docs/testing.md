@@ -4,6 +4,8 @@ Alle Kommandos laufen in `app/`.
 
 | Kommando | Was es tut |
 | --- | --- |
+| `npm run test:build` | Produktions-Build; jede Warnung ist ein Fehler |
+| `npm run test:smoke` | Startet `nuxt dev`, holt `/`, jede Warnung ist ein Fehler |
 | `npm run test:lint` | ESLint + Typecheck (das, was die CI als Gate fährt) |
 | `npm run test:lint:eslint` | ESLint mit `--max-warnings 0` |
 | `npm run test:lint:typecheck` | `vue-tsc --noEmit` |
@@ -16,6 +18,23 @@ Alle Kommandos laufen in `app/`.
 Jedes Gate hat einen eigenen Workflow unter `.github/workflows/app.test.*.yml`,
 jeweils mit vorgeschaltetem `paths-filter`-Job, damit Änderungen außerhalb von
 `app/` keine Läufe auslösen.
+
+## Warum es ein Build- *und* ein Smoke-Gate gibt
+
+Lint, Typecheck und die Unit-Suite fassen drei Dinge nie an: Nitros Scan über
+`server/`, die Auto-Import-Registry und den Vue-Compiler über alle Seiten. Genau
+dort liegt eine eigene Fehlerklasse — eine Spec-Datei, die als Server-Plugin
+eingesammelt wird; zwei Module, die denselben Auto-Import exportieren.
+
+Die beiden Pipelines sind sich dabei nicht einig, und das ist der Grund für zwei
+Schritte statt einem: Ein Spec unter `server/plugins/` lässt `nuxt dev` mit einem
+Rollup-Fehler abbrechen, während `nuxt build` ihn stillschweigend wegoptimiert
+und ein lauffähiges Artefakt abliefert. Ein Build-Gate allein hätte den Fall also
+durchgelassen — nachgemessen, nicht vermutet.
+
+Beide Skripte behandeln **jede Warnung als Fehler**, weil Nuxt Warnungen meldet
+und trotzdem mit 0 aussteigt. Ausnahmen kommen in die `ACCEPTED`-Liste im
+jeweiligen Skript, mit Begründung — und besser gar nicht.
 
 ## Linting
 

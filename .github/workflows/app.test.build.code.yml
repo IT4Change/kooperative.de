@@ -1,0 +1,62 @@
+name: "app:test:build the app comes up, warning-free"
+
+on: push
+
+jobs:
+  # only (but most important) job from this workflow required for pull requests
+  # check results serve as run conditions for all other jobs here
+  files-changed:
+    name: Detect File Changes - app-test-build-code
+    runs-on: ubuntu-latest
+    outputs:
+      changes: ${{ steps.changes.outputs.filter }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v4.1.7
+
+      - name: Check for app file changes
+        uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+        id: changes
+        with:
+          token: ${{ github.token }}
+          filters: |
+            filter:
+              - 'app/**/*'
+              - '.github/workflows/*'
+          list-files: shell
+
+  build:
+    if: needs.files-changed.outputs.changes == 'true'
+    name: Build - App
+    needs: files-changed
+    runs-on: ubuntu-latest
+    env:
+      WORKING_DIRECTORY: ./app
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v4.1.7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: app/.tool-versions
+
+      - name: Env File
+        run: cp .env.template .env
+        working-directory: ${{env.WORKING_DIRECTORY}}
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: ${{env.WORKING_DIRECTORY}}
+
+      # Lint, typecheck and the unit suite never run Nitro's scan of server/, the
+      # auto-import registry or the Vue compiler over every page. Those only run
+      # here, and both pipelines are checked because they disagree: a spec file
+      # picked up as a server plugin aborts dev and is silently tree-shaken out of
+      # the production build.
+      - name: App | Production build
+        run: npm run test:build
+        working-directory: ${{env.WORKING_DIRECTORY}}
+
+      - name: App | Dev server smoke test
+        run: npm run test:smoke
+        working-directory: ${{env.WORKING_DIRECTORY}}
