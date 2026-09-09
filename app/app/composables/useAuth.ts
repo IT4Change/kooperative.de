@@ -62,7 +62,10 @@ async function logout() {
 
 export function useAuth() {
   if (import.meta.client && !loaded.value && !loading.value) {
-    void refresh()
+    // Nobody awaits this one, so its rejection has to be absorbed here — an
+    // unreachable /api/auth/me would otherwise surface as an unhandled
+    // rejection. `loaded` is set either way, and no user means logged out.
+    refresh().catch(() => {})
   }
   return {
     user: readonly(user),

@@ -14,12 +14,12 @@ export default defineVitestConfig({
       include: ['app/**/*.{ts,vue}', 'server/**/*.ts'],
       exclude: ['**/*.spec.ts'],
       // One floor for the whole project, raised as the suite grows and never
-      // lowered. Target is 90 %. See docs/testing.md.
+      // lowered. See docs/testing.md.
       thresholds: {
-        statements: 69,
-        branches: 60,
-        functions: 60,
-        lines: 69,
+        statements: 96,
+        branches: 89,
+        functions: 94,
+        lines: 97,
       },
     },
   },

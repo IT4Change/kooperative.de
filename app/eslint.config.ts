@@ -192,6 +192,11 @@ export default withNuxt(
       'vitest/require-mock-type-parameters': 'off',
       // Several specs share one beforeEach across sibling describe blocks
       'vitest/require-top-level-describe': 'off',
+      // registerEndpoint() from @nuxt/test-utils registers on the shared mock
+      // server and has to run at module level, before any mount
+      'vitest/require-hook': 'off',
+      // happy-dom does not implement scrollIntoView, so there is nothing to spy on
+      'vitest/prefer-spy-on': 'off',
       // Fake timers and flush helpers legitimately construct promises
       'promise/avoid-new': 'off',
       // Its auto-fix rewrites toHaveBeenCalled() into toHaveBeenCalledWith(),

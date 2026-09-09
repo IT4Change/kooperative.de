@@ -105,6 +105,18 @@ describe('initial load', () => {
     expect(auth.loaded.value).toBe(true)
     expect(auth.loading.value).toBe(false)
   })
+
+  it('swallows the failure of the refresh it starts itself', async () => {
+    fetchMock.mockRejectedValue(new Error('offline'))
+
+    // Nobody awaits that first call, so a rejection would escape as an
+    // unhandled promise rejection and reach the browser console.
+    const auth = await freshAuth()
+    await settle()
+
+    expect(auth.loaded.value).toBe(true)
+    expect(auth.user.value).toBeNull()
+  })
 })
 
 describe('login', () => {

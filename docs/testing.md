@@ -65,32 +65,50 @@ import '../../test/setup-server'
 
 Die Suite läuft mit `TZ=UTC`, damit die Datumsformatierung deterministisch ist.
 
+### Komponenten und Seiten
+
+Komponenten- und Seiten-Specs mounten über `mountSuspended` aus
+`@nuxt/test-utils/runtime`; die Route setzt die Option `route`, z. B.
+`mountSuspended(Page, { route: '/shop?kategorie=alle' })`.
+
+HTTP beantwortet `registerEndpoint()` über einen echten h3-Server im Testprozess
+— kein `$fetch`-Mock. Drei Fallstricke:
+
+- `test/setup.ts` darf `globalThis.$fetch` nur setzen, wenn noch keins da ist.
+  Überschreibt es das von Nuxt installierte, laufen die Endpunkte ins Leere.
+- Die Methode wird gegen `event.method` verglichen, also **`method: 'POST'`**,
+  nicht `'post'`.
+- `getQuery`/`readBody` sind Nitro-Auto-Imports und in App-Specs nicht im Scope.
+  Query aus `event.path` parsen, `readBody` direkt aus `h3` importieren.
+
+`useFetch` cacht seinen Payload pro Key über die ganze Datei — Specs, die
+mehrfach mit unterschiedlichen Antworten mounten, brauchen `clearNuxtData()` im
+`beforeEach`. Wer nach `<body>` teleportiert (Dialoge), unmountet im `afterEach`,
+sonst steht der Inhalt im nächsten Test noch da.
+
+### Warten statt schlafen
+
+Navigationen laden das Chunk der Zielroute nach; wie viele Ticks das dauert,
+hängt von der Maschinenlast ab. Feste `setTimeout`-Wartezeiten sind deshalb
+Flakes mit Ansage. `test/helpers/wait.ts` bietet `waitFor(predicate)` und
+`waitForText(wrapper, text)`, die auf das Ergebnis pollen und mit lesbarer
+Meldung ablaufen. Das Timeout lässt sich über `TEST_WAIT_TIMEOUT` (ms) anheben.
+
 ## Coverage-Ratchet
 
-Die Schwellwerte in `vitest.config.ts` sind ein **Boden, der nur steigt**:
-
-- Die globalen Werte sind aktuell niedrig, weil `all: true` sämtliche noch
-  ungetesteten Vue-Seiten und API-Handler mitzählt. Sie verhindern, dass die
-  Abdeckung insgesamt zurückfällt.
-- Der Glob-Eintrag pinnt die Module der ersten Testwelle auf ~95–100 %, damit
-  diese nicht verrotten, während die globale Zahl klettert.
+Die Schwellwerte in `vitest.config.ts` sind ein **Boden, der nur steigt**. Es
+gibt genau einen globalen Satz Schwellen — keine pfadabhängigen Ausnahmen, damit
+nicht einzelne Ecken stillschweigend zurückfallen können.
 
 **Vorgehen beim Erweitern:** Tests schreiben → `npm run test:unit` → die
-erreichten Werte als neue Schwellen eintragen (globale Werte anheben, neu
-abgedeckte Dateien in den Glob aufnehmen). Schwellen werden nie gesenkt; wenn ein
-Wert fällt, fehlt ein Test.
+erreichten Werte als neue Schwellen eintragen. Schwellen werden nie gesenkt; wenn
+ein Wert fällt, fehlt ein Test.
 
-### Abgedeckt (erste Welle)
+Stand: 891 Tests, 96 % Statements / 89 % Branches / 94 % Functions / 97 % Lines.
 
-`server/utils/`: `iban`, `blz`, `converter`, `validate`, `mailFooter`,
-`orderStatus`, `checkoutOptions`, `countries`, `links` ·
-`app/composables/useAdminFormat`
-
-### Noch offen
-
-Composables mit State (`useCart`, `useAuth`, `useConsent`, `useStorage`),
-API-Handler mit gemocktem DB-Layer, `orderCompute`/`pendingOrder` (brauchen ein
-Pool-Mock), Komponenten-Rendering.
+Was noch offen ist, sind einzelne Fehlerpfade in den Admin-API-Handlern
+(`admin/api/orders/[id].get.ts`, `admin/api/pending/[id].get.ts`) sowie Zweige,
+die nur mit einer echten Datenbank auftreten.
 
 ## E2E-Tests (Full-Stack)
 
