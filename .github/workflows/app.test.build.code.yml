@@ -29,6 +29,8 @@ jobs:
     name: Build - App
     needs: files-changed
     runs-on: ubuntu-latest
+    # This job starts a server; a hang must not tie up a runner for hours.
+    timeout-minutes: 15
     env:
       WORKING_DIRECTORY: ./app
     steps:
