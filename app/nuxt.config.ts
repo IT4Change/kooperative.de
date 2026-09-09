@@ -2,6 +2,11 @@
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
+  // Specs live next to the code they test, which puts them inside the directories
+  // Nitro scans. Without this, server/plugins/*.spec.ts is registered as a plugin
+  // (and fails the build for want of a default export), server/middleware/*.spec.ts
+  // would run on every request, and every server/api spec would become an endpoint.
+  ignore: ['**/*.spec.ts'],
   modules: [
     // tsconfigPath enables type-aware linting, which the it4c TypeScript rules require
     ['@nuxt/eslint', { config: { typescript: { tsconfigPath: 'tsconfig.json' } } }],

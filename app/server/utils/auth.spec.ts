@@ -12,7 +12,7 @@ import {
   verifySession,
   setSessionCookie,
   clearSessionCookie,
-  getSession,
+  getCustomerSession,
   requireSession,
   generateInsecureSalt,
 } from './auth'
@@ -221,11 +221,11 @@ describe('session cookie', () => {
   it('reads the session back from the request cookie', () => {
     const token = signSession({ customerId: 9, email: 'e@example.org' })
 
-    expect(getSession(makeEvent(`koop_session=${token}`))).toMatchObject({ customerId: 9 })
+    expect(getCustomerSession(makeEvent(`koop_session=${token}`))).toMatchObject({ customerId: 9 })
   })
 
   it('returns null without a cookie', () => {
-    expect(getSession(makeEvent())).toBeNull()
+    expect(getCustomerSession(makeEvent())).toBeNull()
   })
 })
 

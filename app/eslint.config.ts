@@ -119,8 +119,9 @@ export default withNuxt(
     },
   },
   {
-    // Nuxt generates the flat config as .mjs, the import needs the extension
-    files: ['eslint.config.ts'],
+    // Nuxt generates the flat config as .mjs, the import needs the extension —
+    // and so do the plain-ESM maintenance scripts, which node resolves itself.
+    files: ['eslint.config.ts', 'scripts/**'],
     rules: {
       'n/file-extension-in-import': 'off',
     },
