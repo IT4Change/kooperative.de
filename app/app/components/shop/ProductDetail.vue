@@ -27,7 +27,7 @@
           class="w-full sm:w-auto text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#00af8c]/40 focus:border-[#00af8c]"
         >
           <option v-for="(v, idx) in product.variants" :key="idx" :value="idx">
-            {{ v.size }} · {{ unitPrice(v).toFixed(2) }} €/{{ v.referenceUnit }}
+            {{ v.size }} ≙ {{ unitPrice(v).toFixed(2) }} €/{{ v.referenceUnit }}
           </option>
         </select>
       </div>
@@ -63,7 +63,7 @@
         </span>
         <template v-if="product.variants && product.variantType !== 'quantity' && activeVariant">
           <span class="text-sm text-gray-400">
-            {{ displayUnitPrice }} €/{{ activeVariant.referenceUnit }}
+            ≙ {{ displayUnitPrice }} €/{{ activeVariant.referenceUnit }}
           </span>
         </template>
         <span v-else-if="product.variantType === 'quantity'" class="text-sm text-gray-400">
