@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.8.0](https://github.com/IT4Change/kooperative.de/compare/v0.7.0...v0.8.0) (2026-09-11)
+
+
+### Features
+
+* **app:** e2e tests ([#36](https://github.com/IT4Change/kooperative.de/issues/36)) ([fe83b5e](https://github.com/IT4Change/kooperative.de/commit/fe83b5ee06d5f4c33430d5c9eca89a94fc8b4d7e))
+* **app:** lazy load products ([#40](https://github.com/IT4Change/kooperative.de/issues/40)) ([241ad01](https://github.com/IT4Change/kooperative.de/commit/241ad010f25cfa779c5128e9268628740f5589f8))
+* **app:** tests & test enforcement ([#34](https://github.com/IT4Change/kooperative.de/issues/34)) ([c441271](https://github.com/IT4Change/kooperative.de/commit/c441271307dbafbe78189ee2fed8634965330969))
+
+
+### Bug Fixes
+
+* **app:** 100% coverage ([#42](https://github.com/IT4Change/kooperative.de/issues/42)) ([db0e57a](https://github.com/IT4Change/kooperative.de/commit/db0e57abf2e7915da725adc1c08fc8f007c6e57e))
+* **app:** aria & label selection ([#38](https://github.com/IT4Change/kooperative.de/issues/38)) ([a1a31ae](https://github.com/IT4Change/kooperative.de/commit/a1a31aea50f8475c5b1925d32023b9bff6785aa3))
+* **app:** entspricht symbol ([#44](https://github.com/IT4Change/kooperative.de/issues/44)) ([339b480](https://github.com/IT4Change/kooperative.de/commit/339b480d04580ce0b6c0606ad940846f63c6082e))
+* **app:** fix build & ci workflow for build ([#43](https://github.com/IT4Change/kooperative.de/issues/43)) ([531c0ce](https://github.com/IT4Change/kooperative.de/commit/531c0ce41fe571ce890ca76de478d1c9d1bb6423))
+* **app:** fix category filters - all as last selector ([#39](https://github.com/IT4Change/kooperative.de/issues/39)) ([f04794e](https://github.com/IT4Change/kooperative.de/commit/f04794e6cae9eab456cdf42cbd7bf3da364ea16a))
+* **app:** fix e2e warning ([#37](https://github.com/IT4Change/kooperative.de/issues/37)) ([3b00160](https://github.com/IT4Change/kooperative.de/commit/3b00160e50561639bf8fbccb81598a93efb5daff))
+* **frontend:** fix express label to be uniform ([#41](https://github.com/IT4Change/kooperative.de/issues/41)) ([53ddf30](https://github.com/IT4Change/kooperative.de/commit/53ddf30591f3155980e27f9af9ddfbb04bb0ca03))
+
 ## [0.7.0](https://github.com/IT4Change/kooperative.de/compare/v0.6.5...v0.7.0) (2026-08-05)
 
 
