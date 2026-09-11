@@ -26,7 +26,7 @@
           class="w-full text-sm border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#00af8c] focus:border-[#00af8c]"
         >
           <option v-for="(v, idx) in product.variants" :key="idx" :value="idx">
-            {{ v.size }} · {{ unitPrice(v).toFixed(2) }} €/{{ v.referenceUnit }}
+            {{ v.size }} ≙ {{ unitPrice(v).toFixed(2) }} €/{{ v.referenceUnit }}
           </option>
         </select>
       </div>
@@ -66,7 +66,7 @@
             v-if="product.variants && product.variantType !== 'quantity'"
             class="block text-xs text-gray-400"
           >
-            {{ displayUnitPrice }} €/{{ activeVariant!.referenceUnit }}
+            ≙ {{ displayUnitPrice }} €/{{ activeVariant!.referenceUnit }}
           </span>
           <span v-else-if="product.variantType === 'quantity'" class="block text-xs text-gray-400">
             {{ quantity }} × {{ activeTierPrice.toFixed(2) }} €

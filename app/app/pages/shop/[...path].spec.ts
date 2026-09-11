@@ -243,7 +243,7 @@ describe('size variants', () => {
     const wrapper = await mount('/shop/3/olivenoel')
     const options = wrapper.findAll('option').map((o) => o.text().replace(/\s+/g, ' '))
 
-    expect(options).toStrictEqual(['0,5 L · 19.04 €/L', '1 L · 17.85 €/L'])
+    expect(options).toStrictEqual(['0,5 L ≙ 19.04 €/L', '1 L ≙ 17.85 €/L'])
   })
 
   it('starts on the first size', async () => {

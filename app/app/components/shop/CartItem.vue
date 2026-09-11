@@ -70,7 +70,7 @@
         @change="onVariantChange(($event.target as HTMLSelectElement).value)"
       >
         <option v-for="(v, idx) in item.product.variants" :key="idx" :value="idx">
-          {{ v.size }} – {{ v.price.toFixed(2) }} € · {{ unitPrice(v).toFixed(2) }} €/{{
+          {{ v.size }} – {{ v.price.toFixed(2) }} € ≙ {{ unitPrice(v).toFixed(2) }} €/{{
             v.referenceUnit
           }}
         </option>
