@@ -221,12 +221,20 @@ Mengenstaffel (Karte 1 Stk. / ab 10 Stk.), ein inaktives Produkt, ein
 verschachtelter Kategoriebaum und ein Testkunde mit deutscher Adresse
 (Steuerzone 2).
 
+Dazu die Kategorie „Lebensmittel" mit „Salz" und dem Unterkategorie-Produkt
+„Zwieback". Beide sind in der DB **aktiv** und müssen trotzdem unsichtbar
+bleiben — sie prüfen den Katalog-Filter (`HIDDEN_CATEGORY_SLUGS` in
+`server/utils/catalog.ts`). Der sichtbare Kategoriebaum heißt deshalb
+„Naturkost", nicht „Lebensmittel".
+
 Dazu 30 Füll-Produkte („Zubehör 01…30"), damit das Grid überhaupt paginiert —
 die Seitengröße ist 24. Sie sind bewusst so benannt, dass sie **hinter** den
 handgeschriebenen Fixtures einsortieren: das Grid sortiert nach Aufrufzahl,
 dann Name, und die übrigen Specs erwarten Honig, Brot, Karte und Olivenöl auf
-der ersten Seite. Die 36 aktiven DB-Zeilen ergeben 34 Grid-Produkte, weil
-`groupProducts` die Varianten von Olivenöl und Karte je zusammenfasst.
+der ersten Seite. Die 38 aktiven DB-Zeilen ergeben 34 Grid-Produkte: zwei fallen
+als Lebensmittel weg, und `groupProducts` fasst die Varianten von Olivenöl und
+Karte je zusammen. Das Admin-Dashboard zählt dagegen 38 — es berichtet den Stand
+der osCommerce-Datenbank, nicht das Sortiment dieses Shops.
 
 ### Zwei Stolpersteine, die dokumentiert bleiben sollten
 
@@ -293,6 +301,10 @@ mehreren Stellen gleichzeitig hängt (URL, Suche, Zählwerte):
   „nichts gefunden", während Treffer eine Kategorie weiter liegen. Die vorher
   aktive Kategorie wird gemerkt und beim Leeren des Suchfelds wiederhergestellt
   — auch dann, wenn das ein bewusst gewähltes „Alle" war.
+- **Lebensmittel** kommen im Katalog gar nicht mehr vor: kein Filter-Button,
+  keine Karten unter „Alle", kein Suchtreffer, 404 auf der Detailroute. Ein
+  alter Link auf `?kategorie=lebensmittel` fällt auf die Standardkategorie
+  zurück statt auf einen leeren Shop.
 
 Weil die Startseite nun gefiltert ist, landet `openShop()` aus den Helpern
 standardmäßig auf `?kategorie=alle`. Specs, die ein bestimmtes Fixture-Produkt
