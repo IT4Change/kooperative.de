@@ -1,8 +1,18 @@
 <template>
   <div class="max-w-[1100px] mx-auto px-4 pt-24 pb-12 sm:px-6">
+    <!--
+      Looks like a plain text link, but is a 44px touch target: the padding grows
+      the hit area, the negative margins take that growth back out of the layout
+      so the label stays exactly where it was. 20px of link was below even the
+      24px WCAG 2.5.8 asks for, and the inline-text exception does not apply to a
+      link standing on its own above the page.
+
+      active: rather than hover: only — a finger has no hover, so without it the
+      tap goes unacknowledged.
+    -->
     <NuxtLink
       to="/shop"
-      class="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-[#00af8c] mb-6"
+      class="-mt-3 -ml-2 mb-3 inline-flex min-h-11 items-center gap-1 rounded-lg px-2 text-sm text-gray-500 transition-colors hover:text-[#00af8c] active:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00af8c]"
     >
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />

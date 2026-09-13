@@ -211,6 +211,15 @@ describe('the product itself', () => {
 
     expect(views).toStrictEqual(['1'])
   })
+
+  it('offers the way back to the listing', async () => {
+    const wrapper = await mount('/shop/1/honig')
+    const back = wrapper.findAll('a').find((a) => a.text().includes('Zurück zum Shop'))
+
+    expect(back?.attributes('href')).toBe('/shop')
+    // How big that link actually is has no meaning without layout — a11y.spec.ts
+    // measures the touch target in a real browser.
+  })
 })
 
 describe('a sparse product', () => {
