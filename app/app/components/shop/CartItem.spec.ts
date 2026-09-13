@@ -21,7 +21,7 @@ function product(over: Partial<Product> = {}): Product {
     name: 'Honig',
     price: 11.9,
     description: '',
-    category: 'lebensmittel',
+    category: 'naturkost',
     images: [],
     slug: 'honig',
     ...over,

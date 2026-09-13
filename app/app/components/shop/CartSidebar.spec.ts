@@ -26,7 +26,7 @@ const HONIG = {
   name: 'Honig',
   price: 11.9,
   description: '',
-  category: 'lebensmittel',
+  category: 'naturkost',
   images: [],
   slug: 'honig',
 } as Product

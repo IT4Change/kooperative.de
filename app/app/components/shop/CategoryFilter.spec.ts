@@ -11,17 +11,17 @@ import type { Category } from '~/data/products'
  * customer cannot click their way into an empty result.
  */
 const CATEGORIES: Category[] = [
-  { slug: 'lebensmittel', name: 'Lebensmittel', description: '', parentSlug: null },
-  { slug: 'lebensmittel/oele', name: 'Öle', description: '', parentSlug: 'lebensmittel' },
-  { slug: 'lebensmittel/brot', name: 'Brot', description: '', parentSlug: 'lebensmittel' },
+  { slug: 'naturkost', name: 'Naturkost', description: '', parentSlug: null },
+  { slug: 'naturkost/oele', name: 'Öle', description: '', parentSlug: 'naturkost' },
+  { slug: 'naturkost/brot', name: 'Brot', description: '', parentSlug: 'naturkost' },
   { slug: 'papeterie', name: 'Papeterie', description: '', parentSlug: null },
   { slug: 'leer', name: 'Leer', description: '', parentSlug: null },
 ]
 
 const COUNTS = {
-  lebensmittel: 3,
-  'lebensmittel/oele': 1,
-  'lebensmittel/brot': 2,
+  naturkost: 3,
+  'naturkost/oele': 1,
+  'naturkost/brot': 2,
   papeterie: 1,
 }
 
@@ -39,7 +39,7 @@ describe('top level', () => {
     const wrapper = await mount(null)
     const labels = topRow(wrapper).map((b) => b.text().replace(/\s+/g, ' '))
 
-    expect(labels).toContain('Lebensmittel 3')
+    expect(labels).toContain('Naturkost 3')
     expect(labels).toContain('Papeterie 1')
   })
 
@@ -86,8 +86,8 @@ describe('top level', () => {
   })
 
   it('marks the parent as active when a child is selected', async () => {
-    const wrapper = await mount('lebensmittel/oele')
-    const parent = topRow(wrapper).find((b) => b.text().includes('Lebensmittel'))
+    const wrapper = await mount('naturkost/oele')
+    const parent = topRow(wrapper).find((b) => b.text().includes('Naturkost'))
 
     expect(parent?.classes().join(' ')).toContain('bg-[#00af8c]')
   })
@@ -101,7 +101,7 @@ describe('subcategories', () => {
   })
 
   it('appears for a category that has children', async () => {
-    const wrapper = await mount('lebensmittel')
+    const wrapper = await mount('naturkost')
     const labels = subRow(wrapper).map((b) => b.text().replace(/\s+/g, ' '))
 
     expect(labels).toContain('Öle 1')
@@ -115,28 +115,28 @@ describe('subcategories', () => {
   })
 
   it('emits the child slug', async () => {
-    const wrapper = await mount('lebensmittel')
+    const wrapper = await mount('naturkost')
 
     await subRow(wrapper)
       .find((b) => b.text().includes('Öle'))!
       .trigger('click')
 
-    expect(wrapper.emitted('select')?.[0]).toStrictEqual(['lebensmittel/oele'])
+    expect(wrapper.emitted('select')?.[0]).toStrictEqual(['naturkost/oele'])
   })
 
   it('offers a way back to the whole parent category', async () => {
-    const wrapper = await mount('lebensmittel/oele')
+    const wrapper = await mount('naturkost/oele')
     const all = subRow(wrapper).at(-1)
 
     // Distinguishable from the other "Alle" for a screen reader.
-    expect(all?.attributes('aria-label')).toBe('Alle Lebensmittel')
+    expect(all?.attributes('aria-label')).toBe('Alle Naturkost')
     await all!.trigger('click')
-    expect(wrapper.emitted('select')?.[0]).toStrictEqual(['lebensmittel'])
+    expect(wrapper.emitted('select')?.[0]).toStrictEqual(['naturkost'])
   })
 
   it('shows a zero for a parent no product counts towards', async () => {
     const wrapper = await mountSuspended(CategoryFilter, {
-      props: { selected: 'lebensmittel/oele', counts: {}, categories: CATEGORIES, total: 0 },
+      props: { selected: 'naturkost/oele', counts: {}, categories: CATEGORIES, total: 0 },
     })
 
     expect(subRow(wrapper).at(-1)?.text()).toContain('0')

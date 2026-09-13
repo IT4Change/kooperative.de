@@ -14,32 +14,40 @@ import { getCatalog, invalidateCatalog } from './catalog'
  */
 
 const CATEGORY_ROWS = [{ categories_id: 1, parent_id: 0, sort_order: 1, categories_name: 'Honig' }]
-const PRODUCT_ROWS = [
-  {
+
+function baseRow() {
+  return {
     products_id: 1,
     products_price: '10.0000',
     products_model: 'HON-1',
-    products_image: null,
+    products_image: null as string | null,
     products_image_detail_1: '',
     products_image_detail_2: '',
     products_image_detail_3: '',
     products_image_detail_4: '',
     products_image_detail_5: '',
-    products_date_added: null,
+    products_date_added: null as Date | null,
     tax_rate: '19.0000',
     products_name: 'Honig',
-    products_description: null,
-    products_description2: null,
-    products_content: null,
-    products_sizes: null,
+    products_description: null as string | null,
+    products_description2: null as string | null,
+    products_content: null as string | null,
+    products_sizes: null as string | null,
     products_viewed: 0,
-    products_head_title_tag: null,
-    products_head_desc_tag: null,
-    products_head_keywords_tag: null,
+    products_head_title_tag: null as string | null,
+    products_head_desc_tag: null as string | null,
+    products_head_keywords_tag: null as string | null,
     category_id: 1,
     category_name: 'Honig',
-  },
-]
+  }
+}
+
+/** One product row with the columns the catalog query selects. */
+function productRow(over: Partial<ReturnType<typeof baseRow>> = {}) {
+  return { ...baseRow(), ...over }
+}
+
+const PRODUCT_ROWS = [productRow()]
 
 function loadedDb(extra: Parameters<typeof createMockDb>[0] = []) {
   return createMockDb([
@@ -185,5 +193,55 @@ describe('getCatalog', () => {
     await getCatalog(db.pool)
 
     expect(db.calls.length).toBeGreaterThan(queriesAfterFirst)
+  })
+})
+
+/**
+ * The food range is sold elsewhere now. It is dropped here, in the one place
+ * the listing, the detail route and the order pipeline all read from, rather
+ * than hidden in the storefront — otherwise it would stay reachable via "Alle",
+ * a direct category link or the product URL.
+ */
+describe('hidden categories', () => {
+  const CATEGORIES = [
+    { categories_id: 1, parent_id: 0, sort_order: 1, categories_name: 'Papeterie' },
+    { categories_id: 52, parent_id: 0, sort_order: 2, categories_name: 'Lebensmittel' },
+    { categories_id: 54, parent_id: 52, sort_order: 1, categories_name: 'Bulgur' },
+  ]
+  const PRODUCTS = [
+    productRow({ products_id: 1, products_name: 'Karte', category_id: 1 }),
+    productRow({ products_id: 2, products_name: 'Salz', category_id: 52 }),
+    productRow({ products_id: 3, products_name: 'Bulgur', category_id: 54 }),
+    // Same name as the visible product and more views, so it wins the plain
+    // "karte" slug during de-duplication — see the slug test below.
+    productRow({ products_id: 4, products_name: 'Karte', category_id: 54, products_viewed: 99 }),
+  ]
+
+  function db() {
+    return createMockDb([
+      { match: 'FROM categories', rows: CATEGORIES },
+      { match: 'FROM products', rows: PRODUCTS },
+    ])
+  }
+
+  it('drops the hidden category and everything below it', async () => {
+    const snapshot = await getCatalog(db().pool)
+
+    expect(snapshot.categories.map((c) => c.slug)).toStrictEqual(['papeterie'])
+  })
+
+  it('drops products of the hidden category and of its children', async () => {
+    const snapshot = await getCatalog(db().pool)
+
+    // 'Salz' sits directly in Lebensmittel, 'Bulgur' in its subcategory.
+    expect(snapshot.products.map((p) => p.id)).toStrictEqual(['1'])
+  })
+
+  it('leaves the slugs of the remaining products untouched', async () => {
+    const snapshot = await getCatalog(db().pool)
+
+    // The hidden namesake already took 'karte'. Filtering before the grouping
+    // would hand it back and silently break every existing link to 'karte-2'.
+    expect(snapshot.products[0].slug).toBe('karte-2')
   })
 })
