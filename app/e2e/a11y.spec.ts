@@ -176,3 +176,43 @@ test.describe('dialog semantics', () => {
     await expect(page.getByTestId('cart-sidebar')).toBeHidden()
   })
 })
+
+/**
+ * Below sm the panel covers the whole screen, so the ✕ is the only thing in
+ * sight that could end the session — and an unlabelled ✕ on a full screen reads
+ * as "discard". The way out is spelled out here instead. Only a real browser
+ * can tell: the swap is a CSS breakpoint, invisible to the unit tests.
+ */
+test.describe('the cart on a phone', () => {
+  test.use({ viewport: { width: 390, height: 844 } })
+
+  test('offers a named way back and keeps the list', async ({ page }) => {
+    await openShop(page)
+    await addToCart(page, 'Honig')
+    const sidebar = page.getByTestId('cart-sidebar')
+    await expect(sidebar).toBeVisible()
+
+    await expect(sidebar.getByRole('button', { name: 'Schließen' })).toBeHidden()
+    await expect(sidebar.getByText('Ihre Bestellliste bleibt gespeichert.')).toBeVisible()
+
+    await sidebar.getByRole('button', { name: 'Weiter einkaufen' }).click()
+
+    await expect(sidebar).toBeHidden()
+    // Back on the shop with the list intact — the badge still counts the item.
+    await expect(page.getByRole('button', { name: 'Bestellliste öffnen' })).toContainText('1')
+    await openCart(page)
+    await expect(page.getByTestId('cart-total')).toContainText('11.90')
+  })
+})
+
+test.describe('the cart beside the shop', () => {
+  test('keeps the bare ✕ where the page stays visible', async ({ page }) => {
+    await openShop(page)
+    await addToCart(page, 'Honig')
+    const sidebar = page.getByTestId('cart-sidebar')
+
+    await expect(sidebar.getByRole('button', { name: 'Schließen' })).toBeVisible()
+    await expect(sidebar.getByRole('button', { name: 'Weiter einkaufen' })).toBeHidden()
+    await expect(sidebar.getByText('Ihre Bestellliste bleibt gespeichert.')).toBeHidden()
+  })
+})
