@@ -57,26 +57,18 @@
         </div>
       </div>
 
-      <div class="flex items-center justify-between">
-        <div>
-          <span class="text-lg font-bold text-[#00af8c]" data-testid="product-price">
-            {{ displayPrice.toFixed(2) }}&nbsp;€
-          </span>
-          <span
-            v-if="product.variants && product.variantType !== 'quantity'"
-            class="block text-xs text-gray-400"
-          >
-            ≙ {{ displayUnitPrice }} €/{{ activeVariant!.referenceUnit }}
-          </span>
-          <span v-else-if="product.variantType === 'quantity'" class="block text-xs text-gray-400">
-            {{ quantity }} × {{ activeTierPrice.toFixed(2) }} €
-          </span>
-          <span v-else-if="product.unit" class="text-xs font-normal text-gray-400"
-            >/ {{ product.unit }}</span
-          >
-        </div>
-        <KoopButton size="sm" @click="handleAdd"> Auf die Bestellliste </KoopButton>
+      <!-- The button keeps its size across all cards: the price row holds only
+           the price and the button, everything the price can carry (unit price,
+           tier total, pack size) gets a full-width line of its own below it. -->
+      <div class="flex items-center justify-between gap-3">
+        <span class="text-lg font-bold text-[#00af8c]" data-testid="product-price">
+          {{ displayPrice.toFixed(2) }}&nbsp;€
+        </span>
+        <KoopButton size="sm" class="shrink-0" @click="handleAdd">
+          Auf die Bestellliste
+        </KoopButton>
       </div>
+      <p v-if="priceNote" class="mt-1 text-xs text-gray-400">{{ priceNote }}</p>
     </div>
   </div>
 </template>
@@ -118,9 +110,27 @@
     return activeVariant.value?.price ?? props.product.price
   })
 
-  // Shown next to the price for size variants only, where activeVariant is the
+  // Shown below the price for size variants only, where activeVariant is the
   // currently picked one and therefore always set.
   const displayUnitPrice = computed(() => unitPrice(activeVariant.value!).toFixed(2))
+
+  /**
+   * The line below the price row. Whatever a product carries here — unit price,
+   * tier total or the pack size from the catalogue, which is free text and can
+   * be as long as "(7,06 EURO pro Kilogramm)" — it must not sit next to the
+   * button: that squeezed the button until its label wrapped, and cards ended up
+   * with differently sized buttons.
+   */
+  const priceNote = computed(() => {
+    const { variants, variantType, unit } = props.product
+    if (variants && variantType !== 'quantity') {
+      return `≙ ${displayUnitPrice.value} €/${activeVariant.value!.referenceUnit}`
+    }
+    if (variantType === 'quantity') {
+      return `${quantity.value} × ${activeTierPrice.value.toFixed(2)} €`
+    }
+    return unit ?? ''
+  })
 
   const displayImages = computed(() =>
     activeVariant.value && props.product.variantType !== 'quantity'

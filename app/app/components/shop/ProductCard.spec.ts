@@ -72,6 +72,26 @@ describe('a plain product', () => {
     expect(wrapper.text()).toContain('500 g Glas')
   })
 
+  /**
+   * The catalogue's pack-size field is free text and often a base price
+   * ("(7,06 EURO pro Kilogramm)"). Next to the price it pushed against the
+   * button until the label wrapped, and the grid ended up with buttons of two
+   * different sizes. It therefore belongs on the line below the price row.
+   */
+  it('keeps a long pack size out of the row the button sits in', async () => {
+    const wrapper = await mount(product({ unit: '(7,06 EURO pro Kilogramm)' }))
+
+    const priceRow = wrapper.get('[data-testid="product-price"]').element.parentElement!
+    expect(priceRow.textContent).not.toContain('7,06')
+    expect(wrapper.text()).toContain('(7,06 EURO pro Kilogramm)')
+  })
+
+  it('leaves the line below the price out when there is nothing to say', async () => {
+    const wrapper = await mount(product())
+
+    expect(wrapper.find('p.text-xs.text-gray-400').exists()).toBe(false)
+  })
+
   it('offers neither a size picker nor a quantity field', async () => {
     const wrapper = await mount(product())
 
