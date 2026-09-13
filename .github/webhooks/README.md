@@ -88,3 +88,12 @@ Repository → **Settings → Webhooks → Add webhook**:
 
 Ohne Argument fällt `deploy.sh` auf `master` zurück -- nützlich für
 manuelles Auslösen auf dem Server.
+
+`deploy.sh` installiert bewusst **mit** devDependencies (`npm ci`, kein
+`--omit=dev`): `nuxt build` lädt jedes Modul aus `nuxt.config.ts`, darunter
+`@nuxt/eslint` und `@nuxt/test-utils`. Für die Laufzeit spielt das keine Rolle
+-- `start.sh` startet den eigenständigen Nitro-Build unter `app/.output`, der
+seine Abhängigkeiten gebündelt mitbringt und `node_modules` nie anfasst.
+
+Schlägt Install, Build oder Migration fehl, bricht das Skript vor dem
+`pm2`-Neustart ab; die vorherige Version bleibt live.
