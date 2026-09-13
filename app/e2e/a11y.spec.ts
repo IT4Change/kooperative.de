@@ -216,3 +216,28 @@ test.describe('the cart beside the shop', () => {
     await expect(sidebar.getByText('Ihre Bestellliste bleibt gespeichert.')).toBeHidden()
   })
 })
+
+/**
+ * WCAG 2.2 SC 2.5.8 asks for 24×24 CSS px, the AAA criterion and both platform
+ * guidelines for 44. The back link renders as plain text, so its box is only as
+ * tall as its line unless someone pads it — and padding is exactly the kind of
+ * thing a later refactor drops without noticing. Hence a measurement, not a
+ * class assertion: only a real browser knows how big the target ended up.
+ */
+test.describe('touch targets', () => {
+  test.use({ viewport: { width: 390, height: 844 } })
+
+  test('the way back from a product is big enough for a thumb', async ({ page }) => {
+    await page.goto('/shop/1/honig')
+    const back = page.getByRole('link', { name: 'Zurück zum Shop' })
+    await expect(back).toBeVisible()
+
+    const box = (await back.boundingBox())!
+    expect(box.height).toBeGreaterThanOrEqual(44)
+    expect(box.width).toBeGreaterThanOrEqual(44)
+
+    // Tapping the padding, not the text: the bottom edge of the target.
+    await page.mouse.click(box.x + box.width / 2, box.y + box.height - 3)
+    await expect(page).toHaveURL(/\/shop$/)
+  })
+})
