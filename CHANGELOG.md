@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.8.1](https://github.com/IT4Change/kooperative.de/compare/v0.8.0...v0.8.1) (2026-09-13)
+
+
+### Bug Fixes
+
+* **other:** fix deploy script ([#45](https://github.com/IT4Change/kooperative.de/issues/45)) ([592936e](https://github.com/IT4Change/kooperative.de/commit/592936e3417e7f09ba233cab53f293956bbba4c7))
+
 ## [0.8.0](https://github.com/IT4Change/kooperative.de/compare/v0.7.0...v0.8.0) (2026-09-11)
 
 
