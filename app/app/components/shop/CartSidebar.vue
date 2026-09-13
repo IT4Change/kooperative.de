@@ -15,30 +15,61 @@
             data-testid="cart-sidebar"
           >
             <!-- Header -->
-            <div class="flex items-center justify-between px-5 py-4 border-b border-gray-200">
-              <h2 :id="`${uid}-title`" class="text-lg font-semibold">
-                <template v-if="checkoutStep === 'cart'">Bestellliste</template>
-                <template v-else-if="checkoutStep === 'auth'">Anmelden</template>
-                <template v-else-if="checkoutStep === 'details'">Versand &amp; Zahlung</template>
-                <template v-else-if="checkoutStep === 'confirm'">Übersicht</template>
-                <template v-else>Bestellung gesendet</template>
-              </h2>
-              <button
-                class="text-gray-400 hover:text-gray-600 transition-colors"
-                aria-label="Schließen"
-                @click="closeCart"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="w-5 h-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  stroke-width="2"
+            <div class="px-5 py-4 border-b border-gray-200">
+              <div class="flex items-center justify-between gap-3">
+                <h2 :id="`${uid}-title`" class="text-lg font-semibold truncate">
+                  <template v-if="checkoutStep === 'cart'">Bestellliste</template>
+                  <template v-else-if="checkoutStep === 'auth'">Anmelden</template>
+                  <template v-else-if="checkoutStep === 'details'">Versand &amp; Zahlung</template>
+                  <template v-else-if="checkoutStep === 'confirm'">Übersicht</template>
+                  <template v-else>Bestellung gesendet</template>
+                </h2>
+                <!--
+                  Two controls for one action, one visible per breakpoint. On a
+                  phone the panel covers the whole screen, so a bare ✕ is the only
+                  thing on it that could mean "discard" — it gets a label. On a
+                  wide screen the shop stays visible beside the panel and the ✕
+                  reads as what it is.
+                -->
+                <button
+                  class="sm:hidden shrink-0 inline-flex items-center gap-1 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+                  @click="closeCart"
                 >
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="w-4 h-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    aria-hidden="true"
+                  >
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                  </svg>
+                  Weiter einkaufen
+                </button>
+                <button
+                  class="hidden sm:block text-gray-400 hover:text-gray-600 transition-colors"
+                  aria-label="Schließen"
+                  @click="closeCart"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="w-5 h-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <!-- Only while there is something to lose, and only where leaving
+                   hides the shop: the reassurance is the point, not the sentence. -->
+              <p v-if="!isEmpty" class="sm:hidden mt-1 text-xs text-gray-500">
+                Ihre Bestellliste bleibt gespeichert.
+              </p>
             </div>
 
             <!-- Content -->

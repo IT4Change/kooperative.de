@@ -49,6 +49,12 @@ async function freshCart() {
 const panel = () => document.body.querySelector('[data-testid="cart-sidebar"]')
 const bodyText = () => document.body.textContent
 
+/** The labelled way out, shown instead of the ✕ on a phone. */
+const leaveButton = () =>
+  [...document.body.querySelectorAll('button')].find((b) =>
+    b.textContent.includes('Weiter einkaufen'),
+  )
+
 /** The button that leaves the cart step. */
 const proceed = () =>
   [...document.body.querySelectorAll('button')].find((b) =>
@@ -124,6 +130,38 @@ describe('visibility', () => {
     await nextTick()
 
     expect(cart.isOpen.value).toBe(false)
+  })
+
+  /**
+   * On a phone the panel is the whole screen, so nothing around it hints that
+   * leaving it is harmless. Both halves of that reassurance — where the exit
+   * leads and that the list survives it — have to be on the panel itself.
+   */
+  it('spells out where the way out leads', async () => {
+    const cart = await freshCart()
+    cart.addToCart(HONIG)
+    await mountSuspended(CartSidebar)
+    await new Promise((resolve) => setTimeout(resolve, 0))
+
+    const back = leaveButton()
+    expect(back).toBeDefined()
+    expect(bodyText()).toContain('Ihre Bestellliste bleibt gespeichert.')
+
+    back!.click()
+    await nextTick()
+
+    expect(cart.isOpen.value).toBe(false)
+    // Left, not emptied — that is the whole promise of the label.
+    expect(cart.items.value).toHaveLength(1)
+  })
+
+  it('promises nothing about an empty list', async () => {
+    const cart = await freshCart()
+    await mountSuspended(CartSidebar)
+    cart.openCart()
+    await new Promise((resolve) => setTimeout(resolve, 0))
+
+    expect(bodyText()).not.toContain('bleibt gespeichert')
   })
 
   it('names itself after the current step', async () => {
