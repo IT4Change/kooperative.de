@@ -70,10 +70,16 @@ export const E2E_CUSTOMER = {
 //   tax_class_id 2 = 19 %   tax_class_id 3 = 7 %   (see database/seed/reference.sql)
 
 const CATEGORIES = [
-  { id: 1, parent: 0, sort: 1, name: 'Lebensmittel' },
+  { id: 1, parent: 0, sort: 1, name: 'Naturkost' },
   { id: 2, parent: 1, sort: 1, name: 'Öle' },
   { id: 3, parent: 0, sort: 2, name: 'Papeterie' },
   { id: 4, parent: 0, sort: 3, name: 'Zubehör' },
+  // Hidden by the catalog (HIDDEN_CATEGORY_SLUGS in server/utils/catalog.ts):
+  // the food range is sold elsewhere now. Present here — with active products,
+  // in the parent and in a child — precisely so the filter has something to
+  // drop; nothing below id 5 may ever reach the storefront.
+  { id: 5, parent: 0, sort: 4, name: 'Lebensmittel' },
+  { id: 6, parent: 5, sort: 1, name: 'Gebäck' },
 ]
 
 /**
@@ -159,6 +165,10 @@ const PRODUCTS = [
     taxClass: 2,
     status: 0,
   },
+  // Active, but in the hidden category tree — must never surface either. One
+  // hangs directly off Lebensmittel, one off its child.
+  { id: 8, category: 5, name: 'Salz', model: 'SAL-1', price: '2.0000', taxClass: 3, status: 1 },
+  { id: 9, category: 6, name: 'Zwieback', model: 'ZWI-1', price: '4.0000', taxClass: 3, status: 1 },
   ...FILLER,
 ]
 

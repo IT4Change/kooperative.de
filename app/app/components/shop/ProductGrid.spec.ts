@@ -12,7 +12,7 @@ function product(id: string, name: string): Product {
     name,
     price: 1,
     description: '',
-    category: 'lebensmittel',
+    category: 'naturkost',
     images: [],
     slug: name.toLowerCase(),
   }

@@ -25,7 +25,7 @@ const OLIVENOEL: Product = {
   slug: 'olivenoel',
   price: 9.52,
   description: 'Kaltgepresst',
-  category: 'lebensmittel',
+  category: 'naturkost',
   images: ['/img/oel.jpg'],
   model: 'OEL-1',
   content: '0,5 Liter',
@@ -82,7 +82,7 @@ const HONIG: Product = {
   slug: 'honig',
   price: 11.9,
   description: 'Aus der Region',
-  category: 'lebensmittel',
+  category: 'naturkost',
   images: ['/img/honig.jpg'],
   unit: '500 g Glas',
 }
@@ -114,8 +114,8 @@ const views: string[] = []
 
 registerEndpoint('/api/products/3', () => ({ product: OLIVENOEL, categoryName: 'Öle' }))
 registerEndpoint('/api/products/5', () => ({ product: KARTE, categoryName: 'Papeterie' }))
-registerEndpoint('/api/products/1', () => ({ product: HONIG, categoryName: 'Lebensmittel' }))
-registerEndpoint('/api/products/honig', () => ({ product: HONIG, categoryName: 'Lebensmittel' }))
+registerEndpoint('/api/products/1', () => ({ product: HONIG, categoryName: 'Naturkost' }))
+registerEndpoint('/api/products/honig', () => ({ product: HONIG, categoryName: 'Naturkost' }))
 registerEndpoint('/api/products/7', () => ({ product: KARG }))
 registerEndpoint('/api/products/8', () => ({ product: KAPUTT, categoryName: 'Sonstiges' }))
 registerEndpoint('/api/products/404', () => ({}))
@@ -148,7 +148,7 @@ describe('resolving the URL', () => {
     const wrapper = await mount('/shop/1/honig')
 
     expect(wrapper.get('h1').text()).toBe('Honig')
-    expect(wrapper.text()).toContain('Lebensmittel')
+    expect(wrapper.text()).toContain('Naturkost')
   })
 
   it('rewrites a bare id to the canonical URL', async () => {

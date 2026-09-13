@@ -76,8 +76,10 @@ test.describe('admin', () => {
     const res = await page.request.get('/admin/api/dashboard')
     expect(res.ok()).toBe(true)
     const data = await res.json()
-    // Seven hand-written products (one inactive) plus 30 pagination fillers.
-    expect(data.stats.productsActive).toBe(36)
+    // Nine hand-written products (one inactive) plus 30 pagination fillers. The
+    // two in the hidden Lebensmittel category count here: the dashboard reports
+    // the state of the osCommerce database, not what this storefront sells.
+    expect(data.stats.productsActive).toBe(38)
     expect(data.stats.customers).toBeGreaterThanOrEqual(1)
     expect(data.statuses.map((s: { id: number }) => s.id)).toEqual([1, 2, 3, 4])
   })

@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test'
 
+import { api } from './helpers/api'
 import { closeDb } from './helpers/db'
 import { productCard } from './helpers/shop'
 
@@ -10,10 +11,10 @@ import type { Page } from '@playwright/test'
  * "Alle" sits at the end of each row as the way out of the filter.
  *
  * The seed builds the tree these tests rely on (scripts/seed-e2e.mjs):
- *   Lebensmittel  — Honig, Brot, plus the child Öle
+ *   Naturkost     — Honig, Brot, plus the child Öle
  *     └ Öle       — Olivenöl
  *   Papeterie     — Karte
- * so the default resolves to Lebensmittel › Öle.
+ * so the default resolves to Naturkost › Öle.
  */
 test.describe.configure({ mode: 'serial' })
 
@@ -37,7 +38,7 @@ test.describe('category filter', () => {
   test('preselects the first category and its first subcategory', async ({ page }) => {
     await landOn(page, '/shop')
 
-    await expect(page.getByRole('button', { name: /^Lebensmittel/ })).toHaveClass(/bg-\[#00af8c\]/)
+    await expect(page.getByRole('button', { name: /^Naturkost/ })).toHaveClass(/bg-\[#00af8c\]/)
     await expect(page.getByRole('button', { name: /^Öle/ })).toHaveClass(/bg-\[#00af8c\]/)
     await expect(shownProducts(page)).toHaveText(['Olivenöl'])
   })
@@ -55,7 +56,7 @@ test.describe('category filter', () => {
     await expect(topRow.last()).toHaveAccessibleName('Alle Kategorien')
 
     const subRow = page.locator('.border-l-2 button')
-    await expect(subRow.last()).toHaveAccessibleName('Alle Lebensmittel')
+    await expect(subRow.last()).toHaveAccessibleName('Alle Naturkost')
   })
 
   test('"Alle" shows the whole range and is linkable', async ({ page }) => {
@@ -75,7 +76,7 @@ test.describe('category filter', () => {
 
   test('the subcategory "Alle" falls back to the whole parent category', async ({ page }) => {
     await landOn(page, '/shop')
-    await page.getByRole('button', { name: 'Alle Lebensmittel' }).click()
+    await page.getByRole('button', { name: 'Alle Naturkost' }).click()
 
     // Honig and Brot hang directly off the parent, Olivenöl off the child.
     await expect(shownProducts(page)).toHaveText(['Honig', 'Brot', 'Olivenöl'])
@@ -98,7 +99,7 @@ test.describe('category filter', () => {
 test.describe('search across the preselected category', () => {
   test('searches the whole range, not just the active category', async ({ page }) => {
     await landOn(page, '/shop')
-    // "Karte" sits in Papeterie while Lebensmittel › Öle is active — without the
+    // "Karte" sits in Papeterie while Naturkost › Öle is active — without the
     // switch to "Alle" this would report nothing found.
     await page.getByLabel('Produkte durchsuchen').fill('Karte')
 
@@ -137,8 +138,8 @@ test.describe('search across the preselected category', () => {
     // Honig, Brot and Olivenöl all contain an "o"; Karte does not.
     await expect(shownProducts(page)).toHaveText(['Honig', 'Brot', 'Olivenöl'])
 
-    await page.getByRole('button', { name: /^Lebensmittel/ }).click()
-    await expect(page).toHaveURL(/kategorie=lebensmittel/)
+    await page.getByRole('button', { name: /^Naturkost/ }).click()
+    await expect(page).toHaveURL(/kategorie=naturkost/)
     await expect(shownProducts(page)).toHaveText(['Honig', 'Brot', 'Olivenöl'])
   })
 
@@ -158,7 +159,47 @@ test.describe('ordering by the shop', () => {
     await expect(productCard(page, 'Ausgelistet')).toHaveCount(0)
 
     // Same context, so the welcome dialog does not reappear — landOn tolerates that.
-    await landOn(page, '/shop?kategorie=lebensmittel')
+    await landOn(page, '/shop?kategorie=naturkost')
     await expect(productCard(page, 'Ausgelistet')).toHaveCount(0)
+  })
+})
+
+/**
+ * The food range moved out of this shop. Its products are still active in the
+ * osCommerce database (the old shop keeps selling them), so the catalog has to
+ * drop them — the seed keeps "Salz" in Lebensmittel and "Zwieback" in its child
+ * Gebäck as the proof.
+ */
+test.describe('the hidden Lebensmittel category', () => {
+  test('has no filter button', async ({ page }) => {
+    await landOn(page, '/shop?kategorie=alle')
+
+    await expect(page.getByRole('button', { name: /^Lebensmittel/ })).toHaveCount(0)
+    await expect(page.getByRole('button', { name: /^Gebäck/ })).toHaveCount(0)
+  })
+
+  test('keeps its products out of every view', async ({ page }) => {
+    await landOn(page, '/shop?kategorie=alle')
+    for (const name of ['Salz', 'Zwieback']) {
+      await expect(productCard(page, name)).toHaveCount(0)
+    }
+
+    // Not findable either — the search runs across the whole range.
+    await page.getByLabel('Produkte durchsuchen').fill('Salz')
+    await expect(page.getByTestId('product-card')).toHaveCount(0)
+  })
+
+  test('falls back to the default when linked directly', async ({ page }) => {
+    // An old bookmark must not open an empty shop.
+    await landOn(page, '/shop?kategorie=lebensmittel')
+    await expect(shownProducts(page)).toHaveText(['Olivenöl'])
+  })
+
+  test('does not serve its products on the detail route', async ({ page }) => {
+    await landOn(page, '/shop?kategorie=alle')
+
+    // Guessing the URL of a hidden product gets you a 404, not the product.
+    expect((await api(page, 'GET', '/api/products/salz')).status).toBe(404)
+    expect((await api(page, 'GET', '/api/products/8')).status).toBe(404)
   })
 })

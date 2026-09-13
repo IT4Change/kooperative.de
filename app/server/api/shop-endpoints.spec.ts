@@ -42,7 +42,7 @@ function product(over: Partial<Product> = {}): Product {
     name: 'Honig',
     price: 11.9,
     description: 'Honig aus der Region',
-    category: 'lebensmittel',
+    category: 'naturkost',
     images: [],
     slug: 'honig',
     content: 'Langtext',
@@ -55,8 +55,8 @@ function product(over: Partial<Product> = {}): Product {
 }
 
 const CATEGORIES: Category[] = [
-  { slug: 'lebensmittel', name: 'Lebensmittel', description: '', parentSlug: null },
-  { slug: 'lebensmittel/oele', name: 'Öle', description: '', parentSlug: 'lebensmittel' },
+  { slug: 'naturkost', name: 'Naturkost', description: '', parentSlug: null },
+  { slug: 'naturkost/oele', name: 'Öle', description: '', parentSlug: 'naturkost' },
   { slug: 'papeterie', name: 'Papeterie', description: '', parentSlug: null },
 ]
 
@@ -99,22 +99,19 @@ describe('GET /api/products', () => {
   it('drops categories that hold no products', async () => {
     const result = await callHandler<{ categories: Category[] }>(productList)
 
-    expect(result.categories.map((c) => c.slug)).toStrictEqual(['lebensmittel'])
+    expect(result.categories.map((c) => c.slug)).toStrictEqual(['naturkost'])
   })
 
   it('keeps a parent category whose child holds the products', async () => {
     getCatalog.mockResolvedValue({
-      products: [product({ category: 'lebensmittel/oele' })],
+      products: [product({ category: 'naturkost/oele' })],
       categories: CATEGORIES,
     })
 
     const result = await callHandler<{ categories: Category[] }>(productList)
 
     // Otherwise the filter would show a child with no way to reach it.
-    expect(result.categories.map((c) => c.slug)).toStrictEqual([
-      'lebensmittel',
-      'lebensmittel/oele',
-    ])
+    expect(result.categories.map((c) => c.slug)).toStrictEqual(['naturkost', 'naturkost/oele'])
   })
 })
 
@@ -125,7 +122,7 @@ describe('GET /api/products/[id]', () => {
     })
 
     expect(result.product.name).toBe('Honig')
-    expect(result.categoryName).toBe('Lebensmittel')
+    expect(result.categoryName).toBe('Naturkost')
   })
 
   it('finds the same product by its slug', async () => {

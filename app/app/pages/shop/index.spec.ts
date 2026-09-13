@@ -23,8 +23,8 @@ const CATEGORIES: Category[] = [
   { slug: 'buecher', name: 'Bücher', description: '', parentSlug: null },
   { slug: 'buecher/leer', name: 'Bücher leer', description: '', parentSlug: 'buecher' },
   { slug: 'buecher/roman', name: 'Romane', description: '', parentSlug: 'buecher' },
-  { slug: 'lebensmittel', name: 'Lebensmittel', description: '', parentSlug: null },
-  { slug: 'lebensmittel/oele', name: 'Öle', description: '', parentSlug: 'lebensmittel' },
+  { slug: 'naturkost', name: 'Naturkost', description: '', parentSlug: null },
+  { slug: 'naturkost/oele', name: 'Öle', description: '', parentSlug: 'naturkost' },
 ]
 
 function product(over: Partial<Product> & { id: string; name: string }): Product {
@@ -62,11 +62,11 @@ const PRODUCTS: Product[] = [
   product({
     id: 'o1',
     name: 'Olivenöl',
-    category: 'lebensmittel/oele',
+    category: 'naturkost/oele',
     description: 'kaltgepresst',
   }),
-  product({ id: 'o2', name: 'Sonnenblumenöl', category: 'lebensmittel/oele' }),
-  product({ id: 'l1', name: 'Honig', category: 'lebensmittel' }),
+  product({ id: 'o2', name: 'Sonnenblumenöl', category: 'naturkost/oele' }),
+  product({ id: 'l1', name: 'Honig', category: 'naturkost' }),
 ]
 
 /** Swapped out by the tests that need a different catalogue. */
@@ -131,13 +131,13 @@ describe('choosing a category', () => {
   })
 
   it('follows the category in the URL', async () => {
-    const wrapper = await mount('/shop?kategorie=lebensmittel')
+    const wrapper = await mount('/shop?kategorie=naturkost')
 
     expect(shownNames(wrapper)).toStrictEqual(['Olivenöl', 'Sonnenblumenöl', 'Honig'])
   })
 
   it('shows a subcategory on its own', async () => {
-    const wrapper = await mount('/shop?kategorie=lebensmittel/oele')
+    const wrapper = await mount('/shop?kategorie=naturkost/oele')
 
     expect(shownNames(wrapper)).toStrictEqual(['Olivenöl', 'Sonnenblumenöl'])
   })
@@ -159,14 +159,14 @@ describe('choosing a category', () => {
   it('writes the chosen category into the URL', async () => {
     const wrapper = await mount('/shop')
 
-    await clickCategory(wrapper, 'Lebensmittel')
-    await urlBecomes({ kategorie: 'lebensmittel' })
+    await clickCategory(wrapper, 'Naturkost')
+    await urlBecomes({ kategorie: 'naturkost' })
 
-    expect(query().kategorie).toBe('lebensmittel')
+    expect(query().kategorie).toBe('naturkost')
   })
 
   it('writes "alle" when the filter is cleared', async () => {
-    const wrapper = await mount('/shop?kategorie=lebensmittel')
+    const wrapper = await mount('/shop?kategorie=naturkost')
 
     await clickCategory(wrapper, 'Alle')
     await urlBecomes({ kategorie: 'alle' })
@@ -216,7 +216,7 @@ describe('search', () => {
   })
 
   it('restores the category the customer had chosen', async () => {
-    const wrapper = await mount('/shop?kategorie=lebensmittel')
+    const wrapper = await mount('/shop?kategorie=naturkost')
     const input = wrapper.get('input[type="search"]')
     await input.setValue('Honig')
     await urlBecomes({ q: 'Honig' })
@@ -224,7 +224,7 @@ describe('search', () => {
     await input.setValue('')
     await urlBecomes({ q: undefined })
 
-    expect(query().kategorie).toBe('lebensmittel')
+    expect(query().kategorie).toBe('naturkost')
     expect(shownNames(wrapper)).toStrictEqual(['Olivenöl', 'Sonnenblumenöl', 'Honig'])
   })
 
@@ -286,8 +286,8 @@ describe('category counts', () => {
     expect(counts).toMatchObject({
       buecher: 34,
       'buecher/roman': 34,
-      lebensmittel: 3,
-      'lebensmittel/oele': 2,
+      naturkost: 3,
+      'naturkost/oele': 2,
     })
     expect(counts).not.toHaveProperty('leer')
   })
@@ -315,7 +315,7 @@ describe('category counts', () => {
 
     expect(
       wrapper.findAllComponents({ name: 'ShopCategoryFilter' })[0].props('counts'),
-    ).toStrictEqual({ lebensmittel: 1 })
+    ).toStrictEqual({ naturkost: 1 })
   })
 })
 
@@ -342,7 +342,7 @@ describe('sorting', () => {
   })
 
   it('leaves other categories in the order the server sent', async () => {
-    const wrapper = await mount('/shop?kategorie=lebensmittel')
+    const wrapper = await mount('/shop?kategorie=naturkost')
 
     expect(shownNames(wrapper)).toStrictEqual(['Olivenöl', 'Sonnenblumenöl', 'Honig'])
   })
@@ -432,7 +432,7 @@ describe('the welcome dialog', () => {
 
 describe('adding to the cart', () => {
   it('passes the product on from the grid', async () => {
-    const wrapper = await mount('/shop?kategorie=lebensmittel')
+    const wrapper = await mount('/shop?kategorie=naturkost')
     const { clearCart, items, closeCart } = useCart()
     clearCart()
 

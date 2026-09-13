@@ -5,6 +5,22 @@ import type { Pool, RowDataPacket } from 'mysql2/promise'
 import type { Product, Category } from '~/data/products'
 
 /**
+ * Categories the storefront does not sell (any more). The food range has been
+ * split off from the stock that is still to be sold here, so it is dropped from
+ * the catalog rather than merely marked as unavailable in the UI.
+ *
+ * Applied to the whole subtree, and applied here rather than in the SQL query
+ * or the frontend: getCatalog() is the single entry point for the listing, the
+ * detail route and the order pipeline, so nothing hidden reaches any of them.
+ */
+const HIDDEN_CATEGORY_SLUGS = ['lebensmittel']
+
+/** Matches the hidden slugs themselves and everything nested below them. */
+function isHidden(slug: string): boolean {
+  return HIDDEN_CATEGORY_SLUGS.some((hidden) => slug === hidden || slug.startsWith(`${hidden}/`))
+}
+
+/**
  * Loads the catalog (categories + grouped products) from the osCommerce DB.
  * Shared by GET /api/products and the order pipeline so the variant grouping
  * (and thus the meaning of variantIndex) is IDENTICAL on client and server.
@@ -21,8 +37,12 @@ export async function loadCatalog(
     ORDER BY c.parent_id, c.sort_order, cd.categories_name
   `)
   const dbCategories = catRows as unknown as DbCategory[]
+  // Paths are still built from every row: a hidden category may sit between two
+  // visible ones, and dropping it early would change the slugs below it.
   const paths = buildCategoryPaths(dbCategories)
-  const categories = dbCategories.map((row) => convertCategory(row, paths))
+  const categories = dbCategories
+    .map((row) => convertCategory(row, paths))
+    .filter((c) => !isHidden(c.slug))
 
   // SQL_BUFFER_RESULT materialises the result into a temporary table and lets
   // the server release the locks on products/products_description immediately,
@@ -50,7 +70,12 @@ export async function loadCatalog(
     GROUP BY p.products_id
     ORDER BY pd.products_name
   `)
-  const products = groupProducts(prodRows as unknown as DbProduct[], paths)
+  // Filtered AFTER grouping: groupProducts() de-duplicates slugs across the whole
+  // catalogue (honig, honig-2, …). Dropping rows beforehand would renumber those
+  // suffixes on the products that stay, breaking existing links to them.
+  const products = groupProducts(prodRows as unknown as DbProduct[], paths).filter(
+    (p) => !isHidden(p.category),
+  )
 
   return { products, categories }
 }
