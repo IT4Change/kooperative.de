@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.9.1](https://github.com/IT4Change/kooperative.de/compare/v0.9.0...v0.9.1) (2026-09-14)
+
+
+### Bug Fixes
+
+* **app:** fix admin circle ([#54](https://github.com/IT4Change/kooperative.de/issues/54)) ([5e1f4ee](https://github.com/IT4Change/kooperative.de/commit/5e1f4eebb38e35a0545de0b656fd4a237b6814dd))
+
 ## [0.9.0](https://github.com/IT4Change/kooperative.de/compare/v0.8.1...v0.9.0) (2026-09-14)
 
 
