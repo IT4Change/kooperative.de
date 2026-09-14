@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.9.0](https://github.com/IT4Change/kooperative.de/compare/v0.8.1...v0.9.0) (2026-09-14)
+
+
+### Features
+
+* **app:** etag cache ([#52](https://github.com/IT4Change/kooperative.de/issues/52)) ([12f77a1](https://github.com/IT4Change/kooperative.de/commit/12f77a130a0c2aa7c09af6b1b88621088daf6652))
+
+
+### Bug Fixes
+
+* **app:** fix button size ([#49](https://github.com/IT4Change/kooperative.de/issues/49)) ([0589f3d](https://github.com/IT4Change/kooperative.de/commit/0589f3d29b296b56a8b4d938629ec02d0526af1b))
+* **app:** fix detail back button click area ([#51](https://github.com/IT4Change/kooperative.de/issues/51)) ([62e1686](https://github.com/IT4Change/kooperative.de/commit/62e1686763b0371f67a745510f58016a771a9c54))
+* **app:** fix mobile cart back button ([#50](https://github.com/IT4Change/kooperative.de/issues/50)) ([b7147bb](https://github.com/IT4Change/kooperative.de/commit/b7147bbbcadbbe9e5279a193bb3071c2a0a6a1a1))
+* **app:** new confirm text field, sync order steps of old & new shop, fix crash ([#53](https://github.com/IT4Change/kooperative.de/issues/53)) ([62efd84](https://github.com/IT4Change/kooperative.de/commit/62efd84002a3c2da9e402e417b4609a7996091bd))
+* **app:** remove Lebensmittel ([#47](https://github.com/IT4Change/kooperative.de/issues/47)) ([028774a](https://github.com/IT4Change/kooperative.de/commit/028774a939c5b6fd09e1b77fffcaec8a909350d4))
+
 ## [0.8.1](https://github.com/IT4Change/kooperative.de/compare/v0.8.0...v0.8.1) (2026-09-13)
 
 
