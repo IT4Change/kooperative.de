@@ -4,7 +4,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import '../../../test/setup-server'
 import { callHandler } from '../../../test/helpers/event'
 import { createMockDb } from '../../../test/helpers/mock-db'
-import { ORDER_STATUS_FLOW, buildStatusFlow } from '../../utils/orderStatus'
+import { ORDER_STATUS_FLOW, buildStatusFlow, buildFullFlow } from '../../utils/orderStatus'
 
 import orderDetail from './api/orders/[id].get'
 import pendingDetail from './api/pending/[id].get'
@@ -52,7 +52,12 @@ beforeEach(() => {
   // auto-import rather than an import statement, so vi.mock() alone does not
   // reach it — without the global it hits a ReferenceError that the handler's
   // own try/catch then swallows.
-  Object.assign(globalThis, { ORDER_STATUS_FLOW, buildStatusFlow, getPendingByOrderId })
+  Object.assign(globalThis, {
+    ORDER_STATUS_FLOW,
+    buildStatusFlow,
+    buildFullFlow,
+    getPendingByOrderId,
+  })
 })
 
 describe('GET /admin/api/orders/[id]', () => {
@@ -318,21 +323,37 @@ describe('GET /admin/api/orders/[id]', () => {
     getPendingByOrderId.mockResolvedValue({
       confirmedVia: 'reply',
       confirmedAt: '2026-01-02 09:00:00',
+      confirmNote: null,
     })
 
     const result = await callHandler<{
       origin: string
-      confirmation: { via: string; at: string }
+      confirmation: { via: string; at: string; note: string | null }
       statusFlow: { id: number; name: string; state: string }[]
     }>(orderDetail, { params: { id: '55' } })
 
     expect(result.origin).toBe('neu')
-    expect(result.confirmation).toStrictEqual({ via: 'reply', at: '2026-01-02 09:00:00' })
-    expect(result.statusFlow[0]).toMatchObject({
-      id: -1,
-      name: 'Bestätigung ausstehend',
-      state: 'done',
+    expect(result.confirmation).toStrictEqual({
+      via: 'reply',
+      at: '2026-01-02 09:00:00',
+      note: null,
     })
+    expect(result.statusFlow[0]).toMatchObject({ id: -1, name: 'Bestätigt', state: 'done' })
+  })
+
+  it('carries the reason of a manual release to the order view', async () => {
+    orderDb()
+    getPendingByOrderId.mockResolvedValue({
+      confirmedVia: 'admin',
+      confirmedAt: '2026-01-02 09:00:00',
+      confirmNote: 'Telefonisch bestätigt am 02.01.',
+    })
+
+    const result = await callHandler<{ confirmation: { note: string } }>(orderDetail, {
+      params: { id: '55' },
+    })
+
+    expect(result.confirmation.note).toBe('Telefonisch bestätigt am 02.01.')
   })
 
   it('treats the order as an old-shop one when the pending table is absent', async () => {
@@ -340,12 +361,24 @@ describe('GET /admin/api/orders/[id]', () => {
     orderDb()
     getPendingByOrderId.mockRejectedValue(new Error("Table 'koop_pending_order' doesn't exist"))
 
-    const result = await callHandler<{ origin: string; confirmation: null }>(orderDetail, {
-      params: { id: '55' },
-    })
+    const result = await callHandler<{
+      origin: string
+      confirmation: null
+      statusFlow: { id: number; name: string; state: string; note?: string }[]
+    }>(orderDetail, { params: { id: '55' } })
 
     expect(result.origin).toBe('alt')
     expect(result.confirmation).toBeNull()
+    // The step stays in the flow even though it never applied: dropping it is
+    // what made "In Bearbeitung" step 1 here and step 2 on the pending page.
+    expect(result.statusFlow[0]).toMatchObject({
+      id: -1,
+      name: 'Bestätigung',
+      state: 'skipped',
+      note: 'entfällt',
+    })
+    // Status 1 ("In Bearbeitung") sits in slot 2, exactly as on the pending page.
+    expect(result.statusFlow[1]).toMatchObject({ id: 1 })
   })
 
   it('lists the mails that went out for the order', async () => {
@@ -502,6 +535,79 @@ describe('GET /admin/api/pending/[id]', () => {
     })
 
     expect(result.statusFlow[0].state).toBe('done')
+  })
+
+  it('picks the real order status up once the confirmation materialised one', async () => {
+    // The defect this replaces: the osCommerce half of the stepper was hard-wired
+    // to "upcoming", so after a manual confirmation step 2 stayed grey although
+    // the order existed and sat in "In Bearbeitung" — the order page, reading the
+    // same data, showed it as the current step.
+    useMockDb([
+      { match: 'koop_order_mail_log', rows: [] },
+      {
+        match: 'FROM orders_status ',
+        rows: [
+          { orders_status_id: 1, orders_status_name: 'In Bearbeitung' },
+          { orders_status_id: 4, orders_status_name: 'Vorkasse erwartet' },
+        ],
+      },
+      { match: 'FROM orders WHERE orders_id', rows: [{ orders_status: 4 }] },
+      {
+        match: 'FROM orders_status_history',
+        rows: [
+          { orders_status_id: 1, date_added: '2026-01-02 09:00:00' },
+          { orders_status_id: 4, date_added: '2026-01-03 09:00:00' },
+        ],
+      },
+    ])
+    getPendingById.mockResolvedValue({ ...PENDING, status: 'materialized', ordersId: 55 })
+
+    const result = await callHandler<{
+      statusFlow: { id: number; state: string; visitedAt: string | null }[]
+    }>(pendingDetail, { params: { id: '12' } })
+
+    expect(result.statusFlow.map((s) => [s.id, s.state])).toStrictEqual([
+      [-1, 'done'],
+      [1, 'done'],
+      [4, 'current'],
+      [2, 'upcoming'],
+      [3, 'upcoming'],
+    ])
+    expect(result.statusFlow[1].visitedAt).toBe('2026-01-02 09:00:00')
+  })
+
+  it('keeps the osCommerce half upcoming when the materialised order is gone', async () => {
+    // Defensive: orders_id points at a row that no longer exists. Better a
+    // stepper without status detail than a detail page that cannot render.
+    useMockDb([
+      { match: 'koop_order_mail_log', rows: [] },
+      { match: 'FROM orders_status', rows: [] },
+      { match: 'FROM orders WHERE orders_id', rows: [] },
+    ])
+    getPendingById.mockResolvedValue({ ...PENDING, status: 'materialized', ordersId: 55 })
+
+    const result = await callHandler<{ statusFlow: { state: string }[] }>(pendingDetail, {
+      params: { id: '12' },
+    })
+
+    expect(result.statusFlow.slice(1).every((s) => s.state === 'upcoming')).toBe(true)
+  })
+
+  it('reports the reason a manual release was given', async () => {
+    pendingDb()
+    getPendingById.mockResolvedValue({
+      ...PENDING,
+      status: 'materialized',
+      ordersId: 55,
+      confirmedVia: 'admin',
+      confirmNote: 'Kundin hat telefonisch bestätigt.',
+    })
+
+    const result = await callHandler<{ pending: { confirmNote: string } }>(pendingDetail, {
+      params: { id: '12' },
+    })
+
+    expect(result.pending.confirmNote).toBe('Kundin hat telefonisch bestätigt.')
   })
 
   it('names a status the shop does not label', async () => {

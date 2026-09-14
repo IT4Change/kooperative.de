@@ -23,29 +23,48 @@ export default defineEventHandler(async (event) => {
     [id],
   )
 
-  // Status graphic: the confirmation step is the current step for a pending order;
-  // the osCommerce statuses follow as upcoming (same canonical flow as materialized orders).
+  // Status graphic. While the confirmation is outstanding there is no osCommerce
+  // order yet, so that part is entirely upcoming. Once the pending has been
+  // materialized the order DOES exist and has a status — reading it back is what
+  // makes this view agree with the order page instead of freezing the whole
+  // osCommerce part at "upcoming" forever.
   const [flowStatusRows] = await db.execute<RowDataPacket[]>(
     'SELECT orders_status_id, orders_status_name FROM orders_status WHERE language_id = 2',
   )
   const statusNames = new Map<number, string>(
     flowStatusRows.map((r) => [Number(r.orders_status_id), String(r.orders_status_name)]),
   )
-  const confirmState = pending.status === 'materialized' ? 'done' : 'current'
-  const statusFlow = [
-    {
-      id: -1,
-      name: 'Bestätigung ausstehend',
-      state: confirmState,
-      visitedAt: pending.confirmedAt ?? null,
+
+  let currentStatusId: number | null = null
+  let history: { statusId: number; dateAdded: string | Date | null }[] = []
+  if (pending.status === 'materialized' && pending.ordersId) {
+    const [orderRows] = await db.execute<RowDataPacket[]>(
+      'SELECT orders_status FROM orders WHERE orders_id = ? LIMIT 1',
+      [pending.ordersId],
+    )
+    if (orderRows[0]) {
+      currentStatusId = Number(orderRows[0].orders_status)
+      const [historyRows] = await db.execute<RowDataPacket[]>(
+        `SELECT orders_status_id, date_added FROM orders_status_history
+         WHERE orders_id = ? ORDER BY date_added ASC, orders_status_history_id ASC`,
+        [pending.ordersId],
+      )
+      history = historyRows.map((r) => ({
+        statusId: Number(r.orders_status_id),
+        dateAdded: r.date_added as string | Date | null,
+      }))
+    }
+  }
+
+  const statusFlow = buildFullFlow({
+    confirmation: {
+      state: pending.status === 'materialized' ? 'done' : 'current',
+      visitedAt: (pending.confirmedAt as string | null) ?? null,
     },
-    ...ORDER_STATUS_FLOW.map((sid) => ({
-      id: sid,
-      name: statusNames.get(sid) ?? `Status ${sid}`,
-      state: 'upcoming',
-      visitedAt: null,
-    })),
-  ]
+    currentStatusId,
+    statusNames,
+    history,
+  })
 
   return {
     statusFlow,
@@ -54,6 +73,7 @@ export default defineEventHandler(async (event) => {
       status: pending.status,
       ordersId: pending.ordersId,
       confirmedVia: pending.confirmedVia,
+      confirmNote: pending.confirmNote,
       createdAt: pending.createdAt,
       confirmedAt: pending.confirmedAt,
       total: pending.total,

@@ -188,6 +188,47 @@ describe('buildAdminConfirmed', () => {
 
     expect(mail.text).toContain(ADMIN_URL)
   })
+
+  it('does not claim the customer confirmed when the operator released it', () => {
+    const mail = buildAdminConfirmed({
+      orderId: 55,
+      comp: COMP,
+      adminUrl: ADMIN_URL,
+      via: 'admin',
+    })
+
+    // "vom Kunden bestätigt (manuell im Admin)" would misreport who acted.
+    expect(mail.text).not.toContain('vom Kunden bestätigt')
+    expect(mail.text).toContain('manuell im Admin freigegeben')
+    expect(mail.html).toContain('manuell im Admin freigegeben')
+  })
+
+  it('carries the reason for a manual release into the mail', () => {
+    const mail = buildAdminConfirmed({
+      orderId: 55,
+      comp: COMP,
+      adminUrl: ADMIN_URL,
+      via: 'admin',
+      note: 'Kundin hat telefonisch bestätigt.',
+    })
+
+    // Whoever processes the order has to see why it skipped the customer step.
+    expect(mail.text).toContain('Begründung: Kundin hat telefonisch bestätigt.')
+    expect(mail.html).toContain('Kundin hat telefonisch bestätigt.')
+  })
+
+  it('escapes a reason before putting it into the HTML mail', () => {
+    const mail = buildAdminConfirmed({
+      orderId: 55,
+      comp: COMP,
+      adminUrl: ADMIN_URL,
+      via: 'admin',
+      note: '<script>alert(1)</script>',
+    })
+
+    expect(mail.html).not.toContain('<script>')
+    expect(mail.html).toContain('&lt;script&gt;')
+  })
 })
 
 describe('escaping', () => {

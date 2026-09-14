@@ -1,3 +1,4 @@
+import type { ConfirmationState } from '../../../../utils/orderStatus'
 import type { RowDataPacket } from 'mysql2/promise'
 
 /**
@@ -55,31 +56,39 @@ export default defineEventHandler(async (event) => {
   const statusNames = new Map<number, string>(
     statusRows.map((r) => [Number(r.orders_status_id), String(r.orders_status_name)]),
   )
-  const statusFlow = buildStatusFlow(
-    Number(h.orders_status),
-    statusNames,
-    historyRows.map((r) => ({ statusId: Number(r.orders_status_id), dateAdded: r.date_added })),
-  )
-
   // New-shop origin: if this order was materialized from a pending confirmation,
-  // prepend a "Bestätigung ausstehend" (done) step and expose the confirmation info.
+  // the confirmation step is done and carries the confirmation info. An old-shop
+  // order never had that step — it is still rendered, greyed out as 'skipped', so
+  // the step numbering matches the pending and new-shop views.
   let origin: 'alt' | 'neu' = 'alt'
-  let confirmation: { via: string | null; at: unknown } | null = null
+  let confirmation: { via: string | null; at: unknown; note: string | null } | null = null
+  let confirmationState: ConfirmationState = 'skipped'
+  let confirmedAt: string | null = null
   try {
     const pending = await getPendingByOrderId(db, id)
     if (pending) {
       origin = 'neu'
-      confirmation = { via: pending.confirmedVia, at: pending.confirmedAt }
-      statusFlow.unshift({
-        id: -1,
-        name: 'Bestätigung ausstehend',
-        state: 'done',
-        visitedAt: pending.confirmedAt as string | null,
-      })
+      confirmation = {
+        via: pending.confirmedVia,
+        at: pending.confirmedAt,
+        note: pending.confirmNote ?? null,
+      }
+      confirmationState = 'done'
+      confirmedAt = pending.confirmedAt as string | null
     }
   } catch {
     // koop_pending_order may be absent on some environments
   }
+
+  const statusFlow = buildFullFlow({
+    confirmation: { state: confirmationState, visitedAt: confirmedAt },
+    currentStatusId: Number(h.orders_status),
+    statusNames,
+    history: historyRows.map((r) => ({
+      statusId: Number(r.orders_status_id),
+      dateAdded: r.date_added as string | Date | null,
+    })),
+  })
 
   // Mail history (koop_order_mail_log). Tolerate the table being absent.
   let mails: {

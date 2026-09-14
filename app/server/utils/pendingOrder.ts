@@ -30,6 +30,8 @@ export interface PendingRow {
   status: 'pending' | 'confirmed' | 'materialized' | 'cancelled'
   ordersId: number | null
   confirmedVia: string | null
+  /** Why the operator released this without a customer confirmation (via='admin'). */
+  confirmNote: string | null
   createdAt: unknown
   confirmedAt: unknown
   materializedAt: unknown
@@ -55,6 +57,7 @@ function mapRow(r: RowDataPacket): PendingRow {
     status: r.status,
     ordersId: r.orders_id != null ? Number(r.orders_id) : null,
     confirmedVia: r.confirmed_via ? String(r.confirmed_via) : null,
+    confirmNote: r.confirm_note ? String(r.confirm_note) : null,
     createdAt: r.created_at,
     confirmedAt: r.confirmed_at,
     materializedAt: r.materialized_at,
@@ -117,7 +120,7 @@ export async function materializePending(
   db: Pool,
   pending: PendingRow,
   via: 'link' | 'reply' | 'admin',
-  ctx: { remoteIp?: string } = {},
+  ctx: { remoteIp?: string; confirmNote?: string } = {},
 ): Promise<{ ordersId: number; alreadyDone: boolean }> {
   if (pending.status === 'cancelled') {
     throw createError({ statusCode: 409, statusMessage: 'Bestellung wurde storniert' })
@@ -129,7 +132,10 @@ export async function materializePending(
     throw createError({ statusCode: 500, statusMessage: 'Bestelldaten unvollständig' })
   }
 
-  const ordersId = await insertComputedOrder(db, pending.payload.comp, { remoteIp: ctx.remoteIp })
+  const ordersId = await insertComputedOrder(db, pending.payload.comp, {
+    remoteIp: ctx.remoteIp,
+    confirmNote: ctx.confirmNote,
+  })
   const now = new Date()
 
   // Scrub bank details from the retained payload — the IBAN now lives only in
@@ -148,6 +154,7 @@ export async function materializePending(
       status: 'materialized',
       orders_id: ordersId,
       confirmed_via: via,
+      confirm_note: ctx.confirmNote ?? null,
       confirmed_at: now,
       materialized_at: now,
       payload: JSON.stringify(scrubbed),

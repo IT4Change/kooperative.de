@@ -302,7 +302,7 @@ export async function computeOrder(
 export async function insertComputedOrder(
   db: Pool,
   comp: OrderComputation,
-  ctx: { remoteIp?: string } = {},
+  ctx: { remoteIp?: string; confirmNote?: string } = {},
 ): Promise<number> {
   const c = comp.customer
   const now = new Date()
@@ -461,6 +461,18 @@ export async function insertComputedOrder(
     }
   }
 
+  // The operator's reason for a manual release is mirrored into the very first
+  // history entry, because that is the only place the legacy osCommerce admin
+  // can show it — it has no notion of the new shop's confirmation step. The
+  // customer's own note keeps the first slot; the two are labelled apart rather
+  // than merged.
+  const historyComment = [
+    comp.notes ?? '',
+    ctx.confirmNote ? `Manuell freigegeben: ${ctx.confirmNote}` : '',
+  ]
+    .filter(Boolean)
+    .join('\n\n')
+
   await dbInsert(
     db,
     'orders_status_history',
@@ -469,7 +481,7 @@ export async function insertComputedOrder(
       orders_status_id: 1,
       date_added: now,
       customer_notified: 0,
-      comments: comp.notes ?? '',
+      comments: historyComment,
     },
     oc,
   )
