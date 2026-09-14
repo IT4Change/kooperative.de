@@ -2,7 +2,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 import '../../test/setup-server'
-import { callHandler } from '../../test/helpers/event'
+import { callHandler, createTestEvent, statusOf } from '../../test/helpers/event'
 import { createMockDb } from '../../test/helpers/mock-db'
 import { signSession } from '../utils/auth'
 
@@ -86,9 +86,34 @@ beforeEach(() => {
   sendAndLogOrderMail.mockResolvedValue({ status: 'sent', errorMessage: null })
 })
 
+/**
+ * The listing answers with a pre-rendered string rather than an object, so the
+ * catalogue is serialised once per snapshot instead of once per visitor. These
+ * helpers unwrap that for the assertions.
+ */
+interface ListResponse {
+  products: Record<string, unknown>[]
+  categories: Category[]
+}
+
+async function callList(headers: Record<string, string> = {}) {
+  const event = createTestEvent({ headers })
+  const body = await productList(event)
+  const headerOf = (name: string) =>
+    [...vi.mocked(event.node.res.setHeader).mock.calls].reverse().find(([key]) => key === name)?.[1]
+
+  return {
+    body,
+    status: statusOf(event),
+    etag: headerOf('etag') as string,
+    cacheControl: headerOf('cache-control') as string,
+    json: () => JSON.parse(body as string) as ListResponse,
+  }
+}
+
 describe('GET /api/products', () => {
   it('strips the long-form and meta text from the listing', async () => {
-    const result = await callHandler<{ products: Record<string, unknown>[] }>(productList)
+    const result = (await callList()).json()
 
     // The listing already carries the whole catalogue; this text is dead weight.
     expect(result.products[0]).not.toHaveProperty('content')
@@ -97,7 +122,7 @@ describe('GET /api/products', () => {
   })
 
   it('drops categories that hold no products', async () => {
-    const result = await callHandler<{ categories: Category[] }>(productList)
+    const result = (await callList()).json()
 
     expect(result.categories.map((c) => c.slug)).toStrictEqual(['naturkost'])
   })
@@ -108,10 +133,84 @@ describe('GET /api/products', () => {
       categories: CATEGORIES,
     })
 
-    const result = await callHandler<{ categories: Category[] }>(productList)
+    const result = (await callList()).json()
 
     // Otherwise the filter would show a child with no way to reach it.
     expect(result.categories.map((c) => c.slug)).toStrictEqual(['naturkost', 'naturkost/oele'])
+  })
+
+  it('offers the listing for revalidation rather than blind reuse', async () => {
+    const res = await callList()
+
+    // Weak, because nginx rewrites a strong ETag the moment it gzips — see
+    // weakEtag(). An edit in /admin must not sit behind an unreachable cache,
+    // so the payload is stored but checked back on every use.
+    expect(res.etag).toMatch(/^W\/"/)
+    expect(res.cacheControl).toBe('public, no-cache')
+  })
+
+  it('answers an unchanged catalogue with 304 and no body', async () => {
+    const { etag } = await callList()
+
+    const res = await callList({ 'if-none-match': etag })
+
+    expect(res.status).toBe(304)
+    expect(res.body).toBeNull()
+  })
+
+  it('still answers 304 when a proxy stripped the weak marker', async () => {
+    const { etag } = await callList()
+
+    // The mirror image of nginx adding one. Without the weak comparison this
+    // silently degrades into a full re-download on every single revalidation.
+    const res = await callList({ 'if-none-match': etag.replace('W/', '') })
+
+    expect(res.status).toBe(304)
+  })
+
+  it('sends the listing when the held ETag is stale', async () => {
+    const res = await callList({ 'if-none-match': 'W/"long-gone"' })
+
+    expect(res.status).toBe(200)
+    expect(res.json().products).toHaveLength(1)
+  })
+
+  it('serialises once per snapshot', async () => {
+    const snapshot = { products: [product()], categories: CATEGORIES }
+    getCatalog.mockResolvedValue(snapshot)
+    const first = (await callList()).json()
+
+    snapshot.products.push(product({ id: '2', name: 'Bienenwachs' }))
+    const second = (await callList()).json()
+
+    // Same snapshot object, so the body is handed out as rendered — the added
+    // product only becomes visible once getCatalog() returns a new snapshot.
+    expect(second.products).toStrictEqual(first.products)
+  })
+
+  it('re-renders once the snapshot behind it is replaced', async () => {
+    const first = (await callList()).json()
+
+    getCatalog.mockResolvedValue({
+      products: [product(), product({ id: '2', name: 'Bienenwachs' })],
+      categories: CATEGORIES,
+    })
+    const second = (await callList()).json()
+
+    expect(first.products).toHaveLength(1)
+    expect(second.products).toHaveLength(2)
+  })
+
+  it('keeps the ETag across a refresh that changed nothing', async () => {
+    const first = await callList()
+
+    // A new snapshot object carrying identical data — the ordinary outcome of
+    // the 60 s TTL expiring. Hashing the body rather than stamping the refresh
+    // is what lets the returning customer revalidate into a 304 anyway.
+    getCatalog.mockResolvedValue({ products: [product()], categories: CATEGORIES })
+    const second = await callList()
+
+    expect(second.etag).toBe(first.etag)
   })
 })
 
