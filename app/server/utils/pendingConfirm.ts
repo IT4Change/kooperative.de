@@ -19,7 +19,7 @@ export async function confirmPending(
   event: H3Event,
   pending: PendingRow,
   via: 'link' | 'reply' | 'admin',
-  ctx: { remoteIp?: string } = {},
+  ctx: { remoteIp?: string; confirmNote?: string } = {},
 ): Promise<{ ordersId: number; alreadyDone: boolean }> {
   const result = await materializePending(db, pending, via, ctx)
   if (result.alreadyDone) return result
@@ -54,6 +54,9 @@ export async function confirmPending(
     comp,
     adminUrl: adminOrderLink(event, ordersId),
     via,
+    // Carried into the mail so the reason for a release without customer
+    // confirmation reaches whoever processes the order, not just the admin UI.
+    note: ctx.confirmNote,
   })
   await sendAndLogOrderMail(
     db,

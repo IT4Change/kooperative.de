@@ -182,13 +182,21 @@ export function buildAdminConfirmed(ctx: {
   comp: OrderComputation
   adminUrl: string
   via: string
+  /** Reason for a manual release; only set for via='admin'. */
+  note?: string
 }): { subject: string; text: string; html: string } {
   const c = ctx.comp
   const subject = `[Koop · neuer Shop] Bestellung #${ctx.orderId} bestätigt – bitte bearbeiten`
-  const viaLabel =
-    ctx.via === 'admin' ? 'manuell im Admin' : ctx.via === 'reply' ? 'per Antwort' : 'per Link'
+  // A manual release did not come from the customer, so it does not claim to:
+  // saying "vom Kunden bestätigt (manuell im Admin)" would misreport who acted.
+  const manual = ctx.via === 'admin'
+  const viaLabel = manual ? 'manuell im Admin' : ctx.via === 'reply' ? 'per Antwort' : 'per Link'
+  const headline = manual
+    ? `Bestellung #${ctx.orderId} wurde ${viaLabel} freigegeben und kann bearbeitet werden.`
+    : `Bestellung #${ctx.orderId} wurde vom Kunden bestätigt (${viaLabel}) und kann bearbeitet werden.`
   const text = [
-    `Bestellung #${ctx.orderId} wurde vom Kunden bestätigt (${viaLabel}) und kann bearbeitet werden.`,
+    headline,
+    ...(ctx.note ? [`Begründung: ${ctx.note}`] : []),
     `Kunde: ${c.customer.name} <${c.customer.email}>`,
     `Im Admin öffnen: ${ctx.adminUrl}`,
     '',
@@ -199,7 +207,8 @@ export function buildAdminConfirmed(ctx: {
   const html = wrap(
     `Bestellung #${ctx.orderId} bestätigt`,
     `
-    <p style="margin:0 0 12px">Bestellung <strong>#${ctx.orderId}</strong> wurde vom Kunden bestätigt (<em>${esc(viaLabel)}</em>) und kann bearbeitet werden.</p>
+    <p style="margin:0 0 12px">${esc(headline)}</p>
+    ${ctx.note ? `<p style="margin:0 0 12px">Begründung: <em>${esc(ctx.note)}</em></p>` : ''}
     <p style="margin:0 0 4px">Kunde: <strong>${esc(c.customer.name)}</strong> · <a href="mailto:${esc(c.customer.email)}">${esc(c.customer.email)}</a></p>
     ${button(ctx.adminUrl, 'Im Admin öffnen →')}
     ${itemsHtml(c)}

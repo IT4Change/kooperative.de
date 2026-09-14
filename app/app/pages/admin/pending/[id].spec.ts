@@ -1,4 +1,7 @@
 import { mountSuspended, registerEndpoint } from '@nuxt/test-utils/runtime'
+// readBody is a Nitro auto-import and therefore not in scope on this side of
+// the fence; the fake endpoints below run on h3 all the same.
+import { readBody } from 'h3'
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 
 import PendingDetail from './[id].vue'
@@ -20,6 +23,7 @@ let cancelFails: string | null = null
 let confirms = 0
 let cancels = 0
 let loads = 0
+let sentReason: string | null = null
 
 function base() {
   return {
@@ -33,6 +37,7 @@ function base() {
       status: 'pending',
       ordersId: null,
       confirmedVia: null,
+      confirmNote: null,
       createdAt: '2026-03-04T10:00:00',
       confirmedAt: null,
       total: 28.56,
@@ -82,8 +87,9 @@ registerEndpoint(`/admin/api/pending/${ID}`, () => {
 })
 registerEndpoint(`/admin/api/pending/${ID}/confirm`, {
   method: 'POST',
-  handler: () => {
+  handler: async (event) => {
     confirms += 1
+    sentReason = (await readBody(event))?.reason ?? null
     if (confirmFails) throw createError({ statusCode: 400, statusMessage: confirmFails })
     return { ok: true, orderId: 5001 }
   },
@@ -108,6 +114,7 @@ beforeEach(() => {
   confirms = 0
   cancels = 0
   loads = 0
+  sentReason = null
   clearNuxtData()
 })
 
@@ -126,6 +133,11 @@ async function mount() {
 
 const button = (w: Awaited<ReturnType<typeof mount>>, label: string) =>
   w.findAll('button').find((b) => b.text().includes(label))!
+
+/** A manual release is refused without one, so every confirm test needs it. */
+async function enterReason(w: Awaited<ReturnType<typeof mount>>, text: string) {
+  await w.find('textarea').setValue(text)
+}
 
 describe('the header', () => {
   it('says that there is no order number yet', async () => {
@@ -283,6 +295,7 @@ describe('mails', () => {
 describe('confirming by hand', () => {
   it('creates the order and names its number', async () => {
     const wrapper = await mount()
+    await enterReason(wrapper, 'Kundin hat telefonisch bestätigt.')
 
     await button(wrapper, 'Manuell bestätigen').trigger('click')
     await waitFor(() => loads === 2, 'the reload after confirming')
@@ -293,9 +306,38 @@ describe('confirming by hand', () => {
     expect(loads).toBe(2)
   })
 
+  it('sends the reason along', async () => {
+    const wrapper = await mount()
+    await enterReason(wrapper, '  Kundin hat telefonisch bestätigt.  ')
+
+    await button(wrapper, 'Manuell bestätigen').trigger('click')
+    await waitFor(() => loads === 2, 'the reload after confirming')
+
+    expect(sentReason).toBe('Kundin hat telefonisch bestätigt.')
+  })
+
+  it('keeps the button out of reach until a reason is given', async () => {
+    const wrapper = await mount()
+
+    // Releasing without the customer's confirmation skips the step the new shop
+    // exists for; the operator has to say why before it can happen.
+    expect(button(wrapper, 'Manuell bestätigen').attributes('disabled')).toBeDefined()
+
+    await enterReason(wrapper, 'Per Fax bestätigt.')
+    expect(button(wrapper, 'Manuell bestätigen').attributes('disabled')).toBeUndefined()
+  })
+
+  it('does not accept whitespace as a reason', async () => {
+    const wrapper = await mount()
+    await enterReason(wrapper, '    ')
+
+    expect(button(wrapper, 'Manuell bestätigen').attributes('disabled')).toBeDefined()
+  })
+
   it('shows what went wrong', async () => {
     confirmFails = 'Schon bestätigt'
     const wrapper = await mount()
+    await enterReason(wrapper, 'Kundin hat telefonisch bestätigt.')
 
     await button(wrapper, 'Manuell bestätigen').trigger('click')
     await waitForText(wrapper, 'Fehler: Schon bestätigt')
@@ -360,6 +402,26 @@ describe('a confirmed process', () => {
     const wrapper = await mount()
 
     expect(wrapper.text()).toContain(label)
+  })
+
+  it('keeps the reason for the release on the page', async () => {
+    detail = {
+      ...base(),
+      pending: {
+        ...base().pending,
+        status: 'materialized',
+        ordersId: 5001,
+        confirmedVia: 'admin',
+        confirmNote: 'Kundin hat telefonisch bestätigt.',
+      },
+    }
+
+    const wrapper = await mount()
+
+    expect(wrapper.text()).toContain('Begründung der Freischaltung:')
+    expect(wrapper.text()).toContain('Kundin hat telefonisch bestätigt.')
+    // The note about waiting for the customer belongs to the pending state only.
+    expect(wrapper.text()).not.toContain('wartet auf die Bestätigung des Kunden')
   })
 })
 

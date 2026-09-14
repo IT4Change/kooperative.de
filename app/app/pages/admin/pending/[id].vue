@@ -27,59 +27,22 @@
       </div>
 
       <!-- Status graphic -->
-      <section
-        v-if="data.pending.status !== 'cancelled'"
-        class="bg-white rounded-lg shadow-sm border border-gray-200 px-6 py-5"
-      >
-        <h3 class="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-4">
-          Bestellprozess
-        </h3>
-        <div class="flex items-start">
-          <template v-for="(s, i) in data.statusFlow" :key="s.id">
-            <div class="flex flex-col items-center text-center w-24 shrink-0">
-              <div
-                class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold transition"
-                :class="circleClass(s.state)"
-              >
-                <svg
-                  v-if="s.state === 'done'"
-                  class="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2.5"
-                    d="M5 13l4 4L19 7"
-                  />
-                </svg>
-                <span v-else>{{ i + 1 }}</span>
-              </div>
-              <span
-                class="text-xs mt-2 leading-tight"
-                :class="s.state === 'upcoming' ? 'text-gray-400' : 'text-gray-800 font-medium'"
-                >{{ s.name }}</span
-              >
-              <span
-                v-if="s.visitedAt && s.state !== 'upcoming'"
-                class="text-[10px] text-gray-400 mt-0.5"
-                >{{ date(s.visitedAt) }}</span
-              >
-            </div>
-            <div
-              v-if="i < data.statusFlow.length - 1"
-              class="flex-1 h-0.5 mt-5 rounded"
-              :class="s.state === 'done' ? 'bg-[#00af8c]' : 'bg-gray-200'"
-            />
-          </template>
-        </div>
-        <p class="mt-4 text-xs text-gray-500 bg-amber-50 border border-amber-200 rounded px-3 py-2">
+      <AdminStatusFlow v-if="data.pending.status !== 'cancelled'" :steps="data.statusFlow">
+        <p
+          v-if="data.pending.status !== 'materialized'"
+          class="mt-4 text-xs text-gray-500 bg-amber-50 border border-amber-200 rounded px-3 py-2"
+        >
           Diese Bestellung wartet auf die Bestätigung des Kunden (Link oder Antwort-Mail). Erst
           danach wird sie als Bestellung mit Nummer angelegt.
         </p>
-      </section>
+        <p
+          v-else-if="data.pending.confirmNote"
+          class="mt-4 text-xs text-gray-600 bg-amber-50 border border-amber-200 rounded px-3 py-2"
+        >
+          <span class="font-semibold">Begründung der Freischaltung:</span>
+          <span class="whitespace-pre-wrap">{{ data.pending.confirmNote }}</span>
+        </p>
+      </AdminStatusFlow>
 
       <div
         v-if="data.pending.status === 'materialized' && data.pending.ordersId"
@@ -191,9 +154,27 @@
                 Hat der Kunde per Antwort-Mail bestätigt? Dann hier bestätigen — die Bestellung wird
                 angelegt und der Kunde &amp; die Administration benachrichtigt.
               </p>
+              <div>
+                <label :for="`${uid}-reason`" class="block text-xs font-medium text-gray-700 mb-1">
+                  Begründung <span class="text-red-600">*</span>
+                </label>
+                <textarea
+                  :id="`${uid}-reason`"
+                  v-model="reason"
+                  rows="4"
+                  :disabled="busy"
+                  placeholder="Warum wird ohne Kundenbestätigung freigegeben? z. B. telefonisch bestätigt am 14.09., Rückruf von Frau Müller"
+                  class="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#00af8c] focus:border-[#00af8c] disabled:bg-gray-50"
+                />
+                <p class="mt-1 text-[11px] text-gray-400">
+                  Wird am Vorgang, in der Bestellhistorie (auch im alten Admin) und in der
+                  Benachrichtigung an die Administration festgehalten.
+                </p>
+              </div>
               <button
-                class="w-full px-3 py-2 bg-[#00af8c] text-white rounded text-sm font-medium hover:bg-[#009579] disabled:opacity-50"
-                :disabled="busy"
+                class="w-full px-3 py-2 bg-[#00af8c] text-white rounded text-sm font-medium hover:bg-[#009579] disabled:opacity-50 disabled:cursor-not-allowed"
+                :disabled="busy || !reason.trim()"
+                :title="reason.trim() ? undefined : 'Bitte zuerst eine Begründung eingeben'"
                 @click="confirm"
               >
                 {{ busy ? 'Bestätigt…' : 'Manuell bestätigen' }}
@@ -263,17 +244,14 @@
 </template>
 
 <script setup lang="ts">
+  import type { FlowStep } from '~/components/admin/StatusFlow.vue'
+
   definePageMeta({ layout: 'admin' })
 
-  const { euro, dateTime, date, errorMessage } = useAdminFormat()
+  const uid = useId()
+  const { euro, dateTime, errorMessage } = useAdminFormat()
   const route = useRoute()
 
-  interface FlowStep {
-    id: number
-    name: string
-    state: 'done' | 'current' | 'upcoming'
-    visitedAt: string | null
-  }
   interface PendingDetail {
     statusFlow: FlowStep[]
     pending: {
@@ -281,6 +259,7 @@
       status: string
       ordersId: number | null
       confirmedVia: string | null
+      confirmNote: string | null
       createdAt: string
       confirmedAt: string | null
       total: number
@@ -338,15 +317,15 @@
     return via === 'admin' ? 'manuell im Admin' : via === 'reply' ? 'per Antwort' : 'per Link'
   }
 
-  function circleClass(state: FlowStep['state']): string {
-    if (state === 'done') return 'bg-[#00af8c] text-white'
-    if (state === 'current') return 'bg-[#00af8c] text-white ring-4 ring-[#00af8c]/25'
-    return 'bg-white border-2 border-gray-300 text-gray-400'
-  }
-
   const busy = ref(false)
   const actionMsg = ref('')
   const actionError = ref(false)
+  /**
+   * Reason for releasing without the customer's confirmation. Mandatory — the
+   * button stays disabled while it is empty, and the endpoint refuses the call
+   * regardless, so the requirement does not depend on the form.
+   */
+  const reason = ref('')
 
   async function confirm() {
     busy.value = true
@@ -354,7 +333,7 @@
     try {
       const res = await $fetch<{ ok: boolean; orderId: number }>(
         `/admin/api/pending/${route.params.id}/confirm`,
-        { method: 'POST' },
+        { method: 'POST', body: { reason: reason.value.trim() } },
       )
       actionError.value = false
       actionMsg.value = `Bestätigt – Bestellung #${res.orderId} angelegt.`

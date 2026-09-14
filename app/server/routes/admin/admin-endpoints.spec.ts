@@ -913,6 +913,7 @@ describe('pending actions', () => {
     const result = await callHandler(confirmPendingEndpoint, {
       method: 'POST',
       params: { id: '12' },
+      body: { reason: 'Kundin hat telefonisch bestätigt.' },
     })
 
     expect(result).toStrictEqual({ ok: true, orderId: 55, alreadyConfirmed: false })
@@ -922,8 +923,34 @@ describe('pending actions', () => {
       expect.anything(),
       { id: 12 },
       'admin',
-      expect.anything(),
+      expect.objectContaining({ confirmNote: 'Kundin hat telefonisch bestätigt.' }),
     )
+  })
+
+  it('refuses a manual release without a reason', async () => {
+    useMockDb()
+    getPendingById.mockResolvedValue({ id: 12 })
+
+    // Releasing without the customer's confirmation skips the step the new shop
+    // exists for, so it has to be accountable — and the check cannot live in the
+    // form alone, or a direct POST would bypass it.
+    await expect(
+      callHandler(confirmPendingEndpoint, { method: 'POST', params: { id: '12' }, body: {} }),
+    ).rejects.toMatchObject({ statusCode: 400 })
+    expect(confirmPending).not.toHaveBeenCalled()
+  })
+
+  it('refuses a reason that is only whitespace', async () => {
+    useMockDb()
+    getPendingById.mockResolvedValue({ id: 12 })
+
+    await expect(
+      callHandler(confirmPendingEndpoint, {
+        method: 'POST',
+        params: { id: '12' },
+        body: { reason: '   \n  ' },
+      }),
+    ).rejects.toMatchObject({ statusCode: 400 })
   })
 
   it('cancels a pending order', async () => {
@@ -947,14 +974,15 @@ describe('pending actions', () => {
   })
 
   it.each([
-    ['confirm', confirmPendingEndpoint],
-    ['cancel', cancelPendingEndpoint],
-  ])('%s answers 404 for an unknown pending order', async (_label, handler) => {
+    // Only confirm requires a reason; cancel ignores the body.
+    ['confirm', confirmPendingEndpoint, { reason: 'Storniert im Gespräch geklärt.' }],
+    ['cancel', cancelPendingEndpoint, {}],
+  ])('%s answers 404 for an unknown pending order', async (_label, handler, body) => {
     useMockDb()
     getPendingById.mockResolvedValue(null)
 
     await expect(
-      callHandler(handler, { method: 'POST', params: { id: '999' } }),
+      callHandler(handler, { method: 'POST', params: { id: '999' }, body }),
     ).rejects.toMatchObject({ statusCode: 404 })
   })
 })

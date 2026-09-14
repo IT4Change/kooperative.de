@@ -47,6 +47,7 @@ function row(over: Record<string, unknown> = {}) {
     status: 'pending',
     orders_id: null,
     confirmed_via: null,
+    confirm_note: null,
     created_at: '2026-01-01 10:00:00',
     confirmed_at: null,
     materialized_at: null,
@@ -65,6 +66,7 @@ function pending(over: Partial<PendingRow> = {}): PendingRow {
     status: 'pending',
     ordersId: null,
     confirmedVia: null,
+    confirmNote: null,
     createdAt: null,
     confirmedAt: null,
     materializedAt: null,
@@ -158,13 +160,24 @@ describe('lookups', () => {
     const db = createMockDb([
       {
         match: 'koop_pending_order',
-        rows: [row({ status: 'materialized', orders_id: 55, confirmed_via: 'reply' })],
+        rows: [
+          row({
+            status: 'materialized',
+            orders_id: 55,
+            confirmed_via: 'admin',
+            confirm_note: 'Telefonisch bestätigt.',
+          }),
+        ],
       },
     ])
 
     const found = await getPendingByToken(db.pool, 'x')
 
-    expect(found).toMatchObject({ ordersId: 55, confirmedVia: 'reply' })
+    expect(found).toMatchObject({
+      ordersId: 55,
+      confirmedVia: 'admin',
+      confirmNote: 'Telefonisch bestätigt.',
+    })
   })
 
   it('tolerates a row without a mail address', async () => {

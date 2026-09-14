@@ -610,6 +610,33 @@ describe('insertComputedOrder', () => {
     })
   })
 
+  it('records the reason for a manual release in the history', async () => {
+    const db = createMockDb()
+
+    await insertComputedOrder(
+      db.pool,
+      { ...COMP, notes: 'Bitte klingeln' },
+      {
+        confirmNote: 'Kundin hat telefonisch bestätigt.',
+      },
+    )
+
+    // The legacy osCommerce admin has no notion of the confirmation step, so the
+    // history comment is the only place it can surface there. The customer's own
+    // note keeps its slot instead of being overwritten.
+    expect(written().orders_status_history[0].comments).toBe(
+      'Bitte klingeln\n\nManuell freigegeben: Kundin hat telefonisch bestätigt.',
+    )
+  })
+
+  it('leaves the history comment to the customer when nothing was released by hand', async () => {
+    const db = createMockDb()
+
+    await insertComputedOrder(db.pool, { ...COMP, notes: 'Bitte klingeln' })
+
+    expect(written().orders_status_history[0].comments).toBe('Bitte klingeln')
+  })
+
   it('counts the ordered quantity onto the product', async () => {
     const db = createMockDb()
 

@@ -42,66 +42,38 @@
       </div>
 
       <!-- Status stepper -->
-      <section class="bg-white rounded-lg shadow-sm border border-gray-200 px-6 py-5">
-        <h3 class="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-4">
-          Bestellprozess
-        </h3>
-        <div class="flex items-start">
-          <template v-for="(s, i) in data.statusFlow" :key="s.id">
-            <div class="flex flex-col items-center text-center w-24 shrink-0">
-              <div
-                class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold transition"
-                :class="circleClass(s.state)"
-              >
-                <svg
-                  v-if="s.state === 'done'"
-                  class="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2.5"
-                    d="M5 13l4 4L19 7"
-                  />
-                </svg>
-                <span v-else>{{ i + 1 }}</span>
-              </div>
-              <span
-                class="text-xs mt-2 leading-tight"
-                :class="s.state === 'upcoming' ? 'text-gray-400' : 'text-gray-800 font-medium'"
-                >{{ s.name }}</span
-              >
-              <span
-                v-if="s.visitedAt && s.state !== 'upcoming'"
-                class="text-[10px] text-gray-400 mt-0.5"
-                >{{ date(s.visitedAt) }}</span
-              >
-            </div>
-            <div
-              v-if="i < data.statusFlow.length - 1"
-              class="flex-1 h-0.5 mt-5 rounded"
-              :class="s.state === 'done' ? 'bg-[#00af8c]' : 'bg-gray-200'"
-            />
-          </template>
-        </div>
+      <AdminStatusFlow :steps="data.statusFlow">
         <p
           v-if="data.origin === 'alt'"
           class="mt-4 text-xs text-gray-500 bg-gray-50 border border-gray-200 rounded px-3 py-2"
         >
-          Diese Bestellung lief über den <strong>alten Shop</strong> – es fand keine gesonderte
-          Bestätigung durch den Kunden statt.
+          Diese Bestellung lief über den <strong>alten Shop</strong> – Schritt 1 entfällt, eine
+          gesonderte Bestätigung durch den Kunden war dort nicht vorgesehen.
         </p>
-        <p v-else-if="data.confirmation" class="mt-4 text-xs text-gray-500">
-          Vom Kunden bestätigt ({{ viaLabel(data.confirmation.via) }})<span
-            v-if="data.confirmation.at"
+        <template v-else-if="data.confirmation">
+          <p class="mt-4 text-xs text-gray-500">
+            <template v-if="data.confirmation.via === 'admin'">
+              Manuell im Admin freigegeben<span v-if="data.confirmation.at">
+                am {{ dateTime(data.confirmation.at) }}</span
+              >.
+            </template>
+            <template v-else>
+              Vom Kunden bestätigt ({{ viaLabel(data.confirmation.via) }})<span
+                v-if="data.confirmation.at"
+              >
+                am {{ dateTime(data.confirmation.at) }}</span
+              >.
+            </template>
+          </p>
+          <p
+            v-if="data.confirmation.note"
+            class="mt-2 text-xs text-gray-600 bg-amber-50 border border-amber-200 rounded px-3 py-2"
           >
-            am {{ dateTime(data.confirmation.at) }}</span
-          >.
-        </p>
-      </section>
+            <span class="font-semibold">Begründung der Freischaltung:</span>
+            <span class="whitespace-pre-wrap">{{ data.confirmation.note }}</span>
+          </p>
+        </template>
+      </AdminStatusFlow>
 
       <div class="grid gap-6 lg:grid-cols-3">
         <!-- Left: items + totals + history + mails -->
@@ -350,18 +322,14 @@
 </template>
 
 <script setup lang="ts">
+  import type { FlowStep } from '~/components/admin/StatusFlow.vue'
+
   definePageMeta({ layout: 'admin' })
 
   const uid = useId()
-  const { euro, dateTime, date, statusClass, errorMessage } = useAdminFormat()
+  const { euro, dateTime, statusClass, errorMessage } = useAdminFormat()
   const route = useRoute()
 
-  interface FlowStep {
-    id: number
-    name: string
-    state: 'done' | 'current' | 'upcoming'
-    visitedAt: string | null
-  }
   interface MailRow {
     id: number
     direction: string
@@ -376,7 +344,7 @@
   interface OrderDetail {
     statusFlow: FlowStep[]
     origin: 'alt' | 'neu'
-    confirmation: { via: string | null; at: string | null } | null
+    confirmation: { via: string | null; at: string | null; note: string | null } | null
     oldAdminUrl: string | null
     availableStatuses: { id: number; name: string }[]
     mails: MailRow[]
@@ -443,14 +411,12 @@
       .trim()
   }
 
+  /**
+   * Only the two ways the CUSTOMER can confirm. A manual release gets its own
+   * sentence in the template, because it did not come from the customer at all.
+   */
   function viaLabel(via: string | null): string {
-    return via === 'admin' ? 'manuell im Admin' : via === 'reply' ? 'per Antwort' : 'per Link'
-  }
-
-  function circleClass(state: FlowStep['state']): string {
-    if (state === 'done') return 'bg-[#00af8c] text-white'
-    if (state === 'current') return 'bg-[#00af8c] text-white ring-4 ring-[#00af8c]/25'
-    return 'bg-white border-2 border-gray-300 text-gray-400'
+    return via === 'reply' ? 'per Antwort' : 'per Link'
   }
 
   const MAIL_TYPE_LABELS: Record<string, string> = {

@@ -31,7 +31,7 @@ let refreshes = 0
 function base() {
   return {
     origin: 'neu' as const,
-    confirmation: { via: 'link', at: '2026-03-05T12:00:00' },
+    confirmation: { via: 'link', at: '2026-03-05T12:00:00', note: null },
     oldAdminUrl: null,
     availableStatuses: [
       { id: 1, name: 'In Bearbeitung' },
@@ -275,14 +275,34 @@ describe('the status stepper', () => {
   })
 
   it.each([
-    ['admin', 'manuell im Admin'],
-    ['reply', 'per Antwort'],
+    // A manual release did not come from the customer, so the page does not say
+    // it did — the other two ways did.
+    ['admin', 'Manuell im Admin freigegeben'],
+    ['reply', 'Vom Kunden bestätigt (per Antwort)'],
   ])('names confirmation via %s', async (via, label) => {
-    detail = { ...base(), confirmation: { via, at: null } }
+    detail = { ...base(), confirmation: { via, at: null, note: null } }
 
     const wrapper = await mount()
 
     expect(wrapper.text()).toContain(label)
+  })
+
+  it('shows the reason behind a manual release, with its date', async () => {
+    detail = {
+      ...base(),
+      confirmation: {
+        via: 'admin',
+        at: '2026-03-05T12:00:00',
+        note: 'Kundin hat telefonisch bestätigt.',
+      },
+    }
+
+    const wrapper = await mount()
+
+    expect(wrapper.text()).toContain('Manuell im Admin freigegeben')
+    expect(wrapper.text()).toContain('05.03.2026')
+    expect(wrapper.text()).toContain('Begründung der Freischaltung:')
+    expect(wrapper.text()).toContain('Kundin hat telefonisch bestätigt.')
   })
 
   it('says nothing about a confirmation that never happened', async () => {
@@ -292,7 +312,7 @@ describe('the status stepper', () => {
     const wrapper = await mount()
 
     expect(wrapper.text()).not.toContain('Vom Kunden bestätigt')
-    expect(wrapper.text()).not.toContain('keine gesonderte Bestätigung')
+    expect(wrapper.text()).not.toContain('Schritt 1 entfällt')
   })
 
   it('explains that old orders were never confirmed', async () => {
@@ -300,7 +320,7 @@ describe('the status stepper', () => {
 
     const wrapper = await mount()
 
-    expect(wrapper.text()).toContain('keine gesonderte Bestätigung')
+    expect(wrapper.text()).toContain('Schritt 1 entfällt')
   })
 })
 

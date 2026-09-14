@@ -1,8 +1,11 @@
 import { test, expect } from '@playwright/test'
 
-import { latestPending, orderById, orderStatusHistory, mailLog, closeDb } from './helpers/db'
+import { latestPending, orderById, orderStatusHistory, mailLog, query, closeDb } from './helpers/db'
 import { clearMails, waitForMail, to, confirmationLink } from './helpers/maildev'
 import { ADMIN, CUSTOMER, addToCart, checkout, openShop } from './helpers/shop'
+
+/** Same value .env.e2e hands the server, so the assertions read the real inbox. */
+const MAIL_OPERATOR = process.env.MAIL_OPERATOR ?? 'betrieb@example.org'
 
 /**
  * The /admin area replaces the old osCommerce backend. It is protected by HTTP
@@ -135,6 +138,99 @@ test.describe('admin', () => {
 
     const log = await mailLog({ orderId })
     expect(log.some((l) => l.mail_type === 'status_notification')).toBe(true)
+  })
+
+  /**
+   * The manual release. Until now the only confirmation path the suite walked was
+   * the customer's link, and the admin button drifted unnoticed: its stepper kept
+   * the osCommerce half at "upcoming" after the order already existed.
+   */
+  test('releases a pending order by hand, with a reason', async ({ page }) => {
+    await clearMails()
+    await openShop(page)
+    await addToCart(page, 'Honig')
+    await checkout(page, { shipping: 'abholung', payment: 'vorkasse' })
+    const pending = await latestPending(CUSTOMER.email)
+
+    await page.goto(`/admin/pending/${pending!.id}`)
+    const release = page.getByRole('button', { name: 'Manuell bestätigen' })
+
+    // No reason, no release.
+    await expect(release).toBeDisabled()
+    await page.getByLabel('Begründung').fill('Kundin hat telefonisch bestätigt.')
+    await expect(release).toBeEnabled()
+    await release.click()
+
+    await expect
+      .poll(async () => (await latestPending(CUSTOMER.email))?.status, {
+        message: 'the pending order becomes materialized',
+      })
+      .toBe('materialized')
+
+    const orderId = (await latestPending(CUSTOMER.email))!.orders_id!
+
+    // The reported defect: step 2 stayed grey although the order existed. Step 1
+    // is ticked off, step 2 is the one the order is actually sitting on.
+    await expect(page.getByTestId('flow-step-1').locator('svg')).toBeVisible()
+    await expect(page.getByTestId('flow-step-2')).toHaveClass(/ring-4/)
+    await expect(page.getByRole('link', { name: `Zur Bestellung #${orderId}` })).toBeVisible()
+    await expect(page.getByText('Kundin hat telefonisch bestätigt.')).toBeVisible()
+
+    // The reason reaches the legacy admin through the status history …
+    const history = await orderStatusHistory(orderId)
+    expect(history[0].comments).toContain('Manuell freigegeben: Kundin hat telefonisch bestätigt.')
+
+    // … the order page shows it and numbers its steps identically …
+    await page.goto(`/admin/orders/${orderId}`)
+    await expect(page.getByText('Manuell im Admin freigegeben')).toBeVisible()
+    await expect(page.getByTestId('flow-step-2')).toHaveClass(/ring-4/)
+    // Twice on purpose: once at the confirmation, once in the status history —
+    // the latter is the copy the legacy osCommerce admin reads.
+    await expect(page.getByText('Kundin hat telefonisch bestätigt.')).toHaveCount(2)
+    await expect(
+      page.getByText('Manuell freigegeben: Kundin hat telefonisch bestätigt.'),
+    ).toBeVisible()
+
+    // … and so does the mail to the administration.
+    const mail = await waitForMail(
+      (m) => to(MAIL_OPERATOR)(m) && m.subject.includes('bestätigt – bitte bearbeiten'),
+      'the admin notification about the release',
+    )
+    expect(mail.text).toContain('Kundin hat telefonisch bestätigt.')
+    // It was not the customer who confirmed, and the mail must not claim so.
+    expect(mail.text).not.toContain('vom Kunden bestätigt')
+  })
+
+  test('refuses a manual release without a reason', async ({ page }) => {
+    await openShop(page)
+    await addToCart(page, 'Honig')
+    await checkout(page, { shipping: 'abholung', payment: 'vorkasse' })
+    const pending = await latestPending(CUSTOMER.email)
+
+    // The form disables the button; the endpoint has to refuse it regardless,
+    // or the requirement would only hold for people using the form.
+    const res = await page.request.post(`/admin/api/pending/${pending!.id}/confirm`, { data: {} })
+
+    expect(res.status()).toBe(400)
+    expect(await res.text()).toContain('Begründung')
+    expect((await latestPending(CUSTOMER.email))?.status).toBe('pending')
+  })
+
+  test('marks an old-shop order as having skipped the confirmation', async ({ page }) => {
+    const orderId = await confirmedOrder(page)
+    // An order with no koop_pending_order row behind it is exactly what an
+    // old-shop order looks like to the admin.
+    await query('DELETE FROM koop_pending_order WHERE orders_id = ?', [orderId])
+
+    await page.goto(`/admin/orders/${orderId}`)
+
+    await expect(page.getByText('Alter Shop')).toBeVisible()
+    await expect(page.getByText('Schritt 1 entfällt')).toBeVisible()
+    // Still numbered 1, so "In Bearbeitung" stays step 2 as on every other view.
+    await expect(page.getByTestId('flow-step-1')).toHaveText('1')
+    await expect(page.getByTestId('flow-step-1')).toHaveClass(/border-dashed/)
+    // Exact, because the paragraph below the stepper says "Schritt 1 entfällt" too.
+    await expect(page.getByText('entfällt', { exact: true })).toBeVisible()
   })
 
   test('changes the status silently when notification is unchecked', async ({ page }) => {
