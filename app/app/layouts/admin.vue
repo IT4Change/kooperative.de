@@ -17,9 +17,16 @@
           :class="isActive(item) ? 'bg-[#00af8c] text-white font-medium' : 'text-gray-200'"
         >
           <span>{{ item.label }}</span>
+          <!-- leading-5 statt leading-none, und zwar exakt die h-5 des Kreises:
+               Flexbox zentriert die Zeilenbox, nicht die Ziffer. Eine auf 11px
+               gestauchte Zeilenbox überlässt es den Ascent/Descent-Werten des
+               Systemfonts, wo die Ziffer darin landet — je nach Font saß sie
+               dadurch bis zu 2px über der Mitte. Eine Zeilenbox in voller
+               Kreishöhe nimmt diesen Spielraum heraus. Höhe hier und in h-5
+               müssen gleich bleiben. -->
           <span
             v-if="item.badge && pendingCount > 0"
-            class="ml-auto inline-flex items-center justify-center min-w-[20px] h-5 px-1 text-[11px] font-semibold bg-amber-400 text-amber-950 rounded-full leading-none"
+            class="ml-auto inline-flex items-center justify-center min-w-[20px] h-5 px-1 text-[11px] font-semibold bg-amber-400 text-amber-950 rounded-full leading-5 tabular-nums"
             >{{ pendingCount }}</span
           >
           <span
