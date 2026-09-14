@@ -74,7 +74,7 @@ function renderCatalog(snapshot: CatalogSnapshot): RenderedCatalog {
  */
 export default defineEventHandler(async (event) => {
   const snapshot = await getCatalog(useDB())
-  if (!rendered || rendered.snapshot !== snapshot) rendered = renderCatalog(snapshot)
+  if (rendered?.snapshot !== snapshot) rendered = renderCatalog(snapshot)
 
   setResponseHeader(event, 'etag', rendered.etag)
   // Store it, but check back before using it. The catalogue is public and

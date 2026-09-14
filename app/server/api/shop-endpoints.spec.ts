@@ -98,7 +98,7 @@ interface ListResponse {
 
 async function callList(headers: Record<string, string> = {}) {
   const event = createTestEvent({ headers })
-  const body = (await productList(event)) as string | null
+  const body = await productList(event)
   const headerOf = (name: string) =>
     [...vi.mocked(event.node.res.setHeader).mock.calls].reverse().find(([key]) => key === name)?.[1]
 
