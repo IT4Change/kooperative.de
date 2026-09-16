@@ -70,7 +70,9 @@
             class="mt-2 text-xs text-gray-600 bg-amber-50 border border-amber-200 rounded px-3 py-2"
           >
             <span class="font-semibold">Begründung der Freischaltung:</span>
-            <span class="whitespace-pre-wrap">{{ data.confirmation.note }}</span>
+            <!-- ml-1 rather than a literal space: Vue's whitespace: 'condense'
+                 drops whitespace between elements when it spans a newline. -->
+            <span class="ml-1 whitespace-pre-wrap">{{ data.confirmation.note }}</span>
           </p>
         </template>
       </AdminStatusFlow>

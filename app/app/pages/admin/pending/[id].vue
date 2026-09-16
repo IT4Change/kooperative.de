@@ -12,8 +12,15 @@
 
     <template v-if="data">
       <div class="flex flex-wrap items-center gap-3">
-        <h2 class="text-xl font-bold text-gray-800">Bestellung</h2>
-        <span class="text-sm text-gray-400">noch keine Bestell-Nr.</span>
+        <h2 class="text-xl font-bold text-gray-800">
+          Bestellung<span v-if="data.pending.ordersId"> #{{ data.pending.ordersId }}</span>
+        </h2>
+        <!-- Only until the confirmation materialised one — afterwards the number
+             above is the truth, and claiming there is none contradicts the
+             green panel further down. -->
+        <span v-if="!data.pending.ordersId" class="text-sm text-gray-400"
+          >noch keine Bestell-Nr.</span
+        >
         <span
           class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium"
           :class="statusBadge"
@@ -40,7 +47,9 @@
           class="mt-4 text-xs text-gray-600 bg-amber-50 border border-amber-200 rounded px-3 py-2"
         >
           <span class="font-semibold">Begründung der Freischaltung:</span>
-          <span class="whitespace-pre-wrap">{{ data.pending.confirmNote }}</span>
+          <!-- ml-1 rather than a literal space: Vue's whitespace: 'condense'
+               drops whitespace between elements when it spans a newline. -->
+          <span class="ml-1 whitespace-pre-wrap">{{ data.pending.confirmNote }}</span>
         </p>
       </AdminStatusFlow>
 
@@ -340,7 +349,12 @@
       )
       actionError.value = false
       actionMsg.value = `Bestätigt – Bestellung #${res.orderId} angelegt.`
-      await refresh()
+      // On to the order. This view deliberately has no editing panel — it shows
+      // the confirmation process, not the order — so staying here left the
+      // operator on a page that offers nothing more to do, and no reload could
+      // change that. The order carries the release note and its reason in its
+      // own header, so nothing is lost on the way.
+      await navigateTo(`/admin/orders/${res.orderId}`)
     } catch (e) {
       actionError.value = true
       actionMsg.value = `Fehler: ${errorMessage(e)}`

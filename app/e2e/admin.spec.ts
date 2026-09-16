@@ -169,8 +169,18 @@ test.describe('admin', () => {
 
     const orderId = (await latestPending(CUSTOMER.email))!.orders_id!
 
-    // The reported defect: step 2 stayed grey although the order existed. Step 1
-    // is ticked off, step 2 is the one the order is actually sitting on.
+    // Releasing moves straight on to the order. The confirmation view carries no
+    // editing panel — it shows the process, not the order — so staying there was
+    // a dead end that no reload could resolve.
+    await page.waitForURL(`**/admin/orders/${orderId}`)
+    await expect(page.getByLabel('Nachricht an den Kunden (optional)')).toBeVisible()
+
+    // Back on the confirmation view, which stays reachable on its own. Earlier
+    // defects left step 2 grey although the order existed, and the header
+    // claiming "noch keine Bestell-Nr." next to the number it had just been given.
+    await page.goto(`/admin/pending/${pending!.id}`)
+    await expect(page.getByRole('heading', { name: `Bestellung #${orderId}` })).toBeVisible()
+    await expect(page.getByText('noch keine Bestell-Nr.')).toBeHidden()
     await expect(page.getByTestId('flow-step-1').locator('svg')).toBeVisible()
     await expect(page.getByTestId('flow-step-2')).toHaveClass(/ring-4/)
     await expect(page.getByRole('link', { name: `Zur Bestellung #${orderId}` })).toBeVisible()
