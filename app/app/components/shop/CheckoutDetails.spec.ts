@@ -21,6 +21,20 @@ const BASE = {
 
 const fetchMock = vi.fn()
 
+const IBAN_ENDPOINT = '/api/iban/info'
+
+/**
+ * Only the lookups this component made.
+ *
+ * `globalThis.$fetch` is replaced wholesale, so the mock also catches requests
+ * that have nothing to do with the component: Nuxt fetches its build manifest
+ * (`/_nuxt/builds/meta/*.json`) on its own schedule, and on a loaded machine
+ * that lands inside a test. Counting those made every assertion over the call
+ * count flaky — "expected 0, got 1" and "expected 1, got 2", in whichever test
+ * happened to be running when the manifest request went out.
+ */
+const ibanCalls = () => fetchMock.mock.calls.filter(([url]) => String(url) === IBAN_ENDPOINT)
+
 const mount = async (props: Partial<typeof BASE> = {}) =>
   mountSuspended(CheckoutDetails, { props: { ...BASE, ...props } })
 
@@ -209,11 +223,11 @@ function deferredFetches() {
     reject: (e: unknown) => void
   }
   const calls: Call[] = []
-  // Deliberately not an `async` function, which is why the rule is off for this
-  // one line: an async wrapper hands the component a *different* promise that
-  // settles a couple of microtasks after the one the test holds, and settled()
-  // below relies on the component's handler sitting on the very same promise.
-  fetchMock.mockImplementation(async () => {
+  fetchMock.mockImplementation(async (url: unknown) => {
+    // Anything that is not the lookup gets a trivial answer and is not recorded
+    // — otherwise Nuxt's build-manifest request would become calls[0] and the
+    // test would resolve the wrong promise. See ibanCalls().
+    if (String(url) !== IBAN_ENDPOINT) return {}
     const call = {} as Call
     call.promise = new Promise((resolve, reject) => {
       call.resolve = resolve
@@ -257,7 +271,7 @@ describe('live IBAN lookup', () => {
       await settle()
 
       // Every keystroke hitting the API would be wasteful and pointless.
-      expect(fetchMock).not.toHaveBeenCalled()
+      expect(ibanCalls()).toHaveLength(0)
     } finally {
       vi.useRealTimers()
     }
@@ -315,8 +329,8 @@ describe('live IBAN lookup', () => {
       await flush()
       await settle()
 
-      expect(fetchMock).toHaveBeenCalledTimes(1)
-      expect(fetchMock).toHaveBeenCalledWith('/api/iban/info', {
+      expect(ibanCalls()).toHaveLength(1)
+      expect(fetchMock).toHaveBeenCalledWith(IBAN_ENDPOINT, {
         query: { iban: 'DE89370400440532013000' },
       })
     } finally {

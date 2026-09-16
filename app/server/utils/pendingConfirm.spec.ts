@@ -4,6 +4,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { createMockDb } from '../../test/helpers/mock-db'
 
 import { confirmPending } from './pendingConfirm'
+import { buildCustomerConfirmed, buildAdminConfirmed } from './pendingMail'
 
 import type { PendingRow } from './pendingOrder'
 import type { H3Event } from 'h3'
@@ -79,6 +80,29 @@ describe('confirmPending', () => {
       recipient: 'betrieb@example.org',
       mailType: 'admin_order_confirmed',
     })
+  })
+
+  /**
+   * The reason for a manual release is mandatory for the record and must never
+   * leave the house — it documents that an order was released *without* the
+   * customer's confirmation, and belongs to the operator alone.
+   *
+   * Guarded at the seam rather than on the rendered mail: `buildCustomerConfirmed`
+   * has no `note` parameter today, so there is nothing to render. What a later
+   * change would plausibly do is hand the whole ctx to both builders, and that is
+   * what this pins down.
+   */
+  it('keeps the release reason out of the customer mail', async () => {
+    const db = createMockDb()
+    const note = 'Kundin hat telefonisch bestätigt.'
+
+    await confirmPending(db.pool, EVENT, PENDING, 'admin', { confirmNote: note })
+
+    expect(vi.mocked(buildAdminConfirmed).mock.calls[0][0].note).toBe(note)
+    expect(vi.mocked(buildCustomerConfirmed).mock.calls[0][0]).not.toHaveProperty('note')
+
+    const [[, toCustomer]] = sendAndLogOrderMail.mock.calls
+    expect(`${toCustomer.subject}${toCustomer.text}${toCustomer.html}`).not.toContain('telefonisch')
   })
 
   it('lets the operator reply straight to the customer', async () => {

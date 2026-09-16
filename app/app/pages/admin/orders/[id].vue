@@ -225,15 +225,21 @@
               </div>
               <div>
                 <label :for="`${uid}-comment`" class="block text-xs font-medium text-gray-500 mb-1">
-                  Kommentar (optional)
+                  Nachricht an den Kunden (optional)
                 </label>
                 <textarea
                   :id="`${uid}-comment`"
                   v-model="form.comment"
                   rows="2"
                   class="w-full px-3 py-2 border border-gray-300 rounded text-sm resize-none"
-                  placeholder="Interne Notiz / Text für Kundenmail"
+                  placeholder="Steht wörtlich in der Status-Mail, z. B. Paket ging heute raus, DPD-Nr. 0123456789"
                 />
+                <p class="mt-1 text-[11px] text-gray-500">
+                  <span class="font-semibold text-amber-700">Geht an den Kunden.</span>
+                  Wird in die Bestellhistorie geschrieben und — solange unten „Kunde per E-Mail
+                  benachrichtigen" gesetzt ist — wörtlich in die Mail übernommen. „Benachrichtigung
+                  erneut senden" verschickt den Text ebenfalls.
+                </p>
               </div>
               <label class="flex items-center gap-2 text-sm text-gray-700">
                 <input
