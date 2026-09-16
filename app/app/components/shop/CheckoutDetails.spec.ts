@@ -158,11 +158,50 @@ describe('direct debit', () => {
 })
 
 /**
- * Hands out lookups whose answer the test decides, plus a way to wait until a
- * given number of them has actually been dispatched. Advancing the debounce by
- * a fixed amount is not enough: the request leaves in a microtask after the
- * timer, and on a busy machine that lands a tick later.
+ * Polls until `ready()` holds, draining the fake clock, the microtask queue and
+ * Vue's render queue between attempts.
+ *
+ * Same reasoning as test/helpers/wait.ts — which cannot be used here, because it
+ * sleeps on a real setTimeout and these tests run on fake timers: how many ticks
+ * a debounced lookup needs before its answer reaches the DOM depends on machine
+ * load. Reasoning about the order in which promise handlers were attached
+ * instead held locally and broke on a loaded runner — sometimes as a failing
+ * assertion, sometimes only as a branch missing from the coverage report.
  */
+async function until(ready: () => boolean, description: string): Promise<void> {
+  for (let i = 0; i < 400; i++) {
+    if (ready()) return
+    await vi.advanceTimersByTimeAsync(5)
+    await nextTick()
+  }
+  throw new Error(`Timed out waiting for ${description}`)
+}
+
+/**
+ * Drains the pending ticks **without moving the clock**, so a watcher that has
+ * not run yet gets to install its debounce timer before any timer can fire.
+ * Skipping this lets the clock jump past a timer the next prop change was
+ * supposed to cancel, and the component issues two lookups instead of one.
+ */
+async function flush(): Promise<void> {
+  for (let i = 0; i < 20; i++) await nextTick()
+}
+
+/**
+ * Drains whatever is still queued, well past the 250 ms debounce. For the
+ * assertions that say *nothing* more happened: there is no state change to poll
+ * for, so the only honest gate is to let everything pending run first — and a
+ * window shorter than the debounce would make those assertions pass for the
+ * wrong reason.
+ */
+async function settle(): Promise<void> {
+  for (let i = 0; i < 20; i++) {
+    await vi.advanceTimersByTimeAsync(50)
+    await nextTick()
+  }
+}
+
+/** Hands out lookups whose answer the test decides. */
 function deferredFetches() {
   interface Call {
     promise: Promise<unknown>
@@ -170,6 +209,10 @@ function deferredFetches() {
     reject: (e: unknown) => void
   }
   const calls: Call[] = []
+  // Deliberately not an `async` function, which is why the rule is off for this
+  // one line: an async wrapper hands the component a *different* promise that
+  // settles a couple of microtasks after the one the test holds, and settled()
+  // below relies on the component's handler sitting on the very same promise.
   fetchMock.mockImplementation(async () => {
     const call = {} as Call
     call.promise = new Promise((resolve, reject) => {
@@ -181,19 +224,9 @@ function deferredFetches() {
   })
   return {
     at: (i: number) => calls[i],
+    /** Waits until `n` lookups have actually left the component. */
     async dispatched(n: number) {
-      for (let i = 0; i < 100 && calls.length < n; i++) await vi.advanceTimersByTimeAsync(10)
-      expect(calls).toHaveLength(n)
-    },
-    /**
-     * Waits until the answer has reached the component. The component attached
-     * its handler to this promise before the test does, and promise callbacks
-     * run in the order they were attached — so once this resolves, the
-     * component has seen the answer. Advancing timers does not guarantee that.
-     */
-    async settled(i: number) {
-      await calls[i].promise.catch(() => undefined)
-      await nextTick()
+      await until(() => calls.length >= n, `${n} dispatched lookup(s)`)
     },
   }
 }
@@ -205,13 +238,11 @@ describe('live IBAN lookup', () => {
       const wrapper = await mount({ shipping: 'abholung', payment: 'lastschrift' })
       await wrapper.setProps({ iban: 'DE89370400440532013000' })
 
-      await vi.advanceTimersByTimeAsync(300)
-      await wrapper.vm.$nextTick()
+      await until(() => wrapper.text().includes('Commerzbank'), 'the bank name')
 
       expect(fetchMock).toHaveBeenCalledWith('/api/iban/info', {
         query: { iban: 'DE89370400440532013000' },
       })
-      expect(wrapper.text()).toContain('Commerzbank')
     } finally {
       vi.useRealTimers()
     }
@@ -223,7 +254,7 @@ describe('live IBAN lookup', () => {
       const wrapper = await mount({ shipping: 'abholung', payment: 'lastschrift' })
       await wrapper.setProps({ iban: 'DE8' })
 
-      await vi.advanceTimersByTimeAsync(300)
+      await settle()
 
       // Every keystroke hitting the API would be wasteful and pointless.
       expect(fetchMock).not.toHaveBeenCalled()
@@ -245,10 +276,8 @@ describe('live IBAN lookup', () => {
       })
       await wrapper.setProps({ iban: 'DE00000000000000000000' })
 
-      await vi.advanceTimersByTimeAsync(300)
-      await wrapper.vm.$nextTick()
+      await until(() => wrapper.text().includes('ungültig'), 'the rejection notice')
 
-      expect(wrapper.text()).toContain('ungültig')
       // And it must not let the customer continue into a rejection.
       expect(nextButton(wrapper).attributes('disabled')).toBeDefined()
     } finally {
@@ -263,10 +292,10 @@ describe('live IBAN lookup', () => {
       const wrapper = await mount({ shipping: 'abholung', payment: 'lastschrift' })
       await wrapper.setProps({ iban: 'DE89123456780532013000' })
 
-      await vi.advanceTimersByTimeAsync(300)
-      await wrapper.vm.$nextTick()
+      await until(() => wrapper.text().includes('12345678'), 'the BLZ')
 
-      expect(wrapper.text()).toContain('12345678')
+      // Without a name the code itself is all the customer gets to recognise.
+      expect(wrapper.text()).toContain('BLZ 12345678')
     } finally {
       vi.useRealTimers()
     }
@@ -277,11 +306,14 @@ describe('live IBAN lookup', () => {
     try {
       const wrapper = await mount({ shipping: 'abholung', payment: 'lastschrift' })
       await wrapper.setProps({ iban: 'DE8937040044' })
+      // The clock may only move once this lookup's timer is actually installed.
+      await flush()
       await vi.advanceTimersByTimeAsync(100)
 
       // Still within the debounce window — the pending lookup is dropped.
       await wrapper.setProps({ iban: 'DE89370400440532013000' })
-      await vi.advanceTimersByTimeAsync(300)
+      await flush()
+      await settle()
 
       expect(fetchMock).toHaveBeenCalledTimes(1)
       expect(fetchMock).toHaveBeenCalledWith('/api/iban/info', {
@@ -299,10 +331,8 @@ describe('live IBAN lookup', () => {
       const wrapper = await mount({ shipping: 'abholung', payment: 'lastschrift' })
       await wrapper.setProps({ iban: 'DE89370400440532013000' })
 
-      await vi.advanceTimersByTimeAsync(300)
-      await wrapper.vm.$nextTick()
+      await until(() => wrapper.text().includes('Kooperative Bank'), 'the bank name')
 
-      expect(wrapper.text()).toContain('Kooperative Bank')
       expect(wrapper.text()).not.toContain('BLZ')
     } finally {
       vi.useRealTimers()
@@ -319,8 +349,10 @@ describe('live IBAN lookup', () => {
       })
       await wrapper.setProps({ iban: 'DE89370400440532013000' })
 
-      await vi.advanceTimersByTimeAsync(300)
-      await wrapper.vm.$nextTick()
+      await until(
+        () => nextButton(wrapper).attributes('disabled') === undefined,
+        'the next button to open up',
+      )
 
       expect(nextButton(wrapper).attributes('disabled')).toBeUndefined()
     } finally {
@@ -340,9 +372,9 @@ describe('live IBAN lookup', () => {
 
       // The second answer arrives first, the first one late.
       deferred.at(1).resolve({ ok: true, valid: true, bankName: 'Zweite Bank' })
-      await deferred.settled(1)
+      await until(() => wrapper.text().includes('Zweite Bank'), 'the second bank')
       deferred.at(0).resolve({ ok: true, valid: true, bankName: 'Erste Bank' })
-      await deferred.settled(0)
+      await settle()
 
       // Otherwise the customer would see the bank of an IBAN they overwrote.
       expect(wrapper.text()).toContain('Zweite Bank')
@@ -363,9 +395,9 @@ describe('live IBAN lookup', () => {
       await deferred.dispatched(2)
 
       deferred.at(1).resolve({ ok: true, valid: true, bankName: 'Zweite Bank' })
-      await deferred.settled(1)
+      await until(() => wrapper.text().includes('Zweite Bank'), 'the second bank')
       deferred.at(0).reject(new Error('offline'))
-      await deferred.settled(0)
+      await settle()
 
       // A stale failure must not wipe the result the customer is looking at.
       expect(wrapper.text()).toContain('Zweite Bank')
@@ -374,9 +406,15 @@ describe('live IBAN lookup', () => {
     }
   })
 
+  /**
+   * With a bank on screen beforehand, because both assertions at the bottom
+   * already held before the failure was handled: the earlier version of this
+   * test passed whether or not the component's catch had run, and the only
+   * trace of the difference was a branch missing from the coverage report.
+   */
   it('stays quiet when the lookup fails', async () => {
     vi.useFakeTimers()
-    fetchMock.mockRejectedValue(new Error('offline'))
+    const deferred = deferredFetches()
     try {
       const wrapper = await mount({
         shipping: 'abholung',
@@ -384,10 +422,16 @@ describe('live IBAN lookup', () => {
         accountHolder: 'Erika',
       })
       await wrapper.setProps({ iban: 'DE89370400440532013000' })
+      await deferred.dispatched(1)
+      deferred.at(0).resolve({ ok: true, valid: true, bankName: 'Commerzbank' })
+      await until(() => wrapper.text().includes('Commerzbank'), 'the bank name')
 
-      await vi.advanceTimersByTimeAsync(300)
-      await wrapper.vm.$nextTick()
-
+      // The old answer stays on screen until the new one arrives, so the bank
+      // disappearing is the proof that the failure was actually handled.
+      await wrapper.setProps({ iban: 'DE89100000000000000000' })
+      await deferred.dispatched(2)
+      deferred.at(1).reject(new Error('offline'))
+      await until(() => !wrapper.text().includes('Commerzbank'), 'the bank name to clear')
       // A lookup outage must not block an otherwise valid order — the server
       // validates again on submit.
       expect(wrapper.text()).not.toContain('ungültig')
