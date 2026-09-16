@@ -1,0 +1,67 @@
+{
+  "admin-bestellungen": [
+    "color-contrast",
+    "html-has-lang"
+  ],
+  "admin-dashboard": [
+    "color-contrast",
+    "html-has-lang"
+  ],
+  "checkout-anmelden": [
+    "color-contrast",
+    "html-has-lang",
+    "link-name",
+    "target-size"
+  ],
+  "checkout-registrierung": [
+    "color-contrast",
+    "html-has-lang",
+    "link-name"
+  ],
+  "checkout-uebersicht": [
+    "color-contrast",
+    "html-has-lang",
+    "link-name"
+  ],
+  "checkout-versand-zahlung": [
+    "color-contrast",
+    "html-has-lang",
+    "link-name"
+  ],
+  "datenschutz": [
+    "color-contrast",
+    "html-has-lang"
+  ],
+  "dialog-cookie": [
+    "color-contrast",
+    "html-has-lang",
+    "link-name"
+  ],
+  "dialog-willkommen": [
+    "color-contrast",
+    "html-has-lang",
+    "link-name"
+  ],
+  "impressum": [
+    "color-contrast",
+    "html-has-lang"
+  ],
+  "produktdetail": [
+    "color-contrast",
+    "html-has-lang"
+  ],
+  "shop-grid": [
+    "color-contrast",
+    "html-has-lang",
+    "link-name"
+  ],
+  "startseite": [
+    "color-contrast",
+    "html-has-lang"
+  ],
+  "warenkorb": [
+    "color-contrast",
+    "html-has-lang",
+    "link-name"
+  ]
+}

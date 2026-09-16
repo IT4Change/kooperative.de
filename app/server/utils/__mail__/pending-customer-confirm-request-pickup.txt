@@ -1,0 +1,33 @@
+Subject: [Kooperative Dürnau] Bitte bestätigen Sie Ihre Bestellung
+
+Hallo,
+
+vielen Dank für Ihre Bestellung. Bitte bestätigen Sie sie verbindlich –
+entweder über den folgenden Link (Inhalt prüfen und bestätigen):
+https://shop.example.org/bestellung/bestaetigen?token=abc123
+
+oder indem Sie einfach auf diese E-Mail antworten.
+
+Erst mit Ihrer Bestätigung kommt der Kaufvertrag zustande.
+
+Positionen:
+  1. 2× Honig  ·  11,90 €/Stk = 23,80 €
+  2. 3× Brot  ·  3,21 €/Stk = 9,63 €
+  3. 1× Olivenöl (0,5 l)  ·  14,28 €/Stk = 14,28 €
+Zwischensumme: 47,71 €
+Versand (Abholung): nach Aufwand
+MwSt (19%, im Preis enthalten): 6,08 €
+MwSt (7%, im Preis enthalten): 0,63 €
+Gesamt: 47,71 €
+Zahlung: Bezahlung mit Vorkasse
+
+Herzliche Grüsze
+Kooperative Dürnau eG
+
+—
+Kooperative Dürnau Verwaltungsgesellschaft mbH
+Im Winkel 11, 88422 Dürnau
+Geschäftsführer: Rolf Reisiger · Amtsgericht Ulm, HRB 650133
+reisiger@kooperative.de
+
+Diese Bestellbestätigung ist keine Rechnung.
