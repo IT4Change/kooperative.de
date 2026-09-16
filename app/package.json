@@ -17,6 +17,7 @@
     "test:unit:dev": "TZ=UTC vitest",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
+    "test:e2e:a11y:update": "A11Y_UPDATE_BASELINE=1 playwright test a11y.axe",
     "e2e:stack:up": "docker compose -f ../docker-compose.e2e.yml up -d --wait",
     "e2e:stack:down": "docker compose -f ../docker-compose.e2e.yml down -v",
     "e2e:seed": "node scripts/seed-e2e.mjs"
@@ -32,6 +33,7 @@
     "vue-router": "^4.6.4"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
     "@nuxt/eslint": "^1.15.1",
     "@nuxt/test-utils": "^4.3.2",
     "@playwright/test": "^1.63.0",

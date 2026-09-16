@@ -3,7 +3,13 @@
     class="bg-white border border-gray-200 rounded-lg flex flex-col overflow-hidden"
     data-testid="product-card"
   >
-    <NuxtLink :to="`/shop/${product.id}/${product.slug}`">
+    <!--
+      The gallery is the whole accessible content of this link, and its alt text
+      ("Bild 1 von 2") says nothing about where the link goes — with no images at
+      all it is a bare placeholder icon and the link has no name whatsoever. The
+      product name is what a screen reader has to hear here.
+    -->
+    <NuxtLink :to="`/shop/${product.id}/${product.slug}`" :aria-label="product.name">
       <ShopProductGallery :images="displayImages" />
     </NuxtLink>
     <div class="p-5 flex flex-col flex-1">
@@ -13,9 +19,19 @@
       >
         <h3 class="text-base font-semibold text-gray-900 mb-1">{{ product.name }}</h3>
       </NuxtLink>
-      <NuxtLink :to="`/shop/${product.id}/${product.slug}`" class="block mb-3 flex-1">
+      <!--
+        A product without a description used to render an empty link: no content,
+        no name, but still a tab stop. The v-else keeps the flex spacing, so the
+        price row stays pinned to the bottom of the card either way.
+      -->
+      <NuxtLink
+        v-if="product.description"
+        :to="`/shop/${product.id}/${product.slug}`"
+        class="block mb-3 flex-1"
+      >
         <p class="text-sm text-gray-500 line-clamp-5">{{ product.description }}</p>
       </NuxtLink>
+      <div v-else class="mb-3 flex-1" />
 
       <!-- Size variants: dropdown -->
       <div v-if="product.variants && product.variantType !== 'quantity'" class="mb-3">

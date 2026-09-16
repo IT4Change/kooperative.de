@@ -1,0 +1,44 @@
+{
+  "admin-bestellungen": [
+    "color-contrast"
+  ],
+  "admin-dashboard": [
+    "color-contrast"
+  ],
+  "checkout-anmelden": [
+    "color-contrast"
+  ],
+  "checkout-registrierung": [
+    "color-contrast"
+  ],
+  "checkout-uebersicht": [
+    "color-contrast"
+  ],
+  "checkout-versand-zahlung": [
+    "color-contrast"
+  ],
+  "datenschutz": [
+    "color-contrast"
+  ],
+  "dialog-cookie": [
+    "color-contrast"
+  ],
+  "dialog-willkommen": [
+    "color-contrast"
+  ],
+  "impressum": [
+    "color-contrast"
+  ],
+  "produktdetail": [
+    "color-contrast"
+  ],
+  "shop-grid": [
+    "color-contrast"
+  ],
+  "startseite": [
+    "color-contrast"
+  ],
+  "warenkorb": [
+    "color-contrast"
+  ]
+}

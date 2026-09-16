@@ -1,0 +1,27 @@
+Subject: [Koop · neuer Shop] Bestellung #55 – Erika Musterfrau
+Reply-To: kundin@example.org
+
+Neue Bestellung über den neuen Shop
+Bestell-Nr.: 55
+Admin-Link: https://shop.example.org/admin/orders.php?oID=55
+Kunde:
+  Erika Musterfrau
+  kundin@example.org
+  Tel.: 07164 123456
+  Kunden-Nr.: 3
+Lieferadresse:
+  Im Winkel 11
+  88422 Dürnau
+  Deutschland
+Positionen:
+  1. 2× Honig  ·  11.90 €/Stk  =  23.80 €
+  2. 1× Olivenöl (0,5 l)  ·  14.28 €/Stk  =  14.28 €
+Versand: Versand mit DPD (7.50 €)
+Zahlung: Bezahlung mit Lastschrift
+  Kontoinhaber: Erika Musterfrau
+  IBAN:         DE02120300000000202051
+Gesamt: 45.58 €
+
+Anmerkungen:
+Bitte klingeln,
+wir sind nachmittags da.

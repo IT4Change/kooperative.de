@@ -12,6 +12,7 @@ Alle Kommandos laufen in `app/`.
 | `npm run test:unit` | Vitest einmalig inkl. Coverage-Gate |
 | `npm run test:unit:dev` | Vitest im Watch-Modus |
 | `npm run test:e2e` | Playwright gegen echte DB + Mailserver (Stack muss laufen) |
+| `npm run test:e2e:a11y:update` | axe-Baseline neu schreiben (nur nach beabsichtigter Änderung) |
 | `npm run e2e:stack:up` / `:down` | Wegwerf-Backend starten/entfernen |
 | `npm run e2e:seed` | DB manuell zurücksetzen (macht `test:e2e` selbst) |
 
@@ -118,6 +119,38 @@ hängt von der Maschinenlast ab. Feste `setTimeout`-Wartezeiten sind deshalb
 Flakes mit Ansage. `test/helpers/wait.ts` bietet `waitFor(predicate)` und
 `waitForText(wrapper, text)`, die auf das Ergebnis pollen und mit lesbarer
 Meldung ablaufen. Das Timeout lässt sich über `TEST_WAIT_TIMEOUT` (ms) anheben.
+
+### E-Mail-Snapshots
+
+`server/utils/mailSnapshots.spec.ts` legt jede ausgehende Mail als Ganzes fest.
+Die Templates sind reine Funktionen ihres Kontextes — keine Zeitstempel, kein
+Zufall, IDs kommen von außen —, also sind die Snapshots ohne weitere Vorkehrung
+deterministisch.
+
+Warum zusätzlich zu den Verhaltens-Specs daneben: `orderMail.spec.ts` & Co.
+prüfen, was jemandem eingefallen ist („dieser Link muss drin sein", „dieser Name
+muss escaped werden"). Sie sagen nichts über alles, wofür niemand eine Assertion
+geschrieben hat — einen verschobenen Betrag, eine weggefallene Footer-Zeile, eine
+Tabellenspalte ohne Kopf. Diese Mails sind das einzige Dokument, das der Kunde
+über einen gerade geschlossenen Vertrag bekommt; diese stille Fläche ist es wert,
+komplett festgehalten zu werden.
+
+Die Snapshots liegen in `server/utils/__mail__/` als **echte Dateien**:
+
+- `*.html` lässt sich im Browser öffnen — der Snapshot ist gleichzeitig die
+  Design-Vorschau, und ein Diff im Review liest sich als HTML statt als escapter
+  Block.
+- `*.txt` ist die Mail als Plain-Text-Mail: `Subject:` (und `Reply-To:`, wo das
+  Template eins setzt) als Kopfzeilen, dann der Body. Der Betreff ändert sich
+  häufiger als alles andere und gehört ins selbe Artefakt.
+
+Zehn Fälle über sechs Templates: pro Template eine voll bestückte Mail, dazu die
+Varianten, die die Struktur wirklich ändern (Versand 0 € → „nach Aufwand", Kunde
+ohne Namen, Bestellung ohne Bankdaten/Anmerkungen, manuelle Freigabe im Admin mit
+Begründung).
+
+Nach einer **beabsichtigten** Änderung mit `npm run test:unit -- -u` erneuern —
+und den Diff lesen, das ist der eigentliche Zweck.
 
 ## Coverage-Ratchet
 
@@ -354,3 +387,72 @@ darin festzuhalten wäre schlechter, und Ablehnen ist die datensparsame Vorgabe.
 Der Login/Registrierungs-Umschalter ist ein `role="tablist"`. Das ist inhaltlich
 richtig und löst nebenbei die Doppeldeutigkeit zwischen dem Reiter „Anmelden" und
 dem gleichnamigen Absende-Button.
+
+### Automatischer Scan (axe)
+
+`e2e/a11y.axe.spec.ts` fährt zusätzlich einen maschinellen WCAG-Scan über 14
+Ansichten; die Mechanik steht in `e2e/helpers/axe.ts`.
+
+**Warum beides und nicht nur eins.** Die beiden Suiten finden disjunkte Dinge.
+axe kann kein Escape drücken, nicht sagen wohin der Fokus gesprungen ist und
+keine Touch-Zielgröße messen — dafür ist `a11y.spec.ts` da. Die handgeschriebene
+Suite prüft umgekehrt nur, woran jemand gedacht hat; axe ergänzt
+Kontrastverhältnisse, ungültiges ARIA, Landmark- und Überschriftenstruktur,
+doppelte IDs.
+
+**Ruleset.** `wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa`, `wcag22aa` — der
+normative Satz, und die Messlatte, die das BFSG an Onlinehandel anlegt.
+`best-practice` ist bewusst draußen: das sind Empfehlungen, keine Konformität,
+und sie würden die Baseline mit Rauschen füllen.
+
+**Was gescannt wird.** Dialoge werden im *geöffneten* Zustand gescannt — dort
+sitzen die härtesten Probleme, und ein Scan der Seite dahinter sieht sie nicht.
+Der Checkout wird Schritt für Schritt gescannt: eine Route, aber vier Bildschirme.
+Der Übersichts-Schritt hört vor „Bestellung absenden" auf; ein Scan hat keine
+Bestellungen zu schreiben.
+
+#### Die Baseline
+
+`e2e/a11y-baseline.json` hält fest, welche Regeln heute pro Ansicht verletzt
+sind. Eine Regel, die *nicht* drinsteht, lässt den Test fehlschlagen. Das ist
+derselbe Ratchet-Gedanke wie bei der Coverage: ein Boden, der nur sinkt. Wird
+eine Regel repariert, schlägt der Test **ebenfalls** fehl und verlangt, den
+Eintrag zu entfernen — sonst würde er später stillschweigend eine Regression
+wieder abdecken.
+
+Die Baseline hängt an **Regel-IDs, nicht an einzelnen Knoten.** axe meldet einen
+Knoten pro betroffenem Element, ein Kontrastproblem auf der Produktkarte also
+einmal pro Karte — die Zahl bewegt sich damit mit den Seed-Fixtures statt mit dem
+Code. Regel-IDs sind gegen beides stabil. Die vollständige Knotenliste
+(Selektoren, HTML, Fix-Hinweis) hängt als JSON am Playwright-Report, das Beheben
+hat also trotzdem Adressen.
+
+Erneuern nach einer beabsichtigten Änderung: `npm run test:e2e:a11y:update`.
+
+#### Offener Stand
+
+Der erste Lauf fand vier Regeln — keine davon ARIA, Landmarks oder IDs, die
+manuelle Arbeit trägt also. Drei ließen sich ohne jede sichtbare Änderung
+beheben und sind aus der Baseline verschwunden:
+
+| Regel | WCAG | Befund | Behoben durch |
+| --- | --- | --- | --- |
+| `html-has-lang` | 3.1.1 (A) | `<html>` hatte kein `lang`; Screenreader sprachen die deutschen Texte mit fremder Phonetik. Betraf jede Ansicht. | `app.head.htmlAttrs` in `nuxt.config.ts` |
+| `link-name` | 2.4.4 / 4.1.2 (A) | 45 Links ohne Accessible Name im Grid: der Bild-Link der Produktkarte (sein Alt-Text „Bild 1 von 2" sagt nichts über das Ziel, ohne Bilder gibt es gar keinen), und der Beschreibungs-Link bei Produkten **ohne** Beschreibung — `<a><p></p></a>`, leer und trotzdem in der Tab-Reihenfolge. | `aria-label` bzw. `v-if` in `ProductCard.vue` |
+| `target-size` | 2.5.8 (AA) | „Passwort vergessen?" im Login war 17 px hoch. | `py-1 -my-1` in `CheckoutLogin.vue` — Padding vergrößert das Ziel, das negative Margin nimmt den Platz wieder aus dem Fluss, nichts verschiebt sich |
+
+Offen bleibt einer, und zwar bewusst:
+
+| Regel | WCAG | Befund |
+| --- | --- | --- |
+| `color-contrast` | 1.4.3 (AA) | Markengrün `#00af8c` auf Weiß ergibt **2,79:1** (nötig: 4,5:1), die grauen Footer-Links `#888888` ergeben 3,54:1. Betrifft Fließtext; für große Flächen gilt der Wert nicht. |
+
+Das ist eine Gestaltungsentscheidung am Markengrün — ein auf 4,5:1 abgedunkeltes
+Grün für Text, `#00af8c` weiter für Flächen — und deshalb in der Baseline
+geparkt statt vorschnell überschrieben.
+
+Zwei Dinge, die axe nicht meldet und trotzdem auffielen: die Produktkarte
+enthält **drei Links auf dasselbe Ziel** (Bild, Titel, Beschreibung), das sind
+bei 34 Karten über hundert Tab-Stopps bis unter das Grid; und die
+Galerie-Buttons liegen *innerhalb* des Bild-Links, was HTML so nicht vorsieht.
+Beides zu ändern berührt die Bedienung und steht deshalb noch aus.

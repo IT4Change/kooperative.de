@@ -1,0 +1,22 @@
+Subject: [Koop · neuer Shop] Neue Bestellung (unbestätigt) – Erika Musterfrau
+
+Eine neue Bestellung ist eingegangen und wartet auf die Bestätigung des Kunden.
+Kunde: Erika Musterfrau <kundin@example.org>
+Vorgang im Admin: https://shop.example.org/admin/orders/55
+
+Positionen:
+  1. 2× Honig  ·  11,90 €/Stk = 23,80 €
+  2. 3× Brot  ·  3,21 €/Stk = 9,63 €
+  3. 1× Olivenöl (0,5 l)  ·  14,28 €/Stk = 14,28 €
+Zwischensumme: 47,71 €
+Versand (Versand mit DPD): 7,50 €
+MwSt (19%, im Preis enthalten): 6,08 €
+MwSt (7%, im Preis enthalten): 0,63 €
+Gesamt: 55,21 €
+Zahlung: Bezahlung mit Vorkasse
+
+—
+Kooperative Dürnau Verwaltungsgesellschaft mbH
+Im Winkel 11, 88422 Dürnau
+Geschäftsführer: Rolf Reisiger · Amtsgericht Ulm, HRB 650133
+reisiger@kooperative.de

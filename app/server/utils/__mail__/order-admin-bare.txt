@@ -1,0 +1,19 @@
+Subject: [Koop · neuer Shop] Bestellung #56 – Max Mustermann
+Reply-To: kunde@example.org
+
+Neue Bestellung über den neuen Shop
+Bestell-Nr.: 56
+Kunde:
+  Max Mustermann
+  kunde@example.org
+  Tel.: –
+  Kunden-Nr.: 4
+Lieferadresse:
+  Hauptstr. 1
+  73072 Donzdorf
+  Deutschland
+Positionen:
+  1. 3× Brot  ·  3.21 €/Stk  =  9.63 €
+Versand: Abholung (nach Aufwand)
+Zahlung: Bezahlung mit Vorkasse
+Gesamt: 9.63 €

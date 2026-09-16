@@ -68,6 +68,9 @@ export default defineNuxtConfig({
   app: {
     baseURL: '/',
     head: {
+      // WCAG 3.1.1: without it a screen reader pronounces the German texts with
+      // whatever voice it defaults to. Search engines read it too.
+      htmlAttrs: { lang: 'de' },
       link: [
         { rel: 'icon', type: 'image/svg+xml', href: '/img/logo.svg' },
         { rel: 'alternate icon', type: 'image/x-icon', href: '/favicon.ico' },
