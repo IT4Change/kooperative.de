@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.9.3](https://github.com/IT4Change/kooperative.de/compare/v0.9.2...v0.9.3) (2026-09-16)
+
+
+### Bug Fixes
+
+* **app:** fix confirm navigation & text of notes ([#59](https://github.com/IT4Change/kooperative.de/issues/59)) ([1beb4b8](https://github.com/IT4Change/kooperative.de/commit/1beb4b807219466ee96ebbc975f6401af34d5d1f))
+
 ## [0.9.2](https://github.com/IT4Change/kooperative.de/compare/v0.9.1...v0.9.2) (2026-09-16)
 
 
