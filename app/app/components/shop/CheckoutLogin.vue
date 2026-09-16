@@ -76,7 +76,16 @@
           :class="inputCls"
         />
         <p class="mt-1 text-xs text-gray-500">
-          <a :href="forgotUrl" target="_blank" rel="noopener" class="text-[#00af8c] underline"
+          <!--
+            WCAG 2.5.8 wants 24×24 CSS px; the bare text line is 17. The padding
+            enlarges the target and the matching negative margin takes the space
+            back out of the flow, so nothing on screen moves.
+          -->
+          <a
+            :href="forgotUrl"
+            target="_blank"
+            rel="noopener"
+            class="inline-block py-1 -my-1 text-[#00af8c] underline"
             >Passwort vergessen?</a
           >
         </p>

@@ -66,6 +66,30 @@ describe('a plain product', () => {
     expect(wrapper.find('a').attributes('href')).toBe('/shop/1/honig')
   })
 
+  /**
+   * The image link's only content is the gallery, and its alt text ("Bild 1 von
+   * 2") says nothing about where the link goes — with no images at all it is a
+   * placeholder icon and the link has no accessible name whatsoever.
+   */
+  it('names the image link after the product', async () => {
+    const wrapper = await mount(product())
+
+    expect(wrapper.find('a').attributes('aria-label')).toBe('Honig')
+  })
+
+  /**
+   * Wrapping an absent description used to leave an empty link behind: no
+   * content, no name, and still a tab stop — once per such product in the grid.
+   */
+  it('wraps no link around a description that is not there', async () => {
+    const described = await mount(product())
+    const bare = await mount(product({ description: '' }))
+
+    // Image, title, description — against image and title alone.
+    expect(described.findAll('a')).toHaveLength(3)
+    expect(bare.findAll('a')).toHaveLength(2)
+  })
+
   it('shows the pack size when there is one', async () => {
     const wrapper = await mount(product({ unit: '500 g Glas' }))
 

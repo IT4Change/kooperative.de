@@ -431,16 +431,28 @@ Erneuern nach einer beabsichtigten Änderung: `npm run test:e2e:a11y:update`.
 
 #### Offener Stand
 
-Vier Regeln stehen in der Baseline. Keine davon betrifft ARIA, Landmarks oder
-IDs — die manuelle Arbeit trägt.
+Der erste Lauf fand vier Regeln — keine davon ARIA, Landmarks oder IDs, die
+manuelle Arbeit trägt also. Drei ließen sich ohne jede sichtbare Änderung
+beheben und sind aus der Baseline verschwunden:
+
+| Regel | WCAG | Befund | Behoben durch |
+| --- | --- | --- | --- |
+| `html-has-lang` | 3.1.1 (A) | `<html>` hatte kein `lang`; Screenreader sprachen die deutschen Texte mit fremder Phonetik. Betraf jede Ansicht. | `app.head.htmlAttrs` in `nuxt.config.ts` |
+| `link-name` | 2.4.4 / 4.1.2 (A) | 45 Links ohne Accessible Name im Grid: der Bild-Link der Produktkarte (sein Alt-Text „Bild 1 von 2" sagt nichts über das Ziel, ohne Bilder gibt es gar keinen), und der Beschreibungs-Link bei Produkten **ohne** Beschreibung — `<a><p></p></a>`, leer und trotzdem in der Tab-Reihenfolge. | `aria-label` bzw. `v-if` in `ProductCard.vue` |
+| `target-size` | 2.5.8 (AA) | „Passwort vergessen?" im Login war 17 px hoch. | `py-1 -my-1` in `CheckoutLogin.vue` — Padding vergrößert das Ziel, das negative Margin nimmt den Platz wieder aus dem Fluss, nichts verschiebt sich |
+
+Offen bleibt einer, und zwar bewusst:
 
 | Regel | WCAG | Befund |
 | --- | --- | --- |
-| `html-has-lang` | 3.1.1 (A) | `<html>` hat kein `lang`. Betrifft jede Ansicht; Screenreader sprechen die deutschen Texte mit englischer Phonetik. Einzeiler in `nuxt.config.ts` (`app.head.htmlAttrs`). |
-| `link-name` | 2.4.4 / 4.1.2 (A) | 45 Links ohne Accessible Name im Shop-Grid: der Bild-Link der Produktkarte, und der Beschreibungs-Link bei Produkten **ohne** Beschreibung (`<a><p></p></a>` — leer, aber in der Tab-Reihenfolge). |
-| `color-contrast` | 1.4.3 (AA) | Markengrün `#00af8c` auf Weiß ergibt **2,79:1** (nötig: 4,5:1), die grauen Footer-Links `#888888` ergeben 3,54:1. Betrifft Fließtext-Verwendungen; für große Flächen gilt der Wert nicht. |
-| `target-size` | 2.5.8 (AA, 2.2) | „Passwort vergessen?" im Login ist 17 px hoch. |
+| `color-contrast` | 1.4.3 (AA) | Markengrün `#00af8c` auf Weiß ergibt **2,79:1** (nötig: 4,5:1), die grauen Footer-Links `#888888` ergeben 3,54:1. Betrifft Fließtext; für große Flächen gilt der Wert nicht. |
 
-`link-name` und `html-has-lang` sind Level A und rein technisch zu beheben;
-`color-contrast` ist eine Gestaltungsentscheidung am Markengrün und deshalb
-bewusst in der Baseline geparkt statt vorschnell überschrieben.
+Das ist eine Gestaltungsentscheidung am Markengrün — ein auf 4,5:1 abgedunkeltes
+Grün für Text, `#00af8c` weiter für Flächen — und deshalb in der Baseline
+geparkt statt vorschnell überschrieben.
+
+Zwei Dinge, die axe nicht meldet und trotzdem auffielen: die Produktkarte
+enthält **drei Links auf dasselbe Ziel** (Bild, Titel, Beschreibung), das sind
+bei 34 Karten über hundert Tab-Stopps bis unter das Grid; und die
+Galerie-Buttons liegen *innerhalb* des Bild-Links, was HTML so nicht vorsieht.
+Beides zu ändern berührt die Bedienung und steht deshalb noch aus.
