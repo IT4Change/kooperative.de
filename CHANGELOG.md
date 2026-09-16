@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.9.2](https://github.com/IT4Change/kooperative.de/compare/v0.9.1...v0.9.2) (2026-09-16)
+
+
+### Bug Fixes
+
+* **app:** fix admin note description ([#58](https://github.com/IT4Change/kooperative.de/issues/58)) ([9e8e4bd](https://github.com/IT4Change/kooperative.de/commit/9e8e4bd5cbf762a762cb294c37b439f9c3c54e9a))
+* **app:** more quality ensurance ([#56](https://github.com/IT4Change/kooperative.de/issues/56)) ([a33c90a](https://github.com/IT4Change/kooperative.de/commit/a33c90aad460cb7e0c921fd82d1f4abd383cd89f))
+
 ## [0.9.1](https://github.com/IT4Change/kooperative.de/compare/v0.9.0...v0.9.1) (2026-09-14)
 
 
