@@ -1,8 +1,8 @@
-import { mountSuspended, registerEndpoint } from '@nuxt/test-utils/runtime'
+import { mountSuspended, registerEndpoint, mockNuxtImport } from '@nuxt/test-utils/runtime'
 // readBody is a Nitro auto-import and therefore not in scope on this side of
 // the fence; the fake endpoints below run on h3 all the same.
 import { readBody } from 'h3'
-import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 
 import PendingDetail from './[id].vue'
 
@@ -15,6 +15,10 @@ import { waitFor, waitForText } from '~~/test/helpers/wait'
  */
 const ID = 12
 
+/** Confirming leaves this page for the order, so the jump is what gets asserted. */
+const navigateToMock = vi.hoisted(() => vi.fn())
+mockNuxtImport('navigateTo', () => navigateToMock)
+
 let detail: Record<string, unknown> = {}
 let detailStatus = 200
 let detailMessage: string | undefined = 'Datenbank weg'
@@ -22,7 +26,6 @@ let confirmFails: string | null = null
 let cancelFails: string | null = null
 let confirms = 0
 let cancels = 0
-let loads = 0
 let sentReason: string | null = null
 
 function base() {
@@ -79,7 +82,6 @@ function base() {
 }
 
 registerEndpoint(`/admin/api/pending/${ID}`, () => {
-  loads += 1
   if (detailStatus !== 200) {
     throw createError({ statusCode: detailStatus, statusMessage: detailMessage })
   }
@@ -113,8 +115,8 @@ beforeEach(() => {
   cancelFails = null
   confirms = 0
   cancels = 0
-  loads = 0
   sentReason = null
+  navigateToMock.mockReset()
   clearNuxtData()
 })
 
@@ -293,17 +295,17 @@ describe('mails', () => {
 })
 
 describe('confirming by hand', () => {
-  it('creates the order and names its number', async () => {
+  it('creates the order and moves on to it', async () => {
     const wrapper = await mount()
     await enterReason(wrapper, 'Kundin hat telefonisch bestätigt.')
 
     await button(wrapper, 'Manuell bestätigen').trigger('click')
-    await waitFor(() => loads === 2, 'the reload after confirming')
+    await waitFor(() => navigateToMock.mock.calls.length === 1, 'the jump to the new order')
 
     expect(confirms).toBe(1)
-    expect(wrapper.text()).toContain('Bestätigt – Bestellung #5001 angelegt.')
-    // The panel has to show the new state, not the one from before the click.
-    expect(loads).toBe(2)
+    // This view has no editing panel — everything further happens on the order,
+    // so leaving the operator here would be a dead end.
+    expect(navigateToMock).toHaveBeenCalledWith('/admin/orders/5001')
   })
 
   it('sends the reason along', async () => {
@@ -311,7 +313,7 @@ describe('confirming by hand', () => {
     await enterReason(wrapper, '  Kundin hat telefonisch bestätigt.  ')
 
     await button(wrapper, 'Manuell bestätigen').trigger('click')
-    await waitFor(() => loads === 2, 'the reload after confirming')
+    await waitFor(() => navigateToMock.mock.calls.length === 1, 'the jump to the new order')
 
     expect(sentReason).toBe('Kundin hat telefonisch bestätigt.')
   })
