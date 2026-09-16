@@ -157,18 +157,21 @@
               <div>
                 <label :for="`${uid}-reason`" class="block text-xs font-medium text-gray-700 mb-1">
                   Begründung <span class="text-red-600">*</span>
+                  <span class="font-normal text-gray-500">— bleibt intern</span>
                 </label>
                 <textarea
                   :id="`${uid}-reason`"
                   v-model="reason"
                   rows="4"
                   :disabled="busy"
-                  placeholder="Warum wird ohne Kundenbestätigung freigegeben? z. B. telefonisch bestätigt am 14.09., Rückruf von Frau Müller"
+                  placeholder="Der Kunde sieht diesen Text nie. Warum wird ohne Kundenbestätigung freigegeben? z. B. telefonisch bestätigt am 14.09., Rückruf von Frau Müller"
                   class="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#00af8c] focus:border-[#00af8c] disabled:bg-gray-50"
                 />
-                <p class="mt-1 text-[11px] text-gray-400">
-                  Wird am Vorgang, in der Bestellhistorie (auch im alten Admin) und in der
-                  Benachrichtigung an die Administration festgehalten.
+                <p class="mt-1 text-[11px] text-gray-500">
+                  <span class="font-semibold text-gray-700">Geht nicht an den Kunden.</span>
+                  Festgehalten am Vorgang, in der Bestellhistorie (auch im alten Admin) und in der
+                  Benachrichtigung an die Administration. Pflichtfeld, weil eine Freigabe ohne
+                  Bestätigung des Kunden belegt sein muss.
                 </p>
               </div>
               <button
