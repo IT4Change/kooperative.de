@@ -4,14 +4,14 @@
       <h1 class="text-2xl sm:text-3xl font-bold mb-2 inline-flex items-center gap-2">
         Unser Sortiment
         <button
-          class="inline-flex items-center justify-center w-7 h-7 rounded-full border-2 border-gray-300 text-gray-400 hover:border-[#00af8c] hover:text-[#00af8c] transition text-sm font-bold leading-none"
+          class="inline-flex items-center justify-center w-7 h-7 rounded-full border-2 border-gray-300 text-koop-ink-muted hover:border-koop-blue hover:text-koop-blue transition text-sm font-bold leading-none"
           title="Hilfe"
           @click="showWelcome = true"
         >
           ?
         </button>
       </h1>
-      <p class="text-gray-500">
+      <p class="text-koop-ink-muted">
         Bücher, Papeterie, Medien, Körperpflege, Holzwaren und mehr &mdash; direkt von der
         Kooperative.
       </p>
@@ -20,7 +20,7 @@
     <section class="mb-4">
       <div class="relative">
         <svg
-          class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none"
+          class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-koop-ink-muted pointer-events-none"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -37,7 +37,7 @@
           type="search"
           aria-label="Produkte durchsuchen"
           placeholder="Produkte durchsuchen..."
-          class="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#00af8c]/40 focus:border-[#00af8c]"
+          class="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-koop-blue/40 focus:border-koop-blue"
         />
       </div>
     </section>
@@ -53,7 +53,7 @@
     </section>
 
     <section>
-      <p v-if="filteredProducts.length === 0" class="text-center text-gray-500 py-12">
+      <p v-if="filteredProducts.length === 0" class="text-center text-koop-ink-muted py-12">
         Keine Produkte gefunden.
       </p>
       <ShopProductGrid
@@ -98,13 +98,13 @@
           <div class="space-y-5">
             <div class="flex gap-4 items-start">
               <div
-                class="flex-shrink-0 w-10 h-10 rounded-full bg-[#00af8c]/10 flex items-center justify-center text-[#00af8c] font-bold"
+                class="flex-shrink-0 w-10 h-10 rounded-full bg-koop-blue/10 flex items-center justify-center text-koop-blue font-bold"
               >
                 1
               </div>
               <div>
-                <p class="font-semibold text-gray-800">Produkte ausw&auml;hlen</p>
-                <p class="text-sm text-gray-500 mt-0.5">
+                <p class="font-semibold text-koop-ink">Produkte ausw&auml;hlen</p>
+                <p class="text-sm text-koop-ink-muted mt-0.5">
                   St&ouml;bern Sie im Sortiment und setzen Sie die gew&uuml;nschten Artikel auf die
                   Bestell-Liste.
                 </p>
@@ -112,26 +112,26 @@
             </div>
             <div class="flex gap-4 items-start">
               <div
-                class="flex-shrink-0 w-10 h-10 rounded-full bg-[#00af8c]/10 flex items-center justify-center text-[#00af8c] font-bold"
+                class="flex-shrink-0 w-10 h-10 rounded-full bg-koop-blue/10 flex items-center justify-center text-koop-blue font-bold"
               >
                 2
               </div>
               <div>
-                <p class="font-semibold text-gray-800">Bestell-Liste pr&uuml;fen</p>
-                <p class="text-sm text-gray-500 mt-0.5">
+                <p class="font-semibold text-koop-ink">Bestell-Liste pr&uuml;fen</p>
+                <p class="text-sm text-koop-ink-muted mt-0.5">
                   Schauen Sie sich die Bestell-Liste an und kontrollieren Sie Ihre Auswahl.
                 </p>
               </div>
             </div>
             <div class="flex gap-4 items-start">
               <div
-                class="flex-shrink-0 w-10 h-10 rounded-full bg-[#00af8c]/10 flex items-center justify-center text-[#00af8c] font-bold"
+                class="flex-shrink-0 w-10 h-10 rounded-full bg-koop-blue/10 flex items-center justify-center text-koop-blue font-bold"
               >
                 3
               </div>
               <div>
-                <p class="font-semibold text-gray-800">Anmelden oder Konto anlegen</p>
-                <p class="text-sm text-gray-500 mt-0.5">
+                <p class="font-semibold text-koop-ink">Anmelden oder Konto anlegen</p>
+                <p class="text-sm text-koop-ink-muted mt-0.5">
                   Bestandskunden melden sich mit ihrer E-Mail-Adresse und Passwort an. Neukunden
                   legen ein Konto an.
                 </p>
@@ -139,15 +139,15 @@
             </div>
             <div class="flex gap-4 items-start">
               <div
-                class="flex-shrink-0 w-10 h-10 rounded-full bg-[#00af8c]/10 flex items-center justify-center text-[#00af8c] font-bold"
+                class="flex-shrink-0 w-10 h-10 rounded-full bg-koop-blue/10 flex items-center justify-center text-koop-blue font-bold"
               >
                 4
               </div>
               <div>
-                <p class="font-semibold text-gray-800">
+                <p class="font-semibold text-koop-ink">
                   Versand und Zahlung w&auml;hlen, Bestellung absenden
                 </p>
-                <p class="text-sm text-gray-500 mt-0.5">
+                <p class="text-sm text-koop-ink-muted mt-0.5">
                   W&auml;hlen Sie Ihre Versand- und Zahlungsart. Die Bestellung wird per E-Mail an
                   uns geschickt.
                 </p>
@@ -155,13 +155,13 @@
             </div>
             <div class="flex gap-4 items-start">
               <div
-                class="flex-shrink-0 w-10 h-10 rounded-full bg-[#00af8c]/10 flex items-center justify-center text-[#00af8c] font-bold"
+                class="flex-shrink-0 w-10 h-10 rounded-full bg-koop-blue/10 flex items-center justify-center text-koop-blue font-bold"
               >
                 5
               </div>
               <div>
-                <p class="font-semibold text-gray-800">Best&auml;tigungs-E-Mail beantworten</p>
-                <p class="text-sm text-gray-500 mt-0.5">
+                <p class="font-semibold text-koop-ink">Best&auml;tigungs-E-Mail beantworten</p>
+                <p class="text-sm text-koop-ink-muted mt-0.5">
                   Wir pr&uuml;fen Ihre Bestellung und senden Ihnen eine E-Mail zur Best&auml;tigung
                   der Bestellung und der Zahlungskonditionen.
                   <strong
@@ -172,7 +172,7 @@
               </div>
             </div>
           </div>
-          <p class="mt-5 text-gray-500 text-xs sm:text-sm">
+          <p class="mt-5 text-koop-ink-muted text-xs sm:text-sm">
             Kein Online-Payment &mdash; alle Zahlungswege werden separat abgewickelt.
           </p>
           <div class="mt-6 flex justify-center">

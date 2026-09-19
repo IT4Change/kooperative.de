@@ -10,8 +10,8 @@
           !counts[cat.slug]
             ? 'bg-gray-50 text-gray-300 cursor-default'
             : isSelected(cat.slug)
-              ? 'bg-[#00af8c] text-white'
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              ? 'bg-koop-blue text-white'
+              : 'bg-gray-100 text-koop-ink hover:bg-gray-200'
         "
         @click="counts[cat.slug] && $emit('select', cat.slug)"
       >
@@ -25,8 +25,8 @@
         class="px-4 py-2 rounded-full text-sm font-medium transition-colors"
         :class="
           selected === null
-            ? 'bg-[#00af8c] text-white'
-            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            ? 'bg-koop-blue text-white'
+            : 'bg-gray-100 text-koop-ink hover:bg-gray-200'
         "
         @click="$emit('select', null)"
       >
@@ -34,7 +34,7 @@
         <span class="ml-1 opacity-70">{{ total }}</span>
       </button>
     </div>
-    <div v-if="children.length" class="flex flex-wrap gap-2 pl-3 border-l-2 border-[#00af8c]/30">
+    <div v-if="children.length" class="flex flex-wrap gap-2 pl-3 border-l-2 border-koop-blue/30">
       <button
         v-for="cat in children"
         :key="cat.slug"
@@ -44,8 +44,8 @@
           !counts[cat.slug]
             ? 'bg-gray-50 text-gray-300 cursor-default'
             : selected === cat.slug
-              ? 'bg-[#00af8c] text-white'
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              ? 'bg-koop-blue text-white'
+              : 'bg-gray-100 text-koop-ink hover:bg-gray-200'
         "
         @click="counts[cat.slug] && $emit('select', cat.slug)"
       >
@@ -59,8 +59,8 @@
         class="px-3 py-1.5 rounded-full text-xs font-medium transition-colors"
         :class="
           selected === selectedTopLevel
-            ? 'bg-[#00af8c] text-white'
-            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            ? 'bg-koop-blue text-white'
+            : 'bg-gray-100 text-koop-ink hover:bg-gray-200'
         "
         @click="selectedTopLevel && $emit('select', selectedTopLevel)"
       >

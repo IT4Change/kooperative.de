@@ -118,6 +118,16 @@ describe('header', () => {
   })
 })
 
+describe('the Pfirsichblüt ground', () => {
+  it('hands the tile to the stylesheet through the base URL', async () => {
+    const wrapper = await mount()
+
+    expect(wrapper.get('.layout').attributes('style')).toContain(
+      '--koop-ground: url(/img/bg-peach-blossom.jpg)',
+    )
+  })
+})
+
 describe('burger menu', () => {
   it('starts closed', async () => {
     const wrapper = await mount()

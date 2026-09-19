@@ -231,10 +231,13 @@ describe('positions and totals', () => {
     const wrapper = await mount()
     const foot = wrapper.get('tfoot').text().replace(/\s+/g, ' ')
 
-    expect(foot).toContain('Zwischensumme26,18 €')
-    expect(foot).toContain('Versand (DHL) 2,38 €')
-    expect(foot).toContain('zzgl. 7% MwSt.1,71 €')
-    expect(foot).toContain('Gesamt28,56 €')
+    // Tolerant about the gap between label and amount: they are separate cells,
+    // so whether any whitespace lands between them is Prettier's line wrapping,
+    // not something the footer promises.
+    expect(foot).toMatch(/Zwischensumme\s*26,18 €/)
+    expect(foot).toMatch(/Versand \(DHL\)\s*2,38 €/)
+    expect(foot).toMatch(/zzgl\. 7% MwSt\.\s*1,71 €/)
+    expect(foot).toMatch(/Gesamt\s*28,56 €/)
   })
 
   it('says "nach Aufwand" when the shipping cost is not known yet', async () => {

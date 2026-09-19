@@ -11,7 +11,7 @@
         :aria-controls="`${uid}-panel-login`"
         :class="[
           'flex-1 py-2 text-sm font-medium transition-colors',
-          mode === 'login' ? 'text-[#00af8c] border-b-2 border-[#00af8c]' : 'text-gray-500',
+          mode === 'login' ? 'text-koop-blue border-b-2 border-koop-blue' : 'text-koop-ink-muted',
         ]"
         @click="mode = 'login'"
       >
@@ -25,7 +25,9 @@
         :aria-controls="`${uid}-panel-register`"
         :class="[
           'flex-1 py-2 text-sm font-medium transition-colors',
-          mode === 'register' ? 'text-[#00af8c] border-b-2 border-[#00af8c]' : 'text-gray-500',
+          mode === 'register'
+            ? 'text-koop-blue border-b-2 border-koop-blue'
+            : 'text-koop-ink-muted',
         ]"
         @click="mode = 'register'"
       >
@@ -51,7 +53,7 @@
       @submit.prevent="onLogin"
     >
       <div>
-        <label :for="`${uid}-login-email`" class="block text-sm font-medium text-gray-700 mb-1">
+        <label :for="`${uid}-login-email`" class="block text-sm font-medium text-koop-ink mb-1">
           E-Mail *
         </label>
         <input
@@ -64,7 +66,7 @@
         />
       </div>
       <div>
-        <label :for="`${uid}-login-password`" class="block text-sm font-medium text-gray-700 mb-1">
+        <label :for="`${uid}-login-password`" class="block text-sm font-medium text-koop-ink mb-1">
           Passwort *
         </label>
         <input
@@ -75,7 +77,7 @@
           autocomplete="current-password"
           :class="inputCls"
         />
-        <p class="mt-1 text-xs text-gray-500">
+        <p class="mt-1 text-xs text-koop-ink-muted">
           <!--
             WCAG 2.5.8 wants 24×24 CSS px; the bare text line is 17. The padding
             enlarges the target and the matching negative margin takes the space
@@ -85,7 +87,7 @@
             :href="forgotUrl"
             target="_blank"
             rel="noopener"
-            class="inline-block py-1 -my-1 text-[#00af8c] underline"
+            class="inline-block py-1 -my-1 text-koop-blue underline"
             >Passwort vergessen?</a
           >
         </p>
@@ -108,7 +110,7 @@
       @submit.prevent="onRegister"
     >
       <div>
-        <label :for="`${uid}-gender`" class="block text-sm font-medium text-gray-700 mb-1">
+        <label :for="`${uid}-gender`" class="block text-sm font-medium text-koop-ink mb-1">
           Anrede *
         </label>
         <select :id="`${uid}-gender`" v-model="reg.gender" required :class="inputCls">
@@ -120,7 +122,7 @@
       </div>
       <div class="flex gap-3">
         <div class="flex-1">
-          <label :for="`${uid}-firstname`" class="block text-sm font-medium text-gray-700 mb-1">
+          <label :for="`${uid}-firstname`" class="block text-sm font-medium text-koop-ink mb-1">
             Vorname *
           </label>
           <input
@@ -133,7 +135,7 @@
           />
         </div>
         <div class="flex-1">
-          <label :for="`${uid}-lastname`" class="block text-sm font-medium text-gray-700 mb-1">
+          <label :for="`${uid}-lastname`" class="block text-sm font-medium text-koop-ink mb-1">
             Nachname *
           </label>
           <input
@@ -147,7 +149,7 @@
         </div>
       </div>
       <div>
-        <label :for="`${uid}-dob`" class="block text-sm font-medium text-gray-700 mb-1">
+        <label :for="`${uid}-dob`" class="block text-sm font-medium text-koop-ink mb-1">
           Geburtsdatum *
         </label>
         <input
@@ -160,7 +162,7 @@
         />
       </div>
       <div>
-        <label :for="`${uid}-telephone`" class="block text-sm font-medium text-gray-700 mb-1">
+        <label :for="`${uid}-telephone`" class="block text-sm font-medium text-koop-ink mb-1">
           Telefon *
         </label>
         <input
@@ -174,7 +176,7 @@
         />
       </div>
       <div>
-        <label :for="`${uid}-street`" class="block text-sm font-medium text-gray-700 mb-1">
+        <label :for="`${uid}-street`" class="block text-sm font-medium text-koop-ink mb-1">
           Straße *
         </label>
         <input
@@ -188,7 +190,7 @@
       </div>
       <div class="flex gap-3">
         <div class="w-1/3">
-          <label :for="`${uid}-postcode`" class="block text-sm font-medium text-gray-700 mb-1">
+          <label :for="`${uid}-postcode`" class="block text-sm font-medium text-koop-ink mb-1">
             PLZ *
           </label>
           <input
@@ -201,7 +203,7 @@
           />
         </div>
         <div class="flex-1">
-          <label :for="`${uid}-city`" class="block text-sm font-medium text-gray-700 mb-1">
+          <label :for="`${uid}-city`" class="block text-sm font-medium text-koop-ink mb-1">
             Ort *
           </label>
           <input
@@ -215,7 +217,7 @@
         </div>
       </div>
       <div>
-        <label :for="`${uid}-country`" class="block text-sm font-medium text-gray-700 mb-1">
+        <label :for="`${uid}-country`" class="block text-sm font-medium text-koop-ink mb-1">
           Land *
         </label>
         <select :id="`${uid}-country`" v-model="reg.country" required :class="inputCls">
@@ -225,7 +227,7 @@
         </select>
       </div>
       <div>
-        <label :for="`${uid}-email`" class="block text-sm font-medium text-gray-700 mb-1">
+        <label :for="`${uid}-email`" class="block text-sm font-medium text-koop-ink mb-1">
           E-Mail *
         </label>
         <input
@@ -239,7 +241,7 @@
         />
       </div>
       <div>
-        <label :for="`${uid}-password`" class="block text-sm font-medium text-gray-700 mb-1">
+        <label :for="`${uid}-password`" class="block text-sm font-medium text-koop-ink mb-1">
           Passwort *
         </label>
         <input
@@ -252,7 +254,9 @@
           :aria-describedby="`${uid}-password-hint`"
           :class="inputCls"
         />
-        <p :id="`${uid}-password-hint`" class="mt-1 text-xs text-gray-500">Mindestens 8 Zeichen.</p>
+        <p :id="`${uid}-password-hint`" class="mt-1 text-xs text-koop-ink-muted">
+          Mindestens 8 Zeichen.
+        </p>
       </div>
       <div class="flex gap-3 pt-2">
         <button type="button" :class="cancelCls" @click="$emit('back')">Zurück</button>
@@ -271,7 +275,7 @@
   const uid = useId()
 
   const inputCls =
-    'w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-[#00af8c]'
+    'w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-koop-blue'
   const cancelCls =
     'flex-1 py-2 text-sm border border-gray-300 rounded hover:bg-gray-50 transition-colors'
 

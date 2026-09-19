@@ -301,7 +301,7 @@ describe('quantity tiers', () => {
     const wrapper = await mount('/shop/5/karte')
     await wrapper.get('input[type="number"]').setValue(10)
 
-    const marked = wrapper.findAll('.text-\\[\\#00af8c\\].font-medium').map((d) => d.text())
+    const marked = wrapper.findAll('.text-koop-blue.font-medium').map((d) => d.text())
 
     expect(marked).toContain('ab 10 Stk.: 1.79 €/Stk')
   })

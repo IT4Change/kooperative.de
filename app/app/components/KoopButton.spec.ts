@@ -52,18 +52,18 @@ describe('KoopButton', () => {
   })
 
   it.each([
-    ['orange', 'koop-btn--orange'],
-    ['lila', 'koop-btn--lila'],
     ['blue', 'koop-btn--blue'],
+    ['green', 'koop-btn--green'],
+    ['yellow', 'koop-btn--yellow'],
   ])('applies the %s variant', async (variant, expected) => {
     const wrapper = await mountSuspended(KoopButton, {
-      props: { variant: variant as 'orange' },
+      props: { variant: variant as 'blue' },
     })
 
     expect(wrapper.classes()).toContain(expected)
   })
 
-  it('adds no modifier for the default variant', async () => {
+  it('adds no modifier for the default variant — red, the primary action', async () => {
     const wrapper = await mountSuspended(KoopButton)
 
     expect(wrapper.classes()).toContain('koop-btn')

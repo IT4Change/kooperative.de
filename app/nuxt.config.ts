@@ -21,6 +21,7 @@ export default defineNuxtConfig({
       include: [
         '../eslint.config.ts',
         '../prettier.config.ts',
+        '../tailwind.config.ts',
         '../vitest.config.ts',
         '../playwright.config.ts',
       ],

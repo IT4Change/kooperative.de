@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen pt-24 pb-16 px-4 sm:px-6" style="background-color: var(--koop-orange)">
+  <div class="min-h-screen pt-24 pb-16 px-4 sm:px-6">
     <article
       class="max-w-[960px] mx-auto bg-white/95 rounded-2xl shadow-lg px-6 py-10 sm:px-10 sm:py-12 prose"
     >
@@ -19,7 +19,7 @@
           <dd>Amtsgericht Ulm, HRB 650133</dd>
           <dt class="font-semibold">Kontakt</dt>
           <dd>
-            <a class="underline hover:text-[#00af8c]" href="mailto:reisiger@kooperative.de"
+            <a class="underline hover:text-koop-blue" href="mailto:reisiger@kooperative.de"
               >reisiger@kooperative.de</a
             >
           </dd>
@@ -47,7 +47,7 @@
         <p class="leading-relaxed">
           Die Seite wird von der Kooperative Dürnau gewartet und bei MJU-Media gehostet. Bei
           technischen Fragen und Problemen wenden Sie sich bitte an
-          <a class="underline hover:text-[#00af8c]" href="mailto:reisiger@kooperative.de"
+          <a class="underline hover:text-koop-blue" href="mailto:reisiger@kooperative.de"
             >reisiger@kooperative.de</a
           >.
         </p>
@@ -61,7 +61,7 @@
           Vermutete Verstöße gegen geltendes Recht und Sitten bitten wir ebenso anzuzeigen wie jede
           andere Funktionsstörung dieser Seite:
           <a
-            class="underline hover:text-[#00af8c]"
+            class="underline hover:text-koop-blue"
             href="mailto:reisiger@kooperative.de?subject=Beschwerde"
             >Nachricht senden</a
           >.

@@ -31,7 +31,7 @@ const label = (a: { findAll: (s: string) => { text: () => string }[] }) =>
 const navLabels = (w: Awaited<ReturnType<typeof mount>>) => w.findAll('nav a').map(label)
 
 const activeLink = (w: Awaited<ReturnType<typeof mount>>) =>
-  w.findAll('nav a').find((a) => a.classes().includes('bg-[#00af8c]'))
+  w.findAll('nav a').find((a) => a.classes().includes('bg-koop-blue'))
 
 describe('navigation', () => {
   it('lists the four sections', async () => {

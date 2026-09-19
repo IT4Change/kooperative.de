@@ -1,12 +1,16 @@
 <template>
-  <div class="min-h-screen bg-gray-100 text-gray-800 flex">
+  <div class="min-h-screen bg-gray-100 text-koop-ink flex">
     <!-- Sidebar -->
-    <aside class="w-56 shrink-0 bg-[#1f2d3d] text-gray-200 flex flex-col min-h-screen">
+    <aside
+      class="w-56 shrink-0 bg-koop-blue-active text-koop-peach-blossom flex flex-col min-h-screen"
+    >
       <div class="px-4 py-4 border-b border-white/10">
         <NuxtLink to="/admin" class="flex items-center gap-2">
           <span class="text-lg font-bold text-white">Kooperative</span>
         </NuxtLink>
-        <p class="text-[11px] uppercase tracking-wide text-gray-400 mt-0.5">Administration</p>
+        <p class="text-[11px] uppercase tracking-wide text-koop-ink-inverse mt-0.5">
+          Administration
+        </p>
       </div>
       <nav class="flex-1 py-2 text-sm">
         <NuxtLink
@@ -14,7 +18,7 @@
           :key="item.to"
           :to="item.to"
           class="flex items-center gap-2 px-4 py-2.5 hover:bg-white/10 transition"
-          :class="isActive(item) ? 'bg-[#00af8c] text-white font-medium' : 'text-gray-200'"
+          :class="isActive(item) ? 'bg-koop-blue text-white font-medium' : 'text-gray-200'"
         >
           <span>{{ item.label }}</span>
           <!-- leading-5 statt leading-none, und zwar exakt die h-5 des Kreises:
@@ -31,12 +35,12 @@
           >
           <span
             v-else-if="item.readonly"
-            class="ml-auto text-[10px] uppercase text-gray-400 border border-gray-500 rounded px-1"
+            class="ml-auto text-[10px] uppercase text-koop-ink-inverse border border-gray-500 rounded px-1"
             >nur Anzeige</span
           >
         </NuxtLink>
       </nav>
-      <div class="px-4 py-3 border-t border-white/10 text-[11px] text-gray-400">
+      <div class="px-4 py-3 border-t border-white/10 text-[11px] text-koop-ink-inverse">
         Neuer Shop · Admin
       </div>
     </aside>
@@ -44,7 +48,7 @@
     <!-- Content -->
     <div class="flex-1 min-w-0 flex flex-col">
       <header class="bg-white border-b border-gray-200 px-6 py-3">
-        <h1 class="text-base font-semibold text-gray-800">{{ pageTitle }}</h1>
+        <h1 class="text-base font-semibold text-koop-ink">{{ pageTitle }}</h1>
       </header>
       <main class="flex-1 p-6">
         <slot />

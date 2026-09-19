@@ -5,16 +5,16 @@
         v-model="search"
         type="search"
         placeholder="Suche: Kunden-Nr., Name, E-Mail…"
-        class="px-3 py-2 border border-gray-300 rounded text-sm w-72 focus:outline-none focus:ring-2 focus:ring-[#00af8c]/40 focus:border-[#00af8c]"
+        class="px-3 py-2 border border-gray-300 rounded text-sm w-72 focus:outline-none focus:ring-2 focus:ring-koop-blue/40 focus:border-koop-blue"
         @keyup.enter="applyFilters"
       />
       <button
-        class="px-3 py-2 bg-[#00af8c] text-white rounded text-sm hover:bg-[#009579]"
+        class="px-3 py-2 bg-koop-blue text-white rounded text-sm hover:bg-koop-blue-hover"
         @click="applyFilters"
       >
         Suchen
       </button>
-      <span v-if="data" class="text-sm text-gray-500 ml-auto"
+      <span v-if="data" class="text-sm text-koop-ink-muted ml-auto"
         >{{ data.total.toLocaleString('de-DE') }} Kunden</span
       >
     </div>
@@ -26,7 +26,7 @@
     <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
       <table class="w-full text-sm">
         <thead>
-          <tr class="bg-gray-50 text-left text-gray-500 border-b border-gray-200">
+          <tr class="bg-gray-50 text-left text-koop-ink-muted border-b border-gray-200">
             <th class="px-4 py-2.5 font-medium">Nr.</th>
             <th class="px-4 py-2.5 font-medium">Name</th>
             <th class="px-4 py-2.5 font-medium">E-Mail</th>
@@ -36,21 +36,23 @@
         </thead>
         <tbody class="divide-y divide-gray-100">
           <tr v-if="pending">
-            <td colspan="5" class="px-4 py-8 text-center text-gray-400">Lädt…</td>
+            <td colspan="5" class="px-4 py-8 text-center text-koop-ink-muted">Lädt…</td>
           </tr>
           <tr v-else-if="(data?.customers.length ?? 0) === 0">
-            <td colspan="5" class="px-4 py-8 text-center text-gray-400">Keine Kunden gefunden.</td>
+            <td colspan="5" class="px-4 py-8 text-center text-koop-ink-muted">
+              Keine Kunden gefunden.
+            </td>
           </tr>
           <tr v-for="c in data?.customers ?? []" :key="c.id" class="hover:bg-gray-50">
             <td class="px-4 py-2.5 font-mono">{{ c.id }}</td>
-            <td class="px-4 py-2.5 text-gray-800">{{ c.name || '—' }}</td>
+            <td class="px-4 py-2.5 text-koop-ink">{{ c.name || '—' }}</td>
             <td class="px-4 py-2.5">
-              <a :href="`mailto:${c.email}`" class="text-[#00af8c] hover:underline">{{
+              <a :href="`mailto:${c.email}`" class="text-koop-blue hover:underline">{{
                 c.email
               }}</a>
             </td>
-            <td class="px-4 py-2.5 text-gray-600">{{ c.telephone || '–' }}</td>
-            <td class="px-4 py-2.5 text-gray-600">{{ c.city || '–' }}</td>
+            <td class="px-4 py-2.5 text-koop-ink-muted">{{ c.telephone || '–' }}</td>
+            <td class="px-4 py-2.5 text-koop-ink-muted">{{ c.city || '–' }}</td>
           </tr>
         </tbody>
       </table>
@@ -64,7 +66,7 @@
       >
         ‹ Zurück
       </button>
-      <span class="px-2 text-gray-500">Seite {{ page }} / {{ totalPages }}</span>
+      <span class="px-2 text-koop-ink-muted">Seite {{ page }} / {{ totalPages }}</span>
       <button
         class="px-3 py-1.5 border rounded disabled:opacity-40"
         :disabled="page >= totalPages"
@@ -74,7 +76,7 @@
       </button>
     </div>
 
-    <p class="text-xs text-gray-400">Read-only. Bearbeitung folgt in einer späteren Phase.</p>
+    <p class="text-xs text-koop-ink-muted">Read-only. Bearbeitung folgt in einer späteren Phase.</p>
   </div>
 </template>
 

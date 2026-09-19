@@ -38,8 +38,8 @@ test.describe('category filter', () => {
   test('preselects the first category and its first subcategory', async ({ page }) => {
     await landOn(page, '/shop')
 
-    await expect(page.getByRole('button', { name: /^Naturkost/ })).toHaveClass(/bg-\[#00af8c\]/)
-    await expect(page.getByRole('button', { name: /^Öle/ })).toHaveClass(/bg-\[#00af8c\]/)
+    await expect(page.getByRole('button', { name: /^Naturkost/ })).toHaveClass(/bg-koop-blue/)
+    await expect(page.getByRole('button', { name: /^Öle/ })).toHaveClass(/bg-koop-blue/)
     await expect(shownProducts(page)).toHaveText(['Olivenöl'])
   })
 

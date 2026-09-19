@@ -1,6 +1,8 @@
 <template>
   <section class="bg-white rounded-lg shadow-sm border border-gray-200 px-6 py-5">
-    <h3 class="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-4">Bestellprozess</h3>
+    <h3 class="text-xs font-semibold uppercase tracking-wide text-koop-ink-muted mb-4">
+      Bestellprozess
+    </h3>
     <div class="flex items-start">
       <template v-for="(s, i) in steps" :key="s.id">
         <div class="flex flex-col items-center text-center w-24 shrink-0">
@@ -27,10 +29,12 @@
           </div>
           <span class="text-xs mt-2 leading-tight" :class="labelClass(s.state)">{{ s.name }}</span>
           <!-- A skipped step has no date to show; its note takes that slot. -->
-          <span v-if="s.note" class="text-[10px] text-gray-400 mt-0.5 italic">{{ s.note }}</span>
+          <span v-if="s.note" class="text-[10px] text-koop-ink-muted mt-0.5 italic">{{
+            s.note
+          }}</span>
           <span
             v-else-if="s.visitedAt && s.state !== 'upcoming'"
-            class="text-[10px] text-gray-400 mt-0.5"
+            class="text-[10px] text-koop-ink-muted mt-0.5"
             >{{ date(s.visitedAt) }}</span
           >
         </div>
@@ -72,23 +76,23 @@
   const { date } = useAdminFormat()
 
   function circleClass(state: FlowStep['state']): string {
-    if (state === 'done') return 'bg-[#00af8c] text-white'
-    if (state === 'current') return 'bg-[#00af8c] text-white ring-4 ring-[#00af8c]/25'
+    if (state === 'done') return 'bg-koop-green text-white'
+    if (state === 'current') return 'bg-koop-blue text-white ring-4 ring-koop-blue/25'
     // Skipped sits visually below "upcoming": upcoming is still ahead of the
     // order, skipped never applied to it at all.
     if (state === 'skipped')
       return 'bg-gray-50 border-2 border-dashed border-gray-300 text-gray-300'
-    return 'bg-white border-2 border-gray-300 text-gray-400'
+    return 'bg-white border-2 border-gray-300 text-koop-ink-muted'
   }
 
   function labelClass(state: FlowStep['state']): string {
-    if (state === 'upcoming') return 'text-gray-400'
+    if (state === 'upcoming') return 'text-koop-ink-muted'
     if (state === 'skipped') return 'text-gray-300'
-    return 'text-gray-800 font-medium'
+    return 'text-koop-ink font-medium'
   }
 
   function connectorClass(state: FlowStep['state']): string {
-    if (state === 'done') return 'bg-[#00af8c]'
+    if (state === 'done') return 'bg-koop-green'
     // Dashed rather than solid: nothing flowed through this step.
     if (state === 'skipped') return 'bg-transparent border-t-2 border-dashed border-gray-300'
     return 'bg-gray-200'

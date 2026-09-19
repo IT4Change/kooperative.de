@@ -1,6 +1,6 @@
 <template>
   <div class="space-y-6">
-    <NuxtLink to="/admin/orders?status=pending" class="text-sm text-[#00af8c] hover:underline"
+    <NuxtLink to="/admin/orders?status=pending" class="text-sm text-koop-blue hover:underline"
       >‹ Zurück zur Liste</NuxtLink
     >
 
@@ -12,13 +12,13 @@
 
     <template v-if="data">
       <div class="flex flex-wrap items-center gap-3">
-        <h2 class="text-xl font-bold text-gray-800">
+        <h2 class="text-xl font-bold text-koop-ink">
           Bestellung<span v-if="data.pending.ordersId"> #{{ data.pending.ordersId }}</span>
         </h2>
         <!-- Only until the confirmation materialised one — afterwards the number
              above is the truth, and claiming there is none contradicts the
              green panel further down. -->
-        <span v-if="!data.pending.ordersId" class="text-sm text-gray-400"
+        <span v-if="!data.pending.ordersId" class="text-sm text-koop-ink-muted"
           >noch keine Bestell-Nr.</span
         >
         <span
@@ -27,24 +27,26 @@
           >{{ statusLabel }}</span
         >
         <span
-          class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#00af8c]/10 text-[#00838a]"
+          class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium bg-koop-blue/10 text-koop-blue"
           >Neuer Shop</span
         >
-        <span class="text-sm text-gray-500 ml-auto">{{ dateTime(data.pending.createdAt) }}</span>
+        <span class="text-sm text-koop-ink-muted ml-auto">{{
+          dateTime(data.pending.createdAt)
+        }}</span>
       </div>
 
       <!-- Status graphic -->
       <AdminStatusFlow v-if="data.pending.status !== 'cancelled'" :steps="data.statusFlow">
         <p
           v-if="data.pending.status !== 'materialized'"
-          class="mt-4 text-xs text-gray-500 bg-amber-50 border border-amber-200 rounded px-3 py-2"
+          class="mt-4 text-xs text-koop-ink-muted bg-amber-50 border border-amber-200 rounded px-3 py-2"
         >
           Diese Bestellung wartet auf die Bestätigung des Kunden (Link oder Antwort-Mail). Erst
           danach wird sie als Bestellung mit Nummer angelegt.
         </p>
         <p
           v-else-if="data.pending.confirmNote"
-          class="mt-4 text-xs text-gray-600 bg-amber-50 border border-amber-200 rounded px-3 py-2"
+          class="mt-4 text-xs text-koop-ink-muted bg-amber-50 border border-amber-200 rounded px-3 py-2"
         >
           <span class="font-semibold">Begründung der Freischaltung:</span>
           <!-- ml-1 rather than a literal space: Vue's whitespace: 'condense'
@@ -66,12 +68,12 @@
       <div class="grid gap-6 lg:grid-cols-3">
         <div class="lg:col-span-2 space-y-6">
           <section class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-            <header class="px-5 py-3 border-b border-gray-100 font-semibold text-gray-800">
+            <header class="px-5 py-3 border-b border-gray-100 font-semibold text-koop-ink">
               Positionen
             </header>
             <table class="w-full text-sm">
               <thead>
-                <tr class="bg-gray-50 text-left text-gray-500">
+                <tr class="bg-gray-50 text-left text-koop-ink-muted">
                   <th class="px-4 py-2 font-medium">Artikel</th>
                   <th class="px-4 py-2 font-medium text-right">Menge</th>
                   <th class="px-4 py-2 font-medium text-right">Einzel</th>
@@ -80,7 +82,7 @@
               </thead>
               <tbody class="divide-y divide-gray-100">
                 <tr v-for="(it, i) in data.items" :key="i">
-                  <td class="px-4 py-2.5 text-gray-800">{{ it.name }}</td>
+                  <td class="px-4 py-2.5 text-koop-ink">{{ it.name }}</td>
                   <td class="px-4 py-2.5 text-right font-mono">{{ it.quantity }}</td>
                   <td class="px-4 py-2.5 text-right font-mono">{{ euro(it.unitPrice) }}</td>
                   <td class="px-4 py-2.5 text-right font-mono">{{ euro(it.lineTotal) }}</td>
@@ -88,11 +90,13 @@
               </tbody>
               <tfoot class="border-t border-gray-200">
                 <tr>
-                  <td colspan="3" class="px-4 py-1.5 text-right text-gray-600">Zwischensumme</td>
+                  <td colspan="3" class="px-4 py-1.5 text-right text-koop-ink-muted">
+                    Zwischensumme
+                  </td>
                   <td class="px-4 py-1.5 text-right font-mono">{{ euro(data.subtotal) }}</td>
                 </tr>
                 <tr>
-                  <td colspan="3" class="px-4 py-1.5 text-right text-gray-600">
+                  <td colspan="3" class="px-4 py-1.5 text-right text-koop-ink-muted">
                     Versand ({{ data.shipping.label }})
                   </td>
                   <td class="px-4 py-1.5 text-right font-mono">
@@ -100,10 +104,10 @@
                   </td>
                 </tr>
                 <tr v-for="(t, i) in data.taxRows" :key="i">
-                  <td colspan="3" class="px-4 py-1.5 text-right text-gray-500">
+                  <td colspan="3" class="px-4 py-1.5 text-right text-koop-ink-muted">
                     {{ t.description }}
                   </td>
-                  <td class="px-4 py-1.5 text-right font-mono text-gray-500">
+                  <td class="px-4 py-1.5 text-right font-mono text-koop-ink-muted">
                     {{ euro(t.total) }}
                   </td>
                 </tr>
@@ -116,17 +120,17 @@
           </section>
 
           <section class="bg-white rounded-lg shadow-sm border border-gray-200">
-            <header class="px-5 py-3 border-b border-gray-100 font-semibold text-gray-800">
+            <header class="px-5 py-3 border-b border-gray-100 font-semibold text-koop-ink">
               Gesendete E-Mails
             </header>
             <ul class="divide-y divide-gray-100">
               <li v-for="m in data.mails" :key="m.id" class="px-5 py-3 flex items-start gap-3">
-                <span class="shrink-0 mt-0.5 text-gray-400">{{
+                <span class="shrink-0 mt-0.5 text-koop-ink-muted">{{
                   m.direction === 'to_customer' ? '→ Kunde' : '→ Admin'
                 }}</span>
                 <div class="min-w-0 flex-1">
-                  <div class="text-sm text-gray-800">{{ m.subject }}</div>
-                  <div class="text-xs text-gray-400">
+                  <div class="text-sm text-koop-ink">{{ m.subject }}</div>
+                  <div class="text-xs text-koop-ink-muted">
                     {{ m.recipient }} · {{ dateTime(m.createdAt)
                     }}<span v-if="m.sentBy"> · {{ m.sentBy }}</span>
                   </div>
@@ -141,7 +145,7 @@
               </li>
               <li
                 v-if="data.mails.length === 0"
-                class="px-5 py-6 text-center text-gray-400 text-sm"
+                class="px-5 py-6 text-center text-koop-ink-muted text-sm"
               >
                 Keine E-Mails.
               </li>
@@ -155,18 +159,18 @@
             v-if="data.pending.status === 'pending'"
             class="bg-white rounded-lg shadow-sm border border-gray-200"
           >
-            <header class="px-5 py-3 border-b border-gray-100 font-semibold text-gray-800">
+            <header class="px-5 py-3 border-b border-gray-100 font-semibold text-koop-ink">
               Aktion
             </header>
             <div class="px-5 py-4 space-y-3">
-              <p class="text-xs text-gray-500">
+              <p class="text-xs text-koop-ink-muted">
                 Hat der Kunde per Antwort-Mail bestätigt? Dann hier bestätigen — die Bestellung wird
                 angelegt und der Kunde &amp; die Administration benachrichtigt.
               </p>
               <div>
-                <label :for="`${uid}-reason`" class="block text-xs font-medium text-gray-700 mb-1">
+                <label :for="`${uid}-reason`" class="block text-xs font-medium text-koop-ink mb-1">
                   Begründung <span class="text-red-600">*</span>
-                  <span class="font-normal text-gray-500">— bleibt intern</span>
+                  <span class="font-normal text-koop-ink-muted">— bleibt intern</span>
                 </label>
                 <textarea
                   :id="`${uid}-reason`"
@@ -174,17 +178,17 @@
                   rows="4"
                   :disabled="busy"
                   placeholder="Der Kunde sieht diesen Text nie. Warum wird ohne Kundenbestätigung freigegeben? z. B. telefonisch bestätigt am 14.09., Rückruf von Frau Müller"
-                  class="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#00af8c] focus:border-[#00af8c] disabled:bg-gray-50"
+                  class="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-koop-blue focus:border-koop-blue disabled:bg-gray-50"
                 />
-                <p class="mt-1 text-[11px] text-gray-500">
-                  <span class="font-semibold text-gray-700">Geht nicht an den Kunden.</span>
+                <p class="mt-1 text-[11px] text-koop-ink-muted">
+                  <span class="font-semibold text-koop-ink">Geht nicht an den Kunden.</span>
                   Festgehalten am Vorgang, in der Bestellhistorie (auch im alten Admin) und in der
                   Benachrichtigung an die Administration. Pflichtfeld, weil eine Freigabe ohne
                   Bestätigung des Kunden belegt sein muss.
                 </p>
               </div>
               <button
-                class="w-full px-3 py-2 bg-[#00af8c] text-white rounded text-sm font-medium hover:bg-[#009579] disabled:opacity-50 disabled:cursor-not-allowed"
+                class="w-full px-3 py-2 bg-koop-blue text-white rounded text-sm font-medium hover:bg-koop-blue-hover disabled:opacity-50 disabled:cursor-not-allowed"
                 :disabled="busy || !reason.trim()"
                 :title="reason.trim() ? undefined : 'Bitte zuerst eine Begründung eingeben'"
                 @click="confirm"
@@ -209,29 +213,29 @@
           </section>
 
           <section class="bg-white rounded-lg shadow-sm border border-gray-200">
-            <header class="px-5 py-3 border-b border-gray-100 font-semibold text-gray-800">
+            <header class="px-5 py-3 border-b border-gray-100 font-semibold text-koop-ink">
               Kunde
             </header>
             <div class="px-5 py-3 text-sm space-y-1">
-              <div class="font-medium text-gray-800">{{ data.customer.name }}</div>
-              <div v-if="data.customer.company" class="text-gray-600">
+              <div class="font-medium text-koop-ink">{{ data.customer.name }}</div>
+              <div v-if="data.customer.company" class="text-koop-ink-muted">
                 {{ data.customer.company }}
               </div>
               <div>
-                <a :href="`mailto:${data.customer.email}`" class="text-[#00af8c] hover:underline">{{
+                <a :href="`mailto:${data.customer.email}`" class="text-koop-blue hover:underline">{{
                   data.customer.email
                 }}</a>
               </div>
-              <div class="text-gray-600">Tel.: {{ data.customer.telephone || '–' }}</div>
-              <div class="text-xs text-gray-400 pt-1">Kunden-Nr. {{ data.customer.id }}</div>
+              <div class="text-koop-ink-muted">Tel.: {{ data.customer.telephone || '–' }}</div>
+              <div class="text-xs text-koop-ink-muted pt-1">Kunden-Nr. {{ data.customer.id }}</div>
             </div>
           </section>
 
           <section class="bg-white rounded-lg shadow-sm border border-gray-200">
-            <header class="px-5 py-3 border-b border-gray-100 font-semibold text-gray-800">
+            <header class="px-5 py-3 border-b border-gray-100 font-semibold text-koop-ink">
               Lieferadresse
             </header>
-            <div class="px-5 py-3 text-sm text-gray-700 space-y-0.5">
+            <div class="px-5 py-3 text-sm text-koop-ink space-y-0.5">
               <div>{{ data.customer.name }}</div>
               <div>{{ data.customer.street }}</div>
               <div>{{ data.customer.postcode }} {{ data.customer.city }}</div>
@@ -240,13 +244,13 @@
           </section>
 
           <section class="bg-white rounded-lg shadow-sm border border-gray-200">
-            <header class="px-5 py-3 border-b border-gray-100 font-semibold text-gray-800">
+            <header class="px-5 py-3 border-b border-gray-100 font-semibold text-koop-ink">
               Zahlung
             </header>
-            <div class="px-5 py-3 text-sm text-gray-700">{{ data.payment }}</div>
+            <div class="px-5 py-3 text-sm text-koop-ink">{{ data.payment }}</div>
             <div v-if="data.notes" class="px-5 pb-3 text-sm">
-              <div class="font-semibold text-gray-800">Anmerkung</div>
-              <div class="text-gray-600 whitespace-pre-wrap">{{ data.notes }}</div>
+              <div class="font-semibold text-koop-ink">Anmerkung</div>
+              <div class="text-koop-ink-muted whitespace-pre-wrap">{{ data.notes }}</div>
             </div>
           </section>
         </div>
@@ -322,7 +326,7 @@
   const statusBadge = computed(() => {
     const s = data.value?.pending.status
     if (s === 'materialized') return 'bg-green-100 text-green-800'
-    if (s === 'cancelled') return 'bg-gray-200 text-gray-600'
+    if (s === 'cancelled') return 'bg-gray-200 text-koop-ink-muted'
     return 'bg-amber-100 text-amber-800'
   })
   function viaLabel(via: string | null): string {

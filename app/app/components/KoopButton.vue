@@ -1,6 +1,12 @@
 <script setup lang="ts">
+  /**
+   * Red is the default because red is Steiner's Glanz des Lebendigen — the
+   * colour of the deed. A screen has one primary action and it wears red; blue
+   * (Glanz der Seele) carries the alternatives, green confirms, yellow warns.
+   * See app/assets/css/main.css for the palette and its contrast figures.
+   */
   interface Props {
-    variant?: 'teal' | 'orange' | 'lila' | 'blue'
+    variant?: 'red' | 'blue' | 'green' | 'yellow'
     size?: 'md' | 'sm'
     to?: string
     href?: string
@@ -9,7 +15,7 @@
   }
 
   const props = withDefaults(defineProps<Props>(), {
-    variant: 'teal',
+    variant: 'red',
     size: 'md',
     // Absent by default — which of the two is set decides whether the button
     // renders as NuxtLink, anchor or plain button.
@@ -21,7 +27,7 @@
 
   const classes = computed(() => [
     'koop-btn',
-    props.variant !== 'teal' ? `koop-btn--${props.variant}` : '',
+    props.variant !== 'red' ? `koop-btn--${props.variant}` : '',
     props.size === 'sm' ? 'koop-btn--sm' : '',
     props.disabled ? 'koop-btn--disabled' : '',
   ])
@@ -41,9 +47,10 @@
 
 <style scoped>
   .koop-btn {
-    --btn-color: var(--koop-teal);
-    --btn-color-light: var(--koop-teal-hover);
-    --btn-color-dark: var(--koop-teal-active);
+    --btn-face: var(--koop-red);
+    --btn-face-hover: var(--koop-red-hover);
+    --btn-depth-color: var(--koop-red-active);
+    --btn-label: #ffffff;
     --btn-notch: 10px;
     --btn-depth: 4px;
 
@@ -55,7 +62,7 @@
     padding: 0.7rem 1.75rem;
     font-weight: 700;
     font-size: 1rem;
-    color: #ffffff;
+    color: var(--btn-label);
     text-decoration: none;
     background: none;
     border: none;
@@ -72,7 +79,7 @@
     position: absolute;
     inset: 0;
     top: var(--btn-depth);
-    background: var(--btn-color-dark);
+    background: var(--btn-depth-color);
     clip-path: polygon(
       0% var(--btn-notch),
       var(--btn-notch) 0%,
@@ -92,7 +99,7 @@
     position: absolute;
     inset: 0;
     bottom: var(--btn-depth);
-    background: var(--btn-color);
+    background: var(--btn-face);
     clip-path: polygon(
       0% var(--btn-notch),
       var(--btn-notch) 0%,
@@ -119,14 +126,14 @@
 
   /* Hover */
   .koop-btn:hover::after {
-    background: var(--btn-color-light);
+    background: var(--btn-face-hover);
   }
 
   /* Active/pressed */
   .koop-btn:active::after {
     top: var(--btn-depth);
     bottom: 0;
-    background: var(--btn-color);
+    background: var(--btn-face);
   }
 
   .koop-btn:active .koop-btn__label {
@@ -134,22 +141,25 @@
   }
 
   /* Variants */
-  .koop-btn--orange {
-    --btn-color: var(--koop-orange);
-    --btn-color-light: var(--koop-orange-hover);
-    --btn-color-dark: var(--koop-orange-active);
-  }
-
-  .koop-btn--lila {
-    --btn-color: var(--koop-lila);
-    --btn-color-light: var(--koop-lila-hover);
-    --btn-color-dark: var(--koop-lila-active);
-  }
-
   .koop-btn--blue {
-    --btn-color: var(--koop-blue);
-    --btn-color-light: var(--koop-blue-hover);
-    --btn-color-dark: var(--koop-blue-active);
+    --btn-face: var(--koop-blue);
+    --btn-face-hover: var(--koop-blue-hover);
+    --btn-depth-color: var(--koop-blue-active);
+  }
+
+  .koop-btn--green {
+    --btn-face: var(--koop-green);
+    --btn-face-hover: var(--koop-green-hover);
+    --btn-depth-color: var(--koop-green-active);
+  }
+
+  /* The one variant that cannot carry a white label: white on #ffd200 is
+     1.45:1. The ink reaches 9.45:1 instead. */
+  .koop-btn--yellow {
+    --btn-face: var(--koop-yellow);
+    --btn-face-hover: var(--koop-yellow-hover);
+    --btn-depth-color: var(--koop-yellow-active);
+    --btn-label: var(--koop-ink);
   }
 
   .koop-btn--sm {

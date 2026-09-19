@@ -3,8 +3,8 @@
     <h3 class="text-lg font-semibold mb-4">Bestellung prüfen</h3>
 
     <div v-if="user" class="mb-4">
-      <h4 class="text-sm font-semibold text-gray-700 mb-2">Lieferadresse</h4>
-      <div class="text-sm text-gray-600 space-y-0.5">
+      <h4 class="text-sm font-semibold text-koop-ink mb-2">Lieferadresse</h4>
+      <div class="text-sm text-koop-ink-muted space-y-0.5">
         <p>{{ user.firstname }} {{ user.lastname }}</p>
         <p>{{ user.address.street }}</p>
         <p>{{ user.address.postcode }} {{ user.address.city }}</p>
@@ -12,25 +12,25 @@
           {{ user.email }}<span v-if="user.telephone"> · {{ user.telephone }}</span>
         </p>
       </div>
-      <p class="text-xs text-gray-400 mt-1">
+      <p class="text-xs text-koop-ink-muted mt-1">
         Adresse falsch?
-        <a :href="accountUrl" target="_blank" rel="noopener" class="text-[#00af8c] underline"
+        <a :href="accountUrl" target="_blank" rel="noopener" class="text-koop-blue underline"
           >Im alten Shop bearbeiten</a
         >
       </p>
     </div>
 
     <div class="mb-4">
-      <h4 class="text-sm font-semibold text-gray-700 mb-2">Artikel</h4>
+      <h4 class="text-sm font-semibold text-koop-ink mb-2">Artikel</h4>
       <div class="space-y-1">
         <div
           v-for="item in items"
           :key="`${item.product.id}-${item.variantIndex ?? 'base'}`"
           class="flex justify-between text-sm"
         >
-          <span class="text-gray-600">
+          <span class="text-koop-ink-muted">
             {{ item.quantity }}x {{ item.product.name }}
-            <span v-if="getVariant(item)" class="text-gray-400"
+            <span v-if="getVariant(item)" class="text-koop-ink-muted"
               >({{ getVariant(item)!.size }})</span
             >
           </span>
@@ -41,20 +41,20 @@
 
     <div class="mb-4 border-t border-gray-100 pt-3 text-sm space-y-1.5">
       <div class="flex justify-between">
-        <span class="text-gray-500">Zwischensumme</span>
+        <span class="text-koop-ink-muted">Zwischensumme</span>
         <span>{{ totalPrice.toFixed(2) }} €</span>
       </div>
       <div class="flex justify-between">
-        <span class="text-gray-500">Versand: {{ shippingDisplay?.module ?? '–' }}</span>
+        <span class="text-koop-ink-muted">Versand: {{ shippingDisplay?.module ?? '–' }}</span>
         <span>{{ shippingDisplay?.price ?? '–' }}</span>
       </div>
       <div class="flex justify-between">
-        <span class="text-gray-500">Zahlung</span>
+        <span class="text-koop-ink-muted">Zahlung</span>
         <span>{{ paymentDisplay?.label ?? '–' }}</span>
       </div>
       <div
         v-if="payment === 'lastschrift' && iban"
-        class="flex justify-between text-xs text-gray-500"
+        class="flex justify-between text-xs text-koop-ink-muted"
       >
         <span>IBAN</span>
         <span class="font-mono">{{ maskedIban }}</span>
@@ -63,7 +63,7 @@
         <span>Gesamt</span>
         <span
           >{{ totalPrice.toFixed(2)
-          }}<span v-if="hasNoFixedShipping" class="text-xs font-normal text-gray-500">
+          }}<span v-if="hasNoFixedShipping" class="text-xs font-normal text-koop-ink-muted">
             + Versand n. A.</span
           >
           €</span
@@ -72,12 +72,12 @@
     </div>
 
     <div v-if="notes" class="mb-4">
-      <h4 class="text-sm font-semibold text-gray-700 mb-1">Anmerkungen</h4>
-      <p class="text-sm text-gray-600 whitespace-pre-wrap">{{ notes }}</p>
+      <h4 class="text-sm font-semibold text-koop-ink mb-1">Anmerkungen</h4>
+      <p class="text-sm text-koop-ink-muted whitespace-pre-wrap">{{ notes }}</p>
     </div>
 
     <p
-      class="mb-3 text-xs text-gray-500 bg-amber-50 border border-amber-200 rounded px-3 py-2 leading-relaxed"
+      class="mb-3 text-xs text-koop-ink-muted bg-amber-50 border border-amber-200 rounded px-3 py-2 leading-relaxed"
     >
       Mit "Bestellung absenden" wird Ihre Bestellung an uns übermittelt &mdash; sie ist
       <strong>noch nicht rechtsverbindlich</strong>. Wir senden Ihnen eine Bestätigungs-E-Mail mit

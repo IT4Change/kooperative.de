@@ -4,27 +4,29 @@
 
     <div class="flex flex-col">
       <span
-        class="text-sm font-medium text-[#00af8c] bg-[#00af8c]/10 px-2.5 py-0.5 rounded-full w-fit mb-3"
+        class="text-sm font-medium text-koop-blue bg-koop-blue/10 px-2.5 py-0.5 rounded-full w-fit mb-3"
       >
         {{ categoryName }}
       </span>
 
-      <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">{{ product.name }}</h1>
-      <p v-if="product.model" class="text-xs text-gray-400 mb-2">Art.-Nr. {{ product.model }}</p>
-      <p v-if="product.content" class="text-sm text-gray-500 mb-1">{{ product.content }}</p>
-      <p v-if="product.details" class="text-sm text-gray-500 mb-1">{{ product.details }}</p>
+      <h1 class="text-2xl sm:text-3xl font-bold text-koop-ink mb-1">{{ product.name }}</h1>
+      <p v-if="product.model" class="text-xs text-koop-ink-muted mb-2">
+        Art.-Nr. {{ product.model }}
+      </p>
+      <p v-if="product.content" class="text-sm text-koop-ink-muted mb-1">{{ product.content }}</p>
+      <p v-if="product.details" class="text-sm text-koop-ink-muted mb-1">{{ product.details }}</p>
 
-      <p class="text-gray-600 mb-6 mt-3">{{ product.description }}</p>
+      <p class="text-koop-ink-muted mb-6 mt-3">{{ product.description }}</p>
 
       <!-- Size variants: dropdown -->
       <div v-if="product.variants && product.variantType !== 'quantity'" class="mb-4">
-        <label :for="`${uid}-variant`" class="block text-sm font-medium text-gray-700 mb-1">
+        <label :for="`${uid}-variant`" class="block text-sm font-medium text-koop-ink mb-1">
           Gebindegröße
         </label>
         <select
           :id="`${uid}-variant`"
           v-model.number="selectedVariant"
-          class="w-full sm:w-auto text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#00af8c]/40 focus:border-[#00af8c]"
+          class="w-full sm:w-auto text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-koop-blue/40 focus:border-koop-blue"
         >
           <option v-for="(v, idx) in product.variants" :key="idx" :value="idx">
             {{ v.size }} ≙ {{ unitPrice(v).toFixed(2) }} €/{{ v.referenceUnit }}
@@ -35,7 +37,7 @@
       <!-- Quantity tiers -->
       <div v-else-if="product.variantType === 'quantity' && product.variants" class="mb-4">
         <div class="flex items-center gap-3 mb-2">
-          <label :for="`${uid}-quantity`" class="text-sm font-medium text-gray-700">
+          <label :for="`${uid}-quantity`" class="text-sm font-medium text-koop-ink">
             Anzahl:
           </label>
           <input
@@ -43,14 +45,14 @@
             v-model.number="quantity"
             type="number"
             min="1"
-            class="w-20 text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#00af8c]/40 focus:border-[#00af8c]"
+            class="w-20 text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-koop-blue/40 focus:border-koop-blue"
           />
         </div>
-        <div class="text-sm text-gray-500 space-y-0.5">
+        <div class="text-sm text-koop-ink-muted space-y-0.5">
           <div
             v-for="(v, idx) in product.variants"
             :key="idx"
-            :class="{ 'text-[#00af8c] font-medium': idx === activeTierIndex }"
+            :class="{ 'text-koop-blue font-medium': idx === activeTierIndex }"
           >
             {{ v.size }}: {{ v.price.toFixed(2) }} €/Stk
           </div>
@@ -58,18 +60,20 @@
       </div>
 
       <div class="flex items-center gap-4 mb-6">
-        <span class="text-2xl font-bold text-[#00af8c]">
+        <span class="text-2xl font-bold text-koop-blue">
           {{ displayPrice.toFixed(2) }}&nbsp;&euro;
         </span>
         <template v-if="product.variants && product.variantType !== 'quantity' && activeVariant">
-          <span class="text-sm text-gray-400">
+          <span class="text-sm text-koop-ink-muted">
             ≙ {{ displayUnitPrice }} €/{{ activeVariant.referenceUnit }}
           </span>
         </template>
-        <span v-else-if="product.variantType === 'quantity'" class="text-sm text-gray-400">
+        <span v-else-if="product.variantType === 'quantity'" class="text-sm text-koop-ink-muted">
           {{ quantity }} × {{ activeTierPrice.toFixed(2) }} €
         </span>
-        <span v-else-if="product.unit" class="text-sm text-gray-400">/ {{ product.unit }}</span>
+        <span v-else-if="product.unit" class="text-sm text-koop-ink-muted"
+          >/ {{ product.unit }}</span
+        >
       </div>
 
       <KoopButton @click="handleAdd"> Auf die Bestellliste </KoopButton>
