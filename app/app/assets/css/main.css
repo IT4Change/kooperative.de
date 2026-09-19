@@ -14,6 +14,12 @@
   --koop-blue: #5591dc;
   --koop-blue-hover: #71a6e6;
   --koop-blue-active: #3f76bf;
+
+  /* The logo brown (#702f00), darkened until it clears WCAG AA against the
+     darkest pixels of the orange paper texture (4.54:1) and not just against
+     its average colour, where #702f00 would only reach 4.26:1. */
+  --koop-brown: #4a1f00;
+  --koop-brown-hover: #2e1400;
 }
 
 html {

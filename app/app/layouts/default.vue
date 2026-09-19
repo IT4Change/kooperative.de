@@ -259,7 +259,9 @@
 
   .info-link {
     font-size: 0.8rem !important;
-    color: #888 !important;
+    /* Not #888: at 12.8px on the near-white header that is 3.42:1, short of
+       the 4.5:1 WCAG AA asks for. #6e6e6e reaches 4.92:1. */
+    color: #6e6e6e !important;
     font-weight: 400 !important;
   }
 

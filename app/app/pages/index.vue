@@ -4,7 +4,7 @@
     <section
       id="hero"
       class="h-screen flex flex-col items-center justify-center relative overflow-hidden"
-      style="background-color: var(--koop-orange)"
+      :style="heroBackground"
     >
       <div class="relative z-10 flex flex-col items-center px-4">
         <img
@@ -18,7 +18,7 @@
       </div>
       <!-- Scroll-Hinweis -->
       <button
-        class="absolute bottom-1 left-1/2 -translate-x-1/2 z-10 text-white/80 hover:text-white transition-colors focus:outline-none flex flex-col items-center"
+        class="absolute bottom-1 left-1/2 -translate-x-1/2 z-10 text-[var(--koop-brown)] hover:text-[var(--koop-brown-hover)] transition-colors focus:outline-none flex flex-col items-center"
         aria-label="Nach unten scrollen"
         @click="scrollToNext"
       >
@@ -184,6 +184,15 @@
 <script setup lang="ts">
   const { baseURL } = useRuntimeConfig().app
   const sectionLinks = useSectionLinks()
+
+  // The tiled paper texture of the old kooperative.de. Its average colour is
+  // exactly --koop-orange, which therefore doubles as the fallback while the
+  // tile loads or if it fails.
+  const heroBackground = {
+    backgroundColor: 'var(--koop-orange)',
+    backgroundImage: `url(${baseURL}img/bg-orange.jpg)`,
+    backgroundRepeat: 'repeat',
+  }
 
   useHead({
     title: 'Kooperative Dürnau',
