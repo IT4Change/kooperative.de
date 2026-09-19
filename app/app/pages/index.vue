@@ -18,7 +18,7 @@
       </div>
       <!-- Scroll-Hinweis -->
       <button
-        class="absolute bottom-1 left-1/2 -translate-x-1/2 z-10 text-white/80 hover:text-white transition-colors focus:outline-none flex flex-col items-center"
+        class="absolute bottom-1 left-1/2 -translate-x-1/2 z-10 text-[var(--koop-brown)] hover:text-[var(--koop-brown-hover)] transition-colors focus:outline-none flex flex-col items-center"
         aria-label="Nach unten scrollen"
         @click="scrollToNext"
       >
