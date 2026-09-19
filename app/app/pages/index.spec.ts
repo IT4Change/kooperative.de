@@ -78,6 +78,14 @@ describe('content', () => {
     expect(wrapper.get('#hero img').attributes('src')).toBe('/img/logo-schrift-braun.svg')
   })
 
+  it('tiles the old paper texture behind the hero', async () => {
+    const wrapper = await mountPage()
+    const style = wrapper.get('#hero').attributes('style')
+
+    expect(style).toContain('/img/bg-orange.jpg')
+    expect(style).toContain('background-repeat: repeat')
+  })
+
   it('offers the shop and the four areas', async () => {
     const wrapper = await mountPage()
     const labels = wrapper.findAll('a').map((a) => a.text())
