@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.9.4](https://github.com/IT4Change/kooperative.de/compare/v0.9.3...v0.9.4) (2026-09-19)
+
+
+### Bug Fixes
+
+* **app:** background for website ([#61](https://github.com/IT4Change/kooperative.de/issues/61)) ([d84b540](https://github.com/IT4Change/kooperative.de/commit/d84b540e888c80c76cec81064c167f47f027d226))
+
 ## [0.9.3](https://github.com/IT4Change/kooperative.de/compare/v0.9.2...v0.9.3) (2026-09-16)
 
 
