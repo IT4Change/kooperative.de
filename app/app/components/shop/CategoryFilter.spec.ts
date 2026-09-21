@@ -89,7 +89,7 @@ describe('top level', () => {
     const wrapper = await mount('naturkost/oele')
     const parent = topRow(wrapper).find((b) => b.text().includes('Naturkost'))
 
-    expect(parent?.classes().join(' ')).toContain('bg-[#00af8c]')
+    expect(parent?.classes().join(' ')).toContain('bg-koop-blue')
   })
 })
 

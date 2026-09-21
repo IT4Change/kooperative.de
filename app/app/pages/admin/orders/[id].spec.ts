@@ -255,7 +255,7 @@ describe('the status stepper', () => {
     const wrapper = await mount()
     const circles = wrapper.findAll('.w-10.h-10')
 
-    expect(circles[0].classes()).toContain('bg-[#00af8c]')
+    expect(circles[0].classes()).toContain('bg-koop-green')
     expect(circles[1].classes()).toContain('ring-4')
     expect(circles[2].classes()).toContain('border-gray-300')
   })

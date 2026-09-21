@@ -2,22 +2,22 @@
   <div class="py-3 border-b border-gray-100">
     <div class="flex items-start gap-3">
       <div class="flex-1 min-w-0">
-        <h4 class="text-sm font-medium text-gray-900 truncate">
+        <h4 class="text-sm font-medium text-koop-ink truncate">
           {{ item.product.name }}
-          <span v-if="activeVariant && !isQuantityTier" class="font-normal text-gray-500"
+          <span v-if="activeVariant && !isQuantityTier" class="font-normal text-koop-ink-muted"
             >&middot; {{ activeVariant.size }}</span
           >
         </h4>
-        <p class="text-sm text-gray-500">
+        <p class="text-sm text-koop-ink-muted">
           {{ price.toFixed(2) }} €<span v-if="isQuantityTier"> / Stk</span>
         </p>
-        <p v-if="isQuantityTier && activeTier" class="text-xs text-gray-400">
+        <p v-if="isQuantityTier && activeTier" class="text-xs text-koop-ink-muted">
           Staffel: {{ activeTier.size }}
         </p>
       </div>
       <div class="flex items-center gap-1">
         <button
-          class="w-7 h-7 rounded bg-gray-100 hover:bg-gray-200 text-gray-700 flex items-center justify-center text-sm font-bold transition-colors"
+          class="w-7 h-7 rounded bg-gray-100 hover:bg-gray-200 text-koop-ink flex items-center justify-center text-sm font-bold transition-colors"
           @click="$emit('update', item.product.id, item.quantity - 1, item.variantIndex)"
         >
           −
@@ -27,22 +27,22 @@
           :value="item.quantity"
           type="number"
           min="1"
-          class="w-14 text-center text-sm font-medium border border-gray-200 rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-[#00af8c]"
+          class="w-14 text-center text-sm font-medium border border-gray-200 rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-koop-blue"
           @change="onQuantityInput(($event.target as HTMLInputElement).value)"
         />
         <span v-else class="w-8 text-center text-sm font-medium">{{ item.quantity }}</span>
         <button
-          class="w-7 h-7 rounded bg-gray-100 hover:bg-gray-200 text-gray-700 flex items-center justify-center text-sm font-bold transition-colors"
+          class="w-7 h-7 rounded bg-gray-100 hover:bg-gray-200 text-koop-ink flex items-center justify-center text-sm font-bold transition-colors"
           @click="$emit('update', item.product.id, item.quantity + 1, item.variantIndex)"
         >
           +
         </button>
       </div>
-      <span class="text-sm font-semibold text-gray-900 w-16 text-right">
+      <span class="text-sm font-semibold text-koop-ink w-16 text-right">
         {{ (price * item.quantity).toFixed(2) }}&nbsp;€
       </span>
       <button
-        class="text-gray-400 hover:text-red-500 transition-colors"
+        class="text-koop-ink-muted hover:text-red-500 transition-colors"
         aria-label="Entfernen"
         @click="$emit('remove', item.product.id, item.variantIndex)"
       >
@@ -66,7 +66,7 @@
     >
       <select
         :value="item.variantIndex ?? 0"
-        class="text-xs border border-gray-200 rounded px-1.5 py-1 focus:outline-none focus:ring-1 focus:ring-[#00af8c] focus:border-[#00af8c]"
+        class="text-xs border border-gray-200 rounded px-1.5 py-1 focus:outline-none focus:ring-1 focus:ring-koop-blue focus:border-koop-blue"
         @change="onVariantChange(($event.target as HTMLSelectElement).value)"
       >
         <option v-for="(v, idx) in item.product.variants" :key="idx" :value="idx">
@@ -75,14 +75,14 @@
           }}
         </option>
       </select>
-      <p v-if="savingsHint" class="text-xs text-[#00af8c] mt-1">
+      <p v-if="savingsHint" class="text-xs text-koop-blue mt-1">
         {{ savingsHint }}
       </p>
     </div>
 
     <!-- Quantity tiers: next tier hint -->
     <div v-if="isQuantityTier && nextTierHint" class="mt-1">
-      <p class="text-xs text-[#00af8c]">{{ nextTierHint }}</p>
+      <p class="text-xs text-koop-blue">{{ nextTierHint }}</p>
     </div>
   </div>
 </template>

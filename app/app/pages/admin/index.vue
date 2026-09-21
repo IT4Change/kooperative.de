@@ -8,8 +8,8 @@
       <!-- Bestellungen -->
       <section class="bg-white rounded-lg shadow-sm border border-gray-200">
         <header class="px-5 py-3 border-b border-gray-100 flex items-center justify-between">
-          <h2 class="font-semibold text-gray-800">Bestellungen</h2>
-          <NuxtLink to="/admin/orders" class="text-sm text-[#00af8c] hover:underline"
+          <h2 class="font-semibold text-koop-ink">Bestellungen</h2>
+          <NuxtLink to="/admin/orders" class="text-sm text-koop-blue hover:underline"
             >Alle ansehen →</NuxtLink
           >
         </header>
@@ -48,23 +48,23 @@
       <!-- Statistik -->
       <section class="bg-white rounded-lg shadow-sm border border-gray-200">
         <header class="px-5 py-3 border-b border-gray-100">
-          <h2 class="font-semibold text-gray-800">Statistik</h2>
+          <h2 class="font-semibold text-koop-ink">Statistik</h2>
         </header>
         <ul class="divide-y divide-gray-100">
           <li class="flex items-center justify-between px-5 py-3">
-            <NuxtLink to="/admin/customers" class="hover:underline text-gray-700">Kunden</NuxtLink>
+            <NuxtLink to="/admin/customers" class="hover:underline text-koop-ink">Kunden</NuxtLink>
             <span class="font-mono font-semibold tabular-nums">{{
               (data?.stats.customers ?? 0).toLocaleString('de-DE')
             }}</span>
           </li>
           <li class="flex items-center justify-between px-5 py-3">
-            <span class="text-gray-700">Produkte (aktiv)</span>
+            <span class="text-koop-ink">Produkte (aktiv)</span>
             <span class="font-mono font-semibold tabular-nums">{{
               (data?.stats.productsActive ?? 0).toLocaleString('de-DE')
             }}</span>
           </li>
           <li class="flex items-center justify-between px-5 py-3">
-            <span class="text-gray-700">Bewertungen</span>
+            <span class="text-koop-ink">Bewertungen</span>
             <span class="font-mono font-semibold tabular-nums">{{
               (data?.stats.reviews ?? 0).toLocaleString('de-DE')
             }}</span>
@@ -73,7 +73,7 @@
       </section>
     </div>
 
-    <p class="text-xs text-gray-400">
+    <p class="text-xs text-koop-ink-muted">
       Zahlen aus der gemeinsamen Shop-Datenbank (alter + neuer Shop). Read-only.
     </p>
   </div>

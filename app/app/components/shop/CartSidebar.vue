@@ -32,7 +32,7 @@
                   reads as what it is.
                 -->
                 <button
-                  class="sm:hidden shrink-0 inline-flex items-center gap-1 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+                  class="sm:hidden shrink-0 inline-flex items-center gap-1 text-sm font-medium text-koop-ink-muted hover:text-koop-ink transition-colors"
                   @click="closeCart"
                 >
                   <svg
@@ -49,7 +49,7 @@
                   Weiter einkaufen
                 </button>
                 <button
-                  class="hidden sm:block text-gray-400 hover:text-gray-600 transition-colors"
+                  class="hidden sm:block text-koop-ink-muted hover:text-koop-ink-muted transition-colors"
                   aria-label="Schließen"
                   @click="closeCart"
                 >
@@ -67,7 +67,7 @@
               </div>
               <!-- Only while there is something to lose, and only where leaving
                    hides the shop: the reassurance is the point, not the sentence. -->
-              <p v-if="!isEmpty" class="sm:hidden mt-1 text-xs text-gray-500">
+              <p v-if="!isEmpty" class="sm:hidden mt-1 text-xs text-koop-ink-muted">
                 Ihre Bestellliste bleibt gespeichert.
               </p>
             </div>
@@ -77,7 +77,7 @@
               <!-- Cart Step -->
               <template v-if="checkoutStep === 'cart'">
                 <template v-if="isEmpty">
-                  <p class="text-gray-400 text-center py-12">Deine Bestellliste ist leer.</p>
+                  <p class="text-koop-ink-muted text-center py-12">Deine Bestellliste ist leer.</p>
                 </template>
                 <template v-else>
                   <ShopCartItem
@@ -134,10 +134,10 @@
               <div v-if="checkoutStep === 'success'" class="py-6" data-testid="cart-success">
                 <div class="text-center mb-5">
                   <div
-                    class="w-16 h-16 mx-auto mb-4 rounded-full bg-[#00af8c]/10 flex items-center justify-center"
+                    class="w-16 h-16 mx-auto mb-4 rounded-full bg-koop-blue/10 flex items-center justify-center"
                   >
                     <svg
-                      class="w-8 h-8 text-[#00af8c]"
+                      class="w-8 h-8 text-koop-blue"
                       fill="none"
                       stroke="currentColor"
                       stroke-width="2"
@@ -147,7 +147,9 @@
                     </svg>
                   </div>
                   <h3 class="text-lg font-semibold mb-1">Vielen Dank!</h3>
-                  <p class="text-sm text-gray-600">Ihre Bestellung wurde an uns übermittelt.</p>
+                  <p class="text-sm text-koop-ink-muted">
+                    Ihre Bestellung wurde an uns übermittelt.
+                  </p>
                 </div>
                 <div
                   class="rounded-lg bg-amber-50 border border-amber-200 p-4 mb-5 text-sm text-amber-900"
@@ -167,7 +169,7 @@
                     </li>
                   </ol>
                 </div>
-                <p class="text-xs text-gray-500 mb-5">
+                <p class="text-xs text-koop-ink-muted mb-5">
                   Hintergrund: Aus rechtlichen Gründen kommt der Kaufvertrag nicht über die Webseite
                   zustande, sondern erst durch Ihre E-Mail-Antwort. So funktioniert die Kooperative
                   seit jeher.

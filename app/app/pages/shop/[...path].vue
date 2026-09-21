@@ -12,7 +12,7 @@
     -->
     <NuxtLink
       to="/shop"
-      class="-mt-3 -ml-2 mb-3 inline-flex min-h-11 items-center gap-1 rounded-lg px-2 text-sm text-gray-500 transition-colors hover:text-[#00af8c] active:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00af8c]"
+      class="-mt-3 -ml-2 mb-3 inline-flex min-h-11 items-center gap-1 rounded-lg px-2 text-sm text-koop-ink-muted transition-colors hover:text-koop-blue active:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-koop-blue"
     >
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />

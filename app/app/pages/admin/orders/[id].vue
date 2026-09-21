@@ -1,6 +1,6 @@
 <template>
   <div class="space-y-6">
-    <NuxtLink to="/admin/orders" class="text-sm text-[#00af8c] hover:underline"
+    <NuxtLink to="/admin/orders" class="text-sm text-koop-blue hover:underline"
       >‹ Zurück zur Liste</NuxtLink
     >
 
@@ -15,7 +15,7 @@
     <template v-if="data">
       <!-- Header -->
       <div class="flex flex-wrap items-center gap-3">
-        <h2 class="text-xl font-bold text-gray-800">Bestellung #{{ data.order.id }}</h2>
+        <h2 class="text-xl font-bold text-koop-ink">Bestellung #{{ data.order.id }}</h2>
         <span
           class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium"
           :class="statusClass(data.order.statusId)"
@@ -25,18 +25,22 @@
         <span
           class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium"
           :class="
-            data.origin === 'neu' ? 'bg-[#00af8c]/10 text-[#00838a]' : 'bg-gray-100 text-gray-500'
+            data.origin === 'neu'
+              ? 'bg-koop-blue/10 text-koop-blue'
+              : 'bg-gray-100 text-koop-ink-muted'
           "
         >
           {{ data.origin === 'neu' ? 'Neuer Shop' : 'Alter Shop' }}
         </span>
-        <span class="text-sm text-gray-500 ml-auto">{{ dateTime(data.order.datePurchased) }}</span>
+        <span class="text-sm text-koop-ink-muted ml-auto">{{
+          dateTime(data.order.datePurchased)
+        }}</span>
         <a
           v-if="data.oldAdminUrl"
           :href="data.oldAdminUrl"
           target="_blank"
           rel="noopener"
-          class="text-sm text-gray-500 hover:text-[#00af8c] hover:underline whitespace-nowrap"
+          class="text-sm text-koop-ink-muted hover:text-koop-blue hover:underline whitespace-nowrap"
           >Alter Admin ↗</a
         >
       </div>
@@ -45,13 +49,13 @@
       <AdminStatusFlow :steps="data.statusFlow">
         <p
           v-if="data.origin === 'alt'"
-          class="mt-4 text-xs text-gray-500 bg-gray-50 border border-gray-200 rounded px-3 py-2"
+          class="mt-4 text-xs text-koop-ink-muted bg-gray-50 border border-gray-200 rounded px-3 py-2"
         >
           Diese Bestellung lief über den <strong>alten Shop</strong> – Schritt 1 entfällt, eine
           gesonderte Bestätigung durch den Kunden war dort nicht vorgesehen.
         </p>
         <template v-else-if="data.confirmation">
-          <p class="mt-4 text-xs text-gray-500">
+          <p class="mt-4 text-xs text-koop-ink-muted">
             <template v-if="data.confirmation.via === 'admin'">
               Manuell im Admin freigegeben<span v-if="data.confirmation.at">
                 am {{ dateTime(data.confirmation.at) }}</span
@@ -67,7 +71,7 @@
           </p>
           <p
             v-if="data.confirmation.note"
-            class="mt-2 text-xs text-gray-600 bg-amber-50 border border-amber-200 rounded px-3 py-2"
+            class="mt-2 text-xs text-koop-ink-muted bg-amber-50 border border-amber-200 rounded px-3 py-2"
           >
             <span class="font-semibold">Begründung der Freischaltung:</span>
             <!-- ml-1 rather than a literal space: Vue's whitespace: 'condense'
@@ -81,12 +85,12 @@
         <!-- Left: items + totals + history + mails -->
         <div class="lg:col-span-2 space-y-6">
           <section class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-            <header class="px-5 py-3 border-b border-gray-100 font-semibold text-gray-800">
+            <header class="px-5 py-3 border-b border-gray-100 font-semibold text-koop-ink">
               Positionen
             </header>
             <table class="w-full text-sm">
               <thead>
-                <tr class="bg-gray-50 text-left text-gray-500">
+                <tr class="bg-gray-50 text-left text-koop-ink-muted">
                   <th class="px-4 py-2 font-medium">Artikel</th>
                   <th class="px-4 py-2 font-medium text-right">Menge</th>
                   <th class="px-4 py-2 font-medium text-right">Einzel</th>
@@ -96,8 +100,8 @@
               <tbody class="divide-y divide-gray-100">
                 <tr v-for="p in data.products" :key="p.id">
                   <td class="px-4 py-2.5">
-                    <div class="text-gray-800">{{ p.name }}</div>
-                    <div class="text-xs text-gray-400">
+                    <div class="text-koop-ink">{{ p.name }}</div>
+                    <div class="text-xs text-koop-ink-muted">
                       Nr. {{ p.id }}<span v-if="p.model"> · {{ p.model }}</span> · MwSt
                       {{ p.tax }} %
                     </div>
@@ -113,8 +117,8 @@
                 <tr v-for="t in data.totals" :key="t.class + t.title">
                   <td
                     colspan="3"
-                    class="px-4 py-1.5 text-right text-gray-600"
-                    :class="{ 'font-bold text-gray-900': t.class === 'ot_total' }"
+                    class="px-4 py-1.5 text-right text-koop-ink-muted"
+                    :class="{ 'font-bold text-koop-ink': t.class === 'ot_total' }"
                   >
                     {{ plain(t.title) }}
                   </td>
@@ -131,7 +135,7 @@
 
           <!-- Status history -->
           <section class="bg-white rounded-lg shadow-sm border border-gray-200">
-            <header class="px-5 py-3 border-b border-gray-100 font-semibold text-gray-800">
+            <header class="px-5 py-3 border-b border-gray-100 font-semibold text-koop-ink">
               Statusverlauf
             </header>
             <ul class="divide-y divide-gray-100">
@@ -143,21 +147,21 @@
                   {{ h.statusName || `Status ${h.statusId}` }}
                 </span>
                 <div class="min-w-0 flex-1">
-                  <div class="text-xs text-gray-500">{{ dateTime(h.dateAdded) }}</div>
-                  <div v-if="h.comments" class="text-sm text-gray-700 whitespace-pre-wrap mt-0.5">
+                  <div class="text-xs text-koop-ink-muted">{{ dateTime(h.dateAdded) }}</div>
+                  <div v-if="h.comments" class="text-sm text-koop-ink whitespace-pre-wrap mt-0.5">
                     {{ h.comments }}
                   </div>
                 </div>
                 <span
                   class="text-xs shrink-0"
-                  :class="h.customerNotified ? 'text-green-600' : 'text-gray-400'"
+                  :class="h.customerNotified ? 'text-green-600' : 'text-koop-ink-muted'"
                 >
                   {{ h.customerNotified ? '✉ benachrichtigt' : '— keine Mail' }}
                 </span>
               </li>
               <li
                 v-if="data.history.length === 0"
-                class="px-5 py-6 text-center text-gray-400 text-sm"
+                class="px-5 py-6 text-center text-koop-ink-muted text-sm"
               >
                 Kein Verlauf vorhanden.
               </li>
@@ -166,20 +170,20 @@
 
           <!-- Mail timeline -->
           <section class="bg-white rounded-lg shadow-sm border border-gray-200">
-            <header class="px-5 py-3 border-b border-gray-100 font-semibold text-gray-800">
+            <header class="px-5 py-3 border-b border-gray-100 font-semibold text-koop-ink">
               Gesendete E-Mails
             </header>
             <ul class="divide-y divide-gray-100">
               <li v-for="m in data.mails" :key="m.id" class="px-5 py-3 flex items-start gap-3">
                 <span
-                  class="shrink-0 mt-0.5 text-gray-400"
+                  class="shrink-0 mt-0.5 text-koop-ink-muted"
                   :title="m.direction === 'to_customer' ? 'an Kunde' : 'an Administration'"
                 >
                   {{ m.direction === 'to_customer' ? '→ Kunde' : '→ Admin' }}
                 </span>
                 <div class="min-w-0 flex-1">
-                  <div class="text-sm text-gray-800">{{ m.subject }}</div>
-                  <div class="text-xs text-gray-400">
+                  <div class="text-sm text-koop-ink">{{ m.subject }}</div>
+                  <div class="text-xs text-koop-ink-muted">
                     {{ m.recipient }} · {{ mailTypeLabel(m.mailType) }} · {{ dateTime(m.createdAt)
                     }}<span v-if="m.sentBy"> · {{ m.sentBy }}</span>
                   </div>
@@ -195,7 +199,7 @@
               </li>
               <li
                 v-if="data.mails.length === 0"
-                class="px-5 py-6 text-center text-gray-400 text-sm"
+                class="px-5 py-6 text-center text-koop-ink-muted text-sm"
               >
                 Noch keine E-Mails zu dieser Bestellung.
               </li>
@@ -207,12 +211,15 @@
         <div class="space-y-6">
           <!-- Operator action panel -->
           <section class="bg-white rounded-lg shadow-sm border border-gray-200">
-            <header class="px-5 py-3 border-b border-gray-100 font-semibold text-gray-800">
+            <header class="px-5 py-3 border-b border-gray-100 font-semibold text-koop-ink">
               Bearbeitung
             </header>
             <div class="px-5 py-4 space-y-3">
               <div>
-                <label :for="`${uid}-status`" class="block text-xs font-medium text-gray-500 mb-1">
+                <label
+                  :for="`${uid}-status`"
+                  class="block text-xs font-medium text-koop-ink-muted mb-1"
+                >
                   Status setzen
                 </label>
                 <select
@@ -226,7 +233,10 @@
                 </select>
               </div>
               <div>
-                <label :for="`${uid}-comment`" class="block text-xs font-medium text-gray-500 mb-1">
+                <label
+                  :for="`${uid}-comment`"
+                  class="block text-xs font-medium text-koop-ink-muted mb-1"
+                >
                   Nachricht an den Kunden (optional)
                 </label>
                 <textarea
@@ -236,23 +246,23 @@
                   class="w-full px-3 py-2 border border-gray-300 rounded text-sm resize-none"
                   placeholder="Steht wörtlich in der Status-Mail, z. B. Paket ging heute raus, DPD-Nr. 0123456789"
                 />
-                <p class="mt-1 text-[11px] text-gray-500">
+                <p class="mt-1 text-[11px] text-koop-ink-muted">
                   <span class="font-semibold text-amber-700">Geht an den Kunden.</span>
                   Wird in die Bestellhistorie geschrieben und — solange unten „Kunde per E-Mail
                   benachrichtigen" gesetzt ist — wörtlich in die Mail übernommen. „Benachrichtigung
                   erneut senden" verschickt den Text ebenfalls.
                 </p>
               </div>
-              <label class="flex items-center gap-2 text-sm text-gray-700">
+              <label class="flex items-center gap-2 text-sm text-koop-ink">
                 <input
                   v-model="form.notify"
                   type="checkbox"
-                  class="rounded border-gray-300 text-[#00af8c] focus:ring-[#00af8c]"
+                  class="rounded border-gray-300 text-koop-blue focus:ring-koop-blue"
                 />
                 Kunde per E-Mail benachrichtigen
               </label>
               <button
-                class="w-full px-3 py-2 bg-[#00af8c] text-white rounded text-sm font-medium hover:bg-[#009579] disabled:opacity-50"
+                class="w-full px-3 py-2 bg-koop-blue text-white rounded text-sm font-medium hover:bg-koop-blue-hover disabled:opacity-50"
                 :disabled="busy || form.statusId === ''"
                 @click="submitStatus"
               >
@@ -261,13 +271,13 @@
 
               <div class="pt-2 border-t border-gray-100">
                 <button
-                  class="w-full px-3 py-2 border border-gray-300 text-gray-700 rounded text-sm hover:bg-gray-50 disabled:opacity-50"
+                  class="w-full px-3 py-2 border border-gray-300 text-koop-ink rounded text-sm hover:bg-gray-50 disabled:opacity-50"
                   :disabled="busy"
                   @click="resend"
                 >
                   Benachrichtigung (erneut) senden
                 </button>
-                <p class="text-[11px] text-gray-400 mt-1">
+                <p class="text-[11px] text-koop-ink-muted mt-1">
                   Sendet dem Kunden die Mail zum aktuellen Status – ohne den Status zu ändern.
                 </p>
               </div>
@@ -283,31 +293,35 @@
           </section>
 
           <section class="bg-white rounded-lg shadow-sm border border-gray-200">
-            <header class="px-5 py-3 border-b border-gray-100 font-semibold text-gray-800">
+            <header class="px-5 py-3 border-b border-gray-100 font-semibold text-koop-ink">
               Kunde
             </header>
             <div class="px-5 py-3 text-sm space-y-1">
-              <div class="font-medium text-gray-800">{{ data.order.customer.name }}</div>
-              <div v-if="data.order.customer.company" class="text-gray-600">
+              <div class="font-medium text-koop-ink">{{ data.order.customer.name }}</div>
+              <div v-if="data.order.customer.company" class="text-koop-ink-muted">
                 {{ data.order.customer.company }}
               </div>
               <div>
                 <a
                   :href="`mailto:${data.order.customer.email}`"
-                  class="text-[#00af8c] hover:underline"
+                  class="text-koop-blue hover:underline"
                   >{{ data.order.customer.email }}</a
                 >
               </div>
-              <div class="text-gray-600">Tel.: {{ data.order.customer.telephone || '–' }}</div>
-              <div class="text-xs text-gray-400 pt-1">Kunden-Nr. {{ data.order.customer.id }}</div>
+              <div class="text-koop-ink-muted">
+                Tel.: {{ data.order.customer.telephone || '–' }}
+              </div>
+              <div class="text-xs text-koop-ink-muted pt-1">
+                Kunden-Nr. {{ data.order.customer.id }}
+              </div>
             </div>
           </section>
 
           <section class="bg-white rounded-lg shadow-sm border border-gray-200">
-            <header class="px-5 py-3 border-b border-gray-100 font-semibold text-gray-800">
+            <header class="px-5 py-3 border-b border-gray-100 font-semibold text-koop-ink">
               Lieferadresse
             </header>
-            <div class="px-5 py-3 text-sm text-gray-700 space-y-0.5">
+            <div class="px-5 py-3 text-sm text-koop-ink space-y-0.5">
               <div>{{ data.order.delivery.name }}</div>
               <div v-if="data.order.delivery.company">{{ data.order.delivery.company }}</div>
               <div>{{ data.order.delivery.street }}</div>
@@ -318,10 +332,10 @@
           </section>
 
           <section class="bg-white rounded-lg shadow-sm border border-gray-200">
-            <header class="px-5 py-3 border-b border-gray-100 font-semibold text-gray-800">
+            <header class="px-5 py-3 border-b border-gray-100 font-semibold text-koop-ink">
               Zahlung
             </header>
-            <div class="px-5 py-3 text-sm text-gray-700">{{ data.order.paymentMethod || '–' }}</div>
+            <div class="px-5 py-3 text-sm text-koop-ink">{{ data.order.paymentMethod || '–' }}</div>
           </section>
         </div>
       </div>

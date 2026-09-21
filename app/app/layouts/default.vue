@@ -1,5 +1,5 @@
 <template>
-  <div class="layout">
+  <div class="layout" :style="ground">
     <header ref="headerRef" class="header" :class="{ scrolled }">
       <div class="header-main">
         <NuxtLink
@@ -67,11 +67,11 @@
             <h2 :id="`${uid}-storage-title`" class="text-lg font-bold mb-3">
               Cookies erforderlich
             </h2>
-            <p class="text-sm text-gray-600 mb-4">
+            <p class="text-sm text-koop-ink-muted mb-4">
               Um Artikel auf die Bestellliste setzen zu können, muss der lokale Speicher
               (Cookies/localStorage) in deinem Browser aktiviert sein.
             </p>
-            <p class="text-sm text-gray-500 mb-5">
+            <p class="text-sm text-koop-ink-muted mb-5">
               Bitte erlaube Cookies für diese Seite und versuche es erneut. Du wirst anschließend
               gebeten, der Verwendung technisch notwendiger Cookies zuzustimmen.
             </p>
@@ -100,19 +100,19 @@
             class="relative bg-white rounded-xl shadow-2xl max-w-md w-full p-6 focus:outline-none"
           >
             <h2 :id="`${uid}-consent-title`" class="text-lg font-bold mb-3">Cookie-Hinweis</h2>
-            <p class="text-sm text-gray-600 mb-3">
+            <p class="text-sm text-koop-ink-muted mb-3">
               Für den Warenkorb verwenden wir technisch notwendige Cookies bzw. lokalen Speicher.
               Diese sind erforderlich, damit deine Auswahl erhalten bleibt. Es findet kein Tracking
               und keine Weitergabe an Dritte statt.
             </p>
-            <p class="text-sm text-gray-600 mb-5">
+            <p class="text-sm text-koop-ink-muted mb-5">
               Mehr Informationen findest du in unserer
-              <NuxtLink to="/datenschutz" class="text-[#00af8c] underline" @click="declineConsent"
+              <NuxtLink to="/datenschutz" class="text-koop-blue underline" @click="declineConsent"
                 >Datenschutzerklärung</NuxtLink
               >.
             </p>
             <div class="flex flex-col sm:flex-row gap-2 sm:justify-end">
-              <KoopButton size="sm" variant="orange" @click="declineConsent">Ablehnen</KoopButton>
+              <KoopButton size="sm" variant="blue" @click="declineConsent">Ablehnen</KoopButton>
               <KoopButton size="sm" @click="acceptConsent">Akzeptieren</KoopButton>
             </div>
           </div>
@@ -146,6 +146,9 @@
   import { HISTORIE_URL, KONTAKT_URL } from '~/composables/useSectionLinks'
 
   const { baseURL } = useRuntimeConfig().app
+  // Through a custom property rather than straight into background-image, so
+  // the rule that uses it can stay in the stylesheet next to the rest of .layout.
+  const ground = { '--koop-ground': `url(${baseURL}img/bg-peach-blossom.jpg)` }
   const { showWarning: showStorageWarning, dismissWarning: dismissStorageWarning } = useStorage()
   const {
     showBanner: showConsentBanner,
@@ -233,6 +236,12 @@
 </script>
 
 <style scoped>
+  /**
+   * Pfirsichblüt is the ground of the storefront, not an accent — the tile is
+   * the brush texture of the old kooperative.de, recoloured to the Inkarnat.
+   * It is attached here rather than on <body> so the admin layout stays on
+   * plain white: a table of orders is a tool, not a room.
+   */
   .layout {
     min-height: 100vh;
     display: flex;
@@ -241,7 +250,10 @@
       system-ui,
       -apple-system,
       sans-serif;
-    color: #333;
+    color: var(--koop-ink);
+    background-color: var(--koop-peach-blossom);
+    background-image: var(--koop-ground);
+    background-repeat: repeat;
   }
 
   .header {
@@ -259,14 +271,14 @@
 
   .info-link {
     font-size: 0.8rem !important;
-    /* Not #888: at 12.8px on the near-white header that is 3.42:1, short of
-       the 4.5:1 WCAG AA asks for. #6e6e6e reaches 4.92:1. */
-    color: #6e6e6e !important;
+    /* The muted ink rather than a grey: at 12.8px it needs the full 4.5:1, and
+       it reaches 7.35:1 on the near-white header. */
+    color: var(--koop-ink-muted) !important;
     font-weight: 400 !important;
   }
 
   .info-link:hover {
-    color: #00af8c !important;
+    color: var(--koop-blue) !important;
   }
 
   .header-main {
@@ -296,7 +308,7 @@
   .logo-text {
     font-weight: 600;
     font-size: 1.1rem;
-    color: #333;
+    color: var(--koop-ink);
     white-space: nowrap;
     display: inline-block;
     max-width: 200px;
@@ -332,7 +344,7 @@
     display: block;
     width: 24px;
     height: 2px;
-    background: #333;
+    background: var(--koop-ink);
     transition: all 0.3s ease;
     transform-origin: center;
   }
@@ -357,7 +369,7 @@
   }
 
   .main-nav a {
-    color: #333;
+    color: var(--koop-ink);
     text-decoration: none;
     font-weight: 500;
     padding: 0.25rem 0;
@@ -371,12 +383,12 @@
   }
 
   .main-nav a:hover {
-    color: #00af8c;
+    color: var(--koop-blue);
   }
 
   .main-nav a.active {
-    border-bottom-color: #00af8c;
-    color: #00af8c;
+    border-bottom-color: var(--koop-blue);
+    color: var(--koop-blue);
   }
 
   /* Main */
@@ -386,8 +398,8 @@
 
   /* Footer */
   .footer {
-    background: #333;
-    color: #ddd;
+    background: var(--koop-ink);
+    color: var(--koop-peach-blossom);
     padding: 2rem 1.5rem;
     margin-top: auto;
   }
@@ -408,19 +420,19 @@
   }
 
   .footer-section a {
-    color: #aaa;
+    color: var(--koop-ink-inverse);
     text-decoration: none;
     font-size: 0.9rem;
   }
 
   .footer-section a:hover {
-    color: #fff;
+    color: var(--koop-peach-blossom);
   }
 
   .footer-section p {
     margin: 0.5rem 0 0;
     font-size: 0.9rem;
-    color: #aaa;
+    color: var(--koop-ink-inverse);
   }
 
   /* Mobile */
@@ -469,7 +481,7 @@
 
     .info-link {
       font-size: 0.9rem !important;
-      color: #666 !important;
+      color: var(--koop-ink-muted) !important;
       border-bottom: none !important;
       padding: 0.5rem 0 !important;
     }

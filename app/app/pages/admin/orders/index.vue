@@ -7,16 +7,16 @@
         type="search"
         aria-label="Bestellungen durchsuchen"
         placeholder="Suche: Bestell-Nr., Name, E-Mail…"
-        class="px-3 py-2 border border-gray-300 rounded text-sm w-72 focus:outline-none focus:ring-2 focus:ring-[#00af8c]/40 focus:border-[#00af8c]"
+        class="px-3 py-2 border border-gray-300 rounded text-sm w-72 focus:outline-none focus:ring-2 focus:ring-koop-blue/40 focus:border-koop-blue"
         @keyup.enter="pushQuery()"
       />
       <button
-        class="px-3 py-2 bg-[#00af8c] text-white rounded text-sm hover:bg-[#009579]"
+        class="px-3 py-2 bg-koop-blue text-white rounded text-sm hover:bg-koop-blue-hover"
         @click="pushQuery()"
       >
         Suchen
       </button>
-      <span v-if="data" class="text-sm text-gray-500 ml-auto"
+      <span v-if="data" class="text-sm text-koop-ink-muted ml-auto"
         >{{ data.total.toLocaleString('de-DE') }} Bestellungen</span
       >
     </div>
@@ -25,7 +25,7 @@
     <div
       class="flex flex-wrap items-center gap-x-4 gap-y-2 bg-white border border-gray-200 rounded-lg px-4 py-2.5 text-sm"
     >
-      <span class="text-gray-500 font-medium">Status:</span>
+      <span class="text-koop-ink-muted font-medium">Status:</span>
       <label
         v-for="s in STATUS_ORDER"
         :key="s.key"
@@ -34,18 +34,18 @@
         <input
           type="checkbox"
           :checked="selected.includes(s.key)"
-          class="rounded border-gray-300 text-[#00af8c] focus:ring-[#00af8c]"
+          class="rounded border-gray-300 text-koop-blue focus:ring-koop-blue"
           @change="toggle(s.key)"
         />
-        <span :class="selected.includes(s.key) ? 'text-gray-800' : 'text-gray-500'">{{
+        <span :class="selected.includes(s.key) ? 'text-koop-ink' : 'text-koop-ink-muted'">{{
           s.label
         }}</span>
       </label>
       <span class="ml-auto flex items-center gap-3">
-        <button class="text-[#00af8c] hover:underline" @click="setKeys(ALL_KEYS)">
+        <button class="text-koop-blue hover:underline" @click="setKeys(ALL_KEYS)">
           Alle anzeigen
         </button>
-        <button class="text-gray-500 hover:underline" @click="setKeys(DEFAULT_KEYS)">
+        <button class="text-koop-ink-muted hover:underline" @click="setKeys(DEFAULT_KEYS)">
           Standard
         </button>
       </span>
@@ -59,7 +59,7 @@
     <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
       <table class="w-full text-sm">
         <thead>
-          <tr class="bg-gray-50 text-left text-gray-500 border-b border-gray-200">
+          <tr class="bg-gray-50 text-left text-koop-ink-muted border-b border-gray-200">
             <th class="px-4 py-2.5 font-medium">Nr.</th>
             <th class="px-4 py-2.5 font-medium">Datum</th>
             <th class="px-4 py-2.5 font-medium">Kunde</th>
@@ -71,10 +71,10 @@
         </thead>
         <tbody class="divide-y divide-gray-100">
           <tr v-if="pending">
-            <td colspan="7" class="px-4 py-8 text-center text-gray-400">Lädt…</td>
+            <td colspan="7" class="px-4 py-8 text-center text-koop-ink-muted">Lädt…</td>
           </tr>
           <tr v-else-if="(data?.orders.length ?? 0) === 0">
-            <td colspan="7" class="px-4 py-8 text-center text-gray-400">
+            <td colspan="7" class="px-4 py-8 text-center text-koop-ink-muted">
               Keine Bestellungen gefunden.
             </td>
           </tr>
@@ -86,30 +86,30 @@
           >
             <td class="px-4 py-2.5 font-mono">
               <span v-if="o.kind === 'order'">{{ o.id }}</span>
-              <span v-else class="text-gray-400" title="Noch keine Bestell-Nr. (unbestätigt)"
+              <span v-else class="text-koop-ink-muted" title="Noch keine Bestell-Nr. (unbestätigt)"
                 >—</span
               >
             </td>
-            <td class="px-4 py-2.5 whitespace-nowrap text-gray-600">
+            <td class="px-4 py-2.5 whitespace-nowrap text-koop-ink-muted">
               {{ dateTime(o.datePurchased) }}
             </td>
             <td class="px-4 py-2.5">
-              <div class="font-medium text-gray-800">{{ o.customerName || '—' }}</div>
-              <div class="text-xs text-gray-400">{{ o.email }}</div>
+              <div class="font-medium text-koop-ink">{{ o.customerName || '—' }}</div>
+              <div class="text-xs text-koop-ink-muted">{{ o.email }}</div>
             </td>
             <td class="px-4 py-2.5">
               <span
                 class="inline-block px-2 py-0.5 rounded-full text-xs font-medium whitespace-nowrap"
                 :class="
                   o.origin === 'neu'
-                    ? 'bg-[#00af8c]/10 text-[#00838a]'
-                    : 'bg-gray-100 text-gray-500'
+                    ? 'bg-koop-blue/10 text-koop-blue'
+                    : 'bg-gray-100 text-koop-ink-muted'
                 "
               >
                 {{ o.origin === 'neu' ? 'Neuer Shop' : 'Alter Shop' }}
               </span>
             </td>
-            <td class="px-4 py-2.5 text-gray-600">{{ o.paymentMethod }}</td>
+            <td class="px-4 py-2.5 text-koop-ink-muted">{{ o.paymentMethod }}</td>
             <td class="px-4 py-2.5 text-right font-mono tabular-nums">{{ euro(o.total) }}</td>
             <td class="px-4 py-2.5">
               <span
@@ -135,7 +135,7 @@
       >
         ‹ Zurück
       </button>
-      <span class="px-2 text-gray-500">Seite {{ page }} / {{ totalPages }}</span>
+      <span class="px-2 text-koop-ink-muted">Seite {{ page }} / {{ totalPages }}</span>
       <button
         class="px-3 py-1.5 border rounded disabled:opacity-40"
         :disabled="page >= totalPages"

@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen pt-24 pb-16 px-4 sm:px-6" style="background-color: var(--koop-orange)">
+  <div class="min-h-screen pt-24 pb-16 px-4 sm:px-6">
     <article
       class="max-w-[960px] mx-auto bg-white/95 rounded-2xl shadow-lg px-6 py-10 sm:px-10 sm:py-12 prose"
     >

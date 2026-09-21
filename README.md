@@ -25,6 +25,12 @@ Alles in `app/`: `npm run test:lint` (ESLint + `vue-tsc`) und `npm run test:unit
 Details — Aufbau der ESLint-Config, Test-Setup für Server-Module und das
 Coverage-Ratchet — stehen in [docs/testing.md](docs/testing.md).
 
+## Farben
+
+Die Palette ist Rudolf Steiners Farbenkreis und stammt aus dem Logo. Welcher Ton
+wofür da ist, warum, und welche Kombinationen durch WCAG AA fallen, steht in
+[docs/farben.md](docs/farben.md).
+
 ## Projektstruktur
 
 ```
@@ -40,7 +46,7 @@ kooperative.de/
 │   │   │       ├── index.vue    # Shop-Übersicht (Suche, Filter, Grid)
 │   │   │       └── [id].vue     # Produktdetailseite
 │   │   └── assets/css/
-│   │       └── main.css         # Globale Styles (scroll-behavior)
+│   │       └── main.css         # Farbpalette (siehe docs/farben.md) + scroll-behavior
 │   ├── public/
 │   │   ├── img/
 │   │   │   ├── hero.jpg         # Hero-Hintergrund (Sonnenaufgang)
@@ -53,12 +59,14 @@ kooperative.de/
 │   ├── eslint.config.ts         # ESLint (Nuxt-Flat-Config + eslint-config-it4c)
 │   ├── prettier.config.ts       # Re-Export aus eslint-config-it4c/prettier
 │   ├── vitest.config.ts         # Vitest + Coverage-Schwellen
+│   ├── tailwind.config.ts       # Farbpalette als Tailwind-Farben
 │   ├── nuxt.config.ts           # Nuxt-Konfiguration
 │   └── package.json
 ├── docs/
 │   ├── wwweb.pdf                # Original-Sitemap
 │   ├── PROJECT.md               # Projektdefinition
 │   ├── testing.md               # Lint- und Test-Setup
+│   ├── farben.md                # Farbpalette und ihre Begründung
 │   ├── IMG.md                   # Bildübersicht
 │   └── img/                     # Alle heruntergeladenen Bilder
 ├── .github/workflows/

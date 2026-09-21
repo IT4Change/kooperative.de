@@ -1,25 +1,69 @@
+/**
+ * The palette is Rudolf Steiner's colour circle, and it was already in the
+ * logo: yellow, red and blue are his three Glanzfarben — the colours that show
+ * a being from the outside (Glanz des Geistes, des Lebendigen, der Seele) —
+ * while green and Pfirsichblüt are two of the four Bildfarben, the colours that
+ * depict rather than shine (GA 291, Dornach 1921).
+ *
+ * Pfirsichblüt, the Inkarnat, is "das lebendige Bild der Seele" and therefore
+ * the ground the site stands on, not an accent: it is the tiled wallpaper in
+ * public/img/bg-peach-blossom.jpg, whose average colour is exactly
+ * --koop-peach-blossom.
+ *
+ * Roles, so the mapping stays decidable when a new component turns up:
+ *   red    Handlung      the one primary action of a screen (KoopButton)
+ *   blue   Orientierung  links, navigation, focus, admin accents
+ *   green  Bestätigung   status and success
+ *   yellow Hinweis       notices — dark ink only, never white text
+ *   peach  Grund         page background
+ *
+ * Every value below clears WCAG AA against the surfaces it is used on; the
+ * numbers are in the comments. Tailwind utilities read the same palette from
+ * tailwind.config.ts — keep the two in sync.
+ */
 :root {
-  --koop-teal: #00af8c;
-  --koop-teal-hover: #1bc6a3;
-  --koop-teal-active: #008c70;
+  /* Glanzfarben */
 
-  --koop-orange: #fb9957;
-  --koop-orange-hover: #ffae73;
-  --koop-orange-active: #e2823f;
+  /* Glanz des Lebendigen. White text: 5.50:1. */
+  --koop-red: #c9253e;
+  --koop-red-hover: #b02036;
+  --koop-red-active: #961b2e;
 
-  --koop-lila: #9750a1;
-  --koop-lila-hover: #ad65b8;
-  --koop-lila-active: #7d3e87;
+  /* Glanz der Seele. White text 10.87:1, as text on white 10.87:1,
+     as text on the peach ground 6.97:1 — the one colour that works
+     everywhere, which is why it carries links and focus. */
+  --koop-blue: #003c7b;
+  --koop-blue-hover: #00336a;
+  --koop-blue-active: #002a58;
 
-  --koop-blue: #5591dc;
-  --koop-blue-hover: #71a6e6;
-  --koop-blue-active: #3f76bf;
+  /* Glanz des Geistes. Only 1.45:1 against white, so it never carries
+     white text — --koop-ink on yellow is 9.45:1. */
+  --koop-yellow: #ffd200;
+  --koop-yellow-hover: #f2c800;
+  --koop-yellow-active: #e0b900;
 
-  /* The logo brown (#702f00), darkened until it clears WCAG AA against the
-     darkest pixels of the orange paper texture (4.54:1) and not just against
-     its average colour, where #702f00 would only reach 4.26:1. */
-  --koop-brown: #4a1f00;
-  --koop-brown-hover: #2e1400;
+  /* Bildfarben */
+
+  /* Das tote Bild des Lebendigen — Steiner's resting surface. White text 4.61:1. */
+  --koop-green: #008748;
+  --koop-green-hover: #00743d;
+  --koop-green-active: #006234;
+
+  /* Das lebendige Bild der Seele. Ground only, never a text colour. */
+  --koop-peach-blossom: #e4c9c7;
+
+  /* Ink, drawn from the logo's brown outline (#702f00). Both tones clear AA on
+     white and on the peach ground: ink 13.71/8.80, muted 7.35/4.72. */
+  --koop-ink: #3a2a20;
+  --koop-ink-muted: #6b5044;
+  --koop-brown: #702f00;
+
+  /* The muted voice on a dark ground — the storefront footer and the admin
+     sidebar. A deepened Inkarnat rather than a grey, so the dark surfaces stay
+     in the same family: 6.64:1 on the sidebar's --koop-blue-active, 6.38:1 on
+     the footer's --koop-ink. Plain --koop-peach-blossom carries the unmuted
+     text in both places (9.16 / 8.80). */
+  --koop-ink-inverse: #c9aaa4;
 }
 
 html {
