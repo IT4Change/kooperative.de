@@ -38,6 +38,7 @@
       </nav>
       <div class="px-4 py-3 border-t border-white/10 text-[11px] text-gray-400">
         Neuer Shop · Admin
+        <p class="mt-1 font-mono" data-testid="app-version">v{{ appVersion }} · {{ builtAt }}</p>
       </div>
     </aside>
 
@@ -54,6 +55,14 @@
 </template>
 
 <script setup lang="ts">
+  const { appVersion, buildTime } = useRuntimeConfig().public
+  // Shown in local time: the people reading it are in Dürnau, not on UTC.
+  const builtAt = new Date(buildTime).toLocaleString('de-DE', {
+    timeZone: 'Europe/Berlin',
+    dateStyle: 'short',
+    timeStyle: 'short',
+  })
+
   interface NavItem {
     label: string
     to: string

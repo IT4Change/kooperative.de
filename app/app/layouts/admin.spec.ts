@@ -1,6 +1,8 @@
 import { mountSuspended, registerEndpoint } from '@nuxt/test-utils/runtime'
 import { describe, it, expect, beforeEach } from 'vitest'
 
+import pkg from '../../package.json'
+
 import AdminLayout from './admin.vue'
 
 /**
@@ -112,5 +114,16 @@ describe('content', () => {
     })
 
     expect(wrapper.get('main').text()).toBe('Seiteninhalt')
+  })
+})
+
+describe('build info', () => {
+  it('shows version and build time in the sidebar', async () => {
+    const wrapper = await mount('/admin')
+    const info = wrapper.get('[data-testid="app-version"]').text()
+
+    expect(info).toContain(`v${pkg.version}`)
+    // dd.mm.yy, hh:mm in German local time
+    expect(info).toMatch(/\d{2}\.\d{2}\.\d{2}, \d{2}:\d{2}/)
   })
 })

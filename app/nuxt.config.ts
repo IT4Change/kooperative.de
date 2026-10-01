@@ -1,4 +1,12 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
+import pkg from './package.json'
+
+// Baked into the build so the running server reports the version it was built
+// from — after a failed deploy the old process keeps answering with the old one.
+// release-please bumps it on every release (see release-please-config.json).
+const APP_VERSION = pkg.version
+const BUILD_TIME = new Date().toISOString()
+
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
@@ -38,6 +46,10 @@ export default defineNuxtConfig({
       password: process.env.DB_PASSWORD || 'koop',
       database: process.env.DB_DATABASE || 'kooperative',
     },
+    public: {
+      appVersion: APP_VERSION,
+      buildTime: BUILD_TIME,
+    },
   },
   image: {
     format: ['avif', 'webp', 'jpg'],
@@ -71,6 +83,7 @@ export default defineNuxtConfig({
       // WCAG 3.1.1: without it a screen reader pronounces the German texts with
       // whatever voice it defaults to. Search engines read it too.
       htmlAttrs: { lang: 'de' },
+      meta: [{ name: 'app-version', content: APP_VERSION }],
       link: [
         { rel: 'icon', type: 'image/svg+xml', href: '/img/logo.svg' },
         { rel: 'alternate icon', type: 'image/x-icon', href: '/favicon.ico' },

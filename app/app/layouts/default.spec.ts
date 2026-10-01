@@ -1,6 +1,7 @@
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
+import pkg from '../../package.json'
 import { useConsent } from '../composables/useConsent'
 import { useStorage } from '../composables/useStorage'
 
@@ -438,6 +439,13 @@ describe('footer', () => {
 
     expect(hrefs).toContain('/impressum')
     expect(hrefs).toContain('/datenschutz')
+  })
+
+  it('shows the version this build was made from', async () => {
+    const wrapper = await mount()
+
+    // Read from package.json at build time — the one release-please bumps.
+    expect(wrapper.get('[data-testid="app-version"]').text()).toBe(`v${pkg.version}`)
   })
 })
 

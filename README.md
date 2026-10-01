@@ -126,6 +126,17 @@ In Produktion (`NODE_ENV=production`) verweigert der Server Login und Session-Pr
 
 `app/server/middleware/00.security-headers.ts` setzt auf jeder Antwort CSP (`frame-ancestors`, `base-uri`, `object-src`, `form-action`), `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy` und `Permissions-Policy`, in Produktion zusätzlich HSTS. `/admin`, `/bestellung` und `/api` bekommen `X-Robots-Tag: noindex`.
 
+## Version
+
+Die Version steht in `app/package.json` und wird bei jedem Release von release-please mit hochgezählt (`extra-files` in `release-please-config.json`, inkl. `package-lock.json`). Sie wird beim Build eingebrannt und angezeigt:
+
+- `GET /api/version` → `{ "version": "0.10.0", "builtAt": "…" }` (nicht cachebar)
+- `<meta name="app-version">` im HTML
+- dezent im Footer der Website
+- in der Admin-Sidebar inkl. Build-Zeitpunkt
+
+`.github/webhooks/deploy.sh` prüft nach dem Neustart per `scripts/verify-deploy.mjs`, dass der Server die Version des deployten Tags meldet, und bricht sonst mit Fehler ab.
+
 ## Deployment
 
 Automatisch via GitHub Actions bei Push auf `master`:

@@ -61,3 +61,9 @@ node scripts/migrate.mjs || { echo "[deploy] DB migration failed -- aborting, pr
 pm2 stop $FRONTEND_SERVICE || true
 pm2 delete $FRONTEND_SERVICE || true
 pm2 start $FRONTEND_SERVICE
+
+### Verify the new build is the one answering. Release tags are "v1.2.3", the app
+### reports "1.2.3". An untagged master deploy is only reported, not compared.
+### Uses the PORT from .env (loaded above) like start.sh, default 3000.
+node scripts/verify-deploy.mjs "http://127.0.0.1:${PORT:-3000}/api/version" "${TAG#v}" \
+  || { echo "[deploy] new version is not live -- check 'pm2 logs'"; exit 1; }
