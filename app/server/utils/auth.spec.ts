@@ -179,6 +179,42 @@ describe('session tokens', () => {
   })
 })
 
+describe('session secret in production', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs()
+  })
+
+  it.each([
+    ['missing', ''],
+    ['the public dev default', 'dev-only-do-not-use-in-prod-please-change-me-now'],
+    ['too short', 'kurz'],
+  ])('refuses to sign when the secret is %s', (_label, secret) => {
+    vi.stubEnv('NODE_ENV', 'production')
+    vi.stubEnv('SESSION_SECRET', secret)
+
+    expect(() => signSession({ customerId: 1, email: 'a@b.c' })).toThrow(
+      expect.objectContaining({ statusCode: 503 }),
+    )
+  })
+
+  it('refuses to verify a token forged with the dev default', () => {
+    // Signed the way an attacker who read the public default would sign it.
+    vi.stubEnv('SESSION_SECRET', '')
+    const forged = signSession({ customerId: 1, email: 'a@b.c' })
+
+    vi.stubEnv('NODE_ENV', 'production')
+    expect(() => verifySession(forged)).toThrow(expect.objectContaining({ statusCode: 503 }))
+  })
+
+  it('signs and verifies with a proper secret', () => {
+    vi.stubEnv('NODE_ENV', 'production')
+    vi.stubEnv('SESSION_SECRET', 'a-production-grade-secret-of-sufficient-length')
+
+    const token = signSession({ customerId: 3, email: 'a@b.c' })
+    expect(verifySession(token)).toMatchObject({ customerId: 3 })
+  })
+})
+
 describe('session cookie', () => {
   afterEach(() => {
     vi.unstubAllEnvs()
@@ -198,16 +234,23 @@ describe('session cookie', () => {
     expect(verifySession(token)).toMatchObject({ customerId: 5 })
   })
 
-  it('marks the cookie Secure only in production', () => {
-    vi.stubEnv('NODE_ENV', 'development')
-    const dev = makeEvent()
-    setSessionCookie(dev, 1, 'a@b.c')
-    expect(cookieFrom(dev)).not.toContain('Secure')
+  it.each(['development', 'test'])('leaves the cookie non-Secure in %s', (env) => {
+    vi.stubEnv('NODE_ENV', env)
+    const event = makeEvent()
+    setSessionCookie(event, 1, 'a@b.c')
+    expect(cookieFrom(event)).not.toContain('Secure')
+  })
 
-    vi.stubEnv('NODE_ENV', 'production')
-    const prod = makeEvent()
-    setSessionCookie(prod, 1, 'a@b.c')
-    expect(cookieFrom(prod)).toContain('Secure')
+  it.each([
+    ['production', 'production'],
+    ['an unset NODE_ENV', ''],
+    ['an unknown NODE_ENV', 'staging'],
+  ])('marks the cookie Secure for %s', (_label, env) => {
+    vi.stubEnv('NODE_ENV', env)
+    vi.stubEnv('SESSION_SECRET', 'a-production-grade-secret-of-sufficient-length')
+    const event = makeEvent()
+    setSessionCookie(event, 1, 'a@b.c')
+    expect(cookieFrom(event)).toContain('Secure')
   })
 
   it('clears the cookie on logout', () => {
