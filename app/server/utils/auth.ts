@@ -31,9 +31,22 @@ export function verifyPassword(plain: string, stored: string): boolean {
   return timingSafeEqual(Buffer.from(expected), Buffer.from(hash))
 }
 
+const DEV_SECRET = 'dev-only-do-not-use-in-prod-please-change-me-now'
+const MIN_SECRET_LENGTH = 32
+
+function isProduction(): boolean {
+  return process.env.NODE_ENV === 'production'
+}
+
 function getSecret(): Buffer {
-  const secret = process.env.SESSION_SECRET || 'dev-only-do-not-use-in-prod-please-change-me-now'
-  return Buffer.from(secret, 'utf8')
+  const secret = process.env.SESSION_SECRET
+  if (isProduction() && (!secret || secret === DEV_SECRET || secret.length < MIN_SECRET_LENGTH)) {
+    // Fail closed: with the public dev default anyone could sign a session for
+    // any customer. Refusing to sign or verify locks customers out until the
+    // secret is set, which is the lesser evil.
+    throw createError({ statusCode: 503, statusMessage: 'Anmeldung derzeit nicht verfügbar' })
+  }
+  return Buffer.from(secret || DEV_SECRET, 'utf8')
 }
 
 export interface SessionPayload {
@@ -76,7 +89,9 @@ export function setSessionCookie(event: H3Event, customerId: number, email: stri
   setCookie(event, SESSION_COOKIE, token, {
     httpOnly: true,
     sameSite: 'lax',
-    secure: process.env.NODE_ENV === 'production',
+    // Secure unless explicitly running locally: a missing or unexpected
+    // NODE_ENV must not send the session over plain HTTP.
+    secure: process.env.NODE_ENV !== 'development' && process.env.NODE_ENV !== 'test',
     path: '/',
     maxAge: SESSION_TTL_SECONDS,
   })
