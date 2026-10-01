@@ -130,7 +130,7 @@ In Produktion (`NODE_ENV=production`) verweigert der Server Login und Session-Pr
 
 Die Version steht in `app/package.json` und wird bei jedem Release von release-please mit hochgezählt (`extra-files` in `release-please-config.json`, inkl. `package-lock.json`). Sie wird beim Build eingebrannt und angezeigt:
 
-- `GET /api/version` → `{ "version": "0.9.4", "builtAt": "…" }` (nicht cachebar)
+- `GET /api/version` → `{ "version": "0.10.0", "builtAt": "…" }` (nicht cachebar)
 - `<meta name="app-version">` im HTML
 - dezent im Footer der Website
 - in der Admin-Sidebar inkl. Build-Zeitpunkt
