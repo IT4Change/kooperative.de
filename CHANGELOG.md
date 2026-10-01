@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.10.0](https://github.com/IT4Change/kooperative.de/compare/v0.9.4...v0.10.0) (2026-10-01)
+
+
+### Features
+
+* **app:** security headers and robots rules ([#65](https://github.com/IT4Change/kooperative.de/issues/65)) ([61575f1](https://github.com/IT4Change/kooperative.de/commit/61575f11cae12ef7e884c75def2c2f257d5750b2))
+
+
+### Bug Fixes
+
+* **app:** harden session cookie configuration ([#64](https://github.com/IT4Change/kooperative.de/issues/64)) ([75feafd](https://github.com/IT4Change/kooperative.de/commit/75feafd2114e583155554c88be7a18e1d66c2bda))
+
 ## [0.9.4](https://github.com/IT4Change/kooperative.de/compare/v0.9.3...v0.9.4) (2026-09-19)
 
 
