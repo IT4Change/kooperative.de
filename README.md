@@ -122,6 +122,10 @@ Den Output unverändert als `SESSION_SECRET=…` in die jeweilige `.env` (lokal)
 
 In Produktion (`NODE_ENV=production`) verweigert der Server Login und Session-Prüfung (503), solange `SESSION_SECRET` fehlt, kürzer als 32 Zeichen ist oder dem Default aus `.env.template` entspricht.
 
+## Security-Header
+
+`app/server/middleware/00.security-headers.ts` setzt auf jeder Antwort CSP (`frame-ancestors`, `base-uri`, `object-src`, `form-action`), `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy` und `Permissions-Policy`, in Produktion zusätzlich HSTS. `/admin`, `/bestellung` und `/api` bekommen `X-Robots-Tag: noindex`.
+
 ## Deployment
 
 Automatisch via GitHub Actions bei Push auf `master`:
