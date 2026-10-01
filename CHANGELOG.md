@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.0](https://github.com/IT4Change/kooperative.de/compare/v0.10.0...v0.11.0) (2026-10-01)
+
+
+### Features
+
+* **app:** show app version and verify deploys ([#70](https://github.com/IT4Change/kooperative.de/issues/70)) ([2b2b6dc](https://github.com/IT4Change/kooperative.de/commit/2b2b6dc43a2a85f822ad8ed5f3d6de297eb3a493))
+
 ## [0.10.0](https://github.com/IT4Change/kooperative.de/compare/v0.9.4...v0.10.0) (2026-10-01)
 
 
