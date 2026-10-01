@@ -2,7 +2,24 @@
   "packages": {
     ".": {
       "release-type": "simple",
-      "pull-request-title-pattern": "chore(release): release${component} ${version}"
+      "pull-request-title-pattern": "chore(release): release${component} ${version}",
+      "extra-files": [
+        {
+          "type": "json",
+          "path": "app/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "app/package-lock.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "app/package-lock.json",
+          "jsonpath": "$.packages[''].version"
+        }
+      ]
     }
   }
 }

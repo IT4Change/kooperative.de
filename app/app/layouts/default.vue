@@ -135,6 +135,7 @@
           </nav>
         </div>
       </div>
+      <p class="footer-version" data-testid="app-version">v{{ appVersion }}</p>
     </footer>
   </div>
 </template>
@@ -145,7 +146,9 @@
   // as an untaken branch on every `:href` that uses them.
   import { HISTORIE_URL, KONTAKT_URL } from '~/composables/useSectionLinks'
 
-  const { baseURL } = useRuntimeConfig().app
+  const { app: appConfig, public: publicConfig } = useRuntimeConfig()
+  const { baseURL } = appConfig
+  const { appVersion } = publicConfig
   const { showWarning: showStorageWarning, dismissWarning: dismissStorageWarning } = useStorage()
   const {
     showBanner: showConsentBanner,
@@ -415,6 +418,14 @@
 
   .footer-section a:hover {
     color: #fff;
+  }
+
+  .footer-version {
+    margin-top: 1rem;
+    text-align: center;
+    font-size: 0.7rem;
+    /* Muted, but still above 4.5:1 on the #333 footer (WCAG AA). */
+    color: #aaa;
   }
 
   .footer-section p {
