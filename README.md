@@ -120,6 +120,10 @@ openssl rand -base64 48
 
 Den Output unverändert als `SESSION_SECRET=…` in die jeweilige `.env` (lokal) bzw. ins Deployment-Secrets-System (Stage/Prod) eintragen. Bei jedem Wechsel des Secrets werden alle bestehenden Sessions invalidiert — Nutzer:innen müssen sich neu anmelden.
 
+## Security-Header
+
+`app/server/middleware/00.security-headers.ts` setzt auf jeder Antwort CSP (`frame-ancestors`, `base-uri`, `object-src`, `form-action`), `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy` und `Permissions-Policy`, in Produktion zusätzlich HSTS. `/admin`, `/bestellung` und `/api` bekommen `X-Robots-Tag: noindex`.
+
 ## Deployment
 
 Automatisch via GitHub Actions bei Push auf `master`:
