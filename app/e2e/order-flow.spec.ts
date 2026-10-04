@@ -84,7 +84,7 @@ test.describe('order flow', () => {
 
     const mail = await waitForMail(to(CUSTOMER.email), 'the confirmation request')
     await page.goto(confirmationLink(mail))
-    await page.getByRole('button', { name: /verbindlich bestätigen/ }).click()
+    await page.getByRole('button', { name: 'Zahlungspflichtig bestellen' }).click()
     await expect(page.getByRole('heading', { name: /bestätigt/i })).toBeVisible()
 
     const pending = await latestPending(CUSTOMER.email)
@@ -153,14 +153,14 @@ test.describe('order flow', () => {
     const link = confirmationLink(mail)
 
     await page.goto(link)
-    await page.getByRole('button', { name: /verbindlich bestätigen/ }).click()
+    await page.getByRole('button', { name: 'Zahlungspflichtig bestellen' }).click()
     await expect(page.getByRole('heading', { name: /bestätigt/i })).toBeVisible()
     const first = await latestPending(CUSTOMER.email)
 
     // Re-opening the link must show the confirmed state, not another button.
     await page.goto(link)
     await expect(page.getByRole('heading', { name: /bestätigt/i })).toBeVisible()
-    await expect(page.getByRole('button', { name: /verbindlich bestätigen/ })).toHaveCount(0)
+    await expect(page.getByRole('button', { name: 'Zahlungspflichtig bestellen' })).toHaveCount(0)
 
     const second = await latestPending(CUSTOMER.email)
     expect(second!.orders_id).toBe(first!.orders_id)
