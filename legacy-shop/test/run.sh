@@ -49,8 +49,11 @@ shop() {
 # Runs a page; stdout to $WORK/out, stderr to $WORK/err.
 run() {
   local page="$1" db="${2:-}"
+  # xdebug.mode=off: GitHub's runner PHP ships Xdebug, which appends a call
+  # stack to every warning — including the expected one below — and would turn
+  # it into lines clean_stderr does not recognise. Harmless where it is absent.
   (cd "$WORK/shop" && KOOP_TEST_DB="$db" "$PHP" -d display_errors=stderr -d error_reporting=-1 \
-    "$page" >"$WORK/out" 2>"$WORK/err") || true
+    -d xdebug.mode=off -d html_errors=0 "$page" >"$WORK/out" 2>"$WORK/err") || true
 }
 
 # The nested bootstrap redefines PAGE_PARSE_START_TIME — on the shop's PHP 5 a
