@@ -10,4 +10,4 @@ node_modules/
 
 # Legal texts (Impressum, Datenschutz, AGB, ...) — imported into the database with
 # app/scripts/legal-import.mjs, never published in this repository
-legal/
+/legal/
