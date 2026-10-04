@@ -36,7 +36,7 @@ const activeLink = (w: Awaited<ReturnType<typeof mount>>) =>
   w.findAll('nav a').find((a) => a.classes().includes('bg-[#00af8c]'))
 
 describe('navigation', () => {
-  it('lists the four sections', async () => {
+  it('lists the sections', async () => {
     const wrapper = await mount('/admin')
 
     expect(navLabels(wrapper)).toStrictEqual([
@@ -44,6 +44,7 @@ describe('navigation', () => {
       'Bestellungen',
       'Produkte nur Anzeige',
       'Kunden nur Anzeige',
+      'Rechtstexte',
     ])
   })
 

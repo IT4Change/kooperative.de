@@ -25,3 +25,81 @@
 html {
   scroll-behavior: smooth;
 }
+
+/* Legal texts (Impressum, Datenschutz, AGB, …) — HTML rendered from Markdown on
+   the server (server/utils/legalMarkdown.ts). Shared by the standalone pages, the
+   legal dialog and the admin preview, so all three look the same. Tailwind's
+   preflight resets headings and lists, hence the explicit rules. */
+.legal-content {
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+.legal-content > :first-child {
+  margin-top: 0;
+}
+.legal-content h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 2rem 0 0.6rem;
+}
+.legal-content h3 {
+  font-weight: 600;
+  margin: 1.25rem 0 0.4rem;
+}
+.legal-content h4,
+.legal-content h5,
+.legal-content h6 {
+  font-weight: 600;
+  margin: 1rem 0 0.3rem;
+}
+.legal-content p,
+.legal-content ul,
+.legal-content ol {
+  margin: 0 0 0.85rem;
+}
+.legal-content ul {
+  list-style: disc;
+  padding-left: 1.4rem;
+}
+.legal-content ol {
+  list-style: decimal;
+  padding-left: 1.4rem;
+}
+.legal-content li + li {
+  margin-top: 0.25rem;
+}
+.legal-content a {
+  text-decoration: underline;
+}
+.legal-content a:hover {
+  color: var(--koop-teal);
+}
+.legal-content strong {
+  font-weight: 600;
+}
+.legal-content .legal-table {
+  overflow-x: auto;
+  margin: 0 0 1rem;
+}
+.legal-content table {
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  min-width: 100%;
+}
+.legal-content th,
+.legal-content td {
+  border: 1px solid #ddd;
+  padding: 0.4rem 0.6rem;
+  text-align: left;
+  vertical-align: top;
+}
+.legal-content th {
+  background: #f6f6f6;
+  font-weight: 600;
+}
+.legal-content mark.legal-placeholder {
+  background: #fde68a;
+  color: #78350f;
+  padding: 0 0.15rem;
+  border-radius: 0.2rem;
+}

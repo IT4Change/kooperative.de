@@ -211,7 +211,8 @@ async function main() {
   // 3) koop_* tables: drop and let the real migration runner rebuild them, so
   //    the E2E database goes through the same path as a deploy.
   await conn.query(
-    'DROP TABLE IF EXISTS `koop_order_mail_log`, `koop_pending_order`, `koop_schema_migrations`',
+    'DROP TABLE IF EXISTS `koop_order_mail_log`, `koop_pending_order`, `koop_legal_text_version`, ' +
+      '`koop_legal_text_live`, `koop_legal_text_activation`, `koop_schema_migrations`',
   )
   await conn.end()
   execFileSync('node', [join(appRoot, 'scripts', 'migrate.mjs')], {

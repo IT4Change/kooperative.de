@@ -210,6 +210,24 @@ created_at`. Sichtbar im Admin als Mail-Timeline der Bestellung.
 > `body_text`/`body_html` enthalten Kunden-PII (Name/Adresse) und landen dadurch
 > auch im `dbWriteLog`-JSONL. Kein Passwort/keine IBAN darin.
 
+### 4d. Rechtstexte — `koop_legal_text_*` (neu, additiv)
+
+Impressum, Datenschutz, AGB, Widerruf, Versand & Zahlung — versioniert, gepflegt im
+Admin unter **Rechtstexte** (`app/server/utils/legalText.ts`, alle Writes über `dbWrite`):
+
+- **INSERT INTO `koop_legal_text_version`** (`slug, version_no, body_md, body_html, note,
+  created_by, created_at`) — bei „Als neue Version speichern"
+  (`POST /admin/api/legal/:slug/versions`). Versionen werden nie geändert.
+- **INSERT/UPDATE `koop_legal_text_live`** (`slug, version_id, activated_by, activated_at`)
+  + **INSERT INTO `koop_legal_text_activation`** (Protokoll) — bei „Live schalten"
+  (`POST /admin/api/legal/:slug/versions/:id/activate`).
+- Ausgangstexte kommen über `app/scripts/legal-import.mjs`. Das Skript nutzt dieselben
+  Admin-Endpunkte, schreibt also genauso und nur für Seiten **ohne** Version. Die Texte
+  selbst liegen nicht im Repository.
+
+**Der Alt-Shop liest diese Tabellen** (nur lesend) über die Patches in `legacy-shop/` —
+Live-Schalten wirkt in beiden Shops. Siehe `legacy-shop/README.md`.
+
 ## NICHT geschriebene Tabellen
 
 Phase 1 schreibt **nicht** in:
@@ -241,7 +259,7 @@ Während des Pending-Fensters steht die IBAN im `payload` der DB (nötig zur Mat
 Alt-Shop-Tabellen bleiben verboten, solange der Alt-Shop parallel läuft.
 
 **Additive Neu-Tabellen mit `koop_`-Prefix sind erlaubt** (der Alt-Shop ignoriert
-unbekannte Tabellen). Migrationen unter `database/migrations/` werden beim Deploy
+unbekannte Tabellen — Ausnahme: `koop_legal_text_*` liest er über `legacy-shop/` mit). Migrationen unter `database/migrations/` werden beim Deploy
 **automatisch** über `app/scripts/migrate.mjs` ausgeführt (in `deploy.sh` nach dem
 Build, vor dem Restart). Der Runner ist idempotent (Tracking-Tabelle
 `koop_schema_migrations`, toleriert „schon vorhanden"-Fehler) und portabel für
@@ -252,6 +270,8 @@ Migrationen:
 - `002_koop_pending_order.sql` — unbestätigte Bestellungen („Bestätigung ausstehend").
 - `003_mail_log_pending.sql` — `koop_order_mail_log.orders_id` nullbar +
   `pending_order_id` (Mails vor Materialisierung).
+- `004_pending_confirm_note.sql` — Notiz zur manuellen Bestätigung.
+- `005_koop_legal_text.sql` — versionierte Rechtstexte (Versionen, Live-Zeiger, Aktivierungsprotokoll).
 
 **„Bestätigung ausstehend" ist via „Materialize-on-confirm" umgesetzt:** Der Status
 existiert nur in `koop_pending_order`, NICHT als Zeile in der geteilten `orders_status`.
