@@ -31,10 +31,10 @@ const CUSTOMER_ROW = {
   customers_email_address: 'e@example.org',
   customers_telephone: '0711',
   entry_company: null,
-  entry_street_address: 'Im Winkel 11',
+  entry_street_address: 'Musterweg 1',
   entry_suburb: null,
-  entry_postcode: '88422',
-  entry_city: 'Dürnau',
+  entry_postcode: '12345',
+  entry_city: 'Musterstadt',
   entry_state: null,
   entry_country_id: 81,
 }
@@ -253,8 +253,8 @@ describe('computeOrder', () => {
     expect(comp.customer).toMatchObject({
       customerId: 3,
       name: 'Erika Musterfrau',
-      street: 'Im Winkel 11',
-      city: 'Dürnau',
+      street: 'Musterweg 1',
+      city: 'Musterstadt',
       country: 'Deutschland',
     })
     expect(comp.payment).toStrictEqual({ label: 'Bezahlung mit Rechnung', method: 'rechnung' })
@@ -484,10 +484,10 @@ describe('insertComputedOrder', () => {
       lastname: 'Musterfrau',
       name: 'Erika Musterfrau',
       company: null,
-      street: 'Im Winkel 11',
+      street: 'Musterweg 1',
       suburb: null,
-      city: 'Dürnau',
-      postcode: '88422',
+      city: 'Musterstadt',
+      postcode: '12345',
       state: null,
       country: 'Deutschland',
       telephone: '0711',

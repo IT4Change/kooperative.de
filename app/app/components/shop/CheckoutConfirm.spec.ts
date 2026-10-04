@@ -49,7 +49,7 @@ async function signIn(over: Record<string, unknown> = {}) {
     firstname: 'Erika',
     lastname: 'Musterfrau',
     telephone: '0711 123',
-    address: { street: 'Im Winkel 11', postcode: '88422', city: 'Dürnau', countryId: 81 },
+    address: { street: 'Musterweg 1', postcode: '12345', city: 'Musterstadt', countryId: 81 },
     ...over,
   }) as unknown as typeof $fetch
   const auth = useAuth()
@@ -77,8 +77,8 @@ describe('the delivery address', () => {
 
     expect(wrapper.text()).toContain('Lieferadresse')
     expect(wrapper.text()).toContain('Erika Musterfrau')
-    expect(wrapper.text()).toContain('Im Winkel 11')
-    expect(wrapper.text()).toContain('88422 Dürnau')
+    expect(wrapper.text()).toContain('Musterweg 1')
+    expect(wrapper.text()).toContain('12345 Musterstadt')
     expect(wrapper.text()).toContain('0711 123')
     expect(wrapper.get('a[target="_blank"]').attributes('href')).toContain('account.php')
   })

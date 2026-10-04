@@ -15,7 +15,7 @@ const ME = {
   firstname: 'Erika',
   lastname: 'Musterfrau',
   telephone: '0711',
-  address: { street: 'Im Winkel 11', postcode: '88422', city: 'Dürnau', countryId: 81 },
+  address: { street: 'Musterweg 1', postcode: '12345', city: 'Musterstadt', countryId: 81 },
 }
 
 const fetchMock = vi.fn()
@@ -58,7 +58,7 @@ describe('initial load', () => {
       firstname: 'Erika',
       lastname: 'Musterfrau',
       telephone: '0711',
-      address: { street: 'Im Winkel 11', postcode: '88422', city: 'Dürnau', countryId: 81 },
+      address: { street: 'Musterweg 1', postcode: '12345', city: 'Musterstadt', countryId: 81 },
     })
   })
 

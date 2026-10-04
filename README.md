@@ -122,6 +122,10 @@ Den Output unverändert als `SESSION_SECRET=…` in die jeweilige `.env` (lokal)
 
 In Produktion (`NODE_ENV=production`) verweigert der Server Login und Session-Prüfung (503), solange `SESSION_SECRET` fehlt, kürzer als 32 Zeichen ist oder dem Default aus `.env.template` entspricht.
 
+### Firmenangaben im Mail-Footer
+
+Jede Mail trägt im Footer die Pflichtangaben der Firma (§ 35a GmbHG, § 125a HGB). Weil das Repository öffentlich ist und diese Angaben personenbezogene Daten enthalten, kommen sie aus der Server-Umgebung: `COMPANY_NAME`, `COMPANY_STREET`, `COMPANY_CITY`, `COMPANY_MANAGER`, `COMPANY_REGISTER`, `COMPANY_EMAIL` und optional `COMPANY_VAT_ID` (siehe `app/.env.template`). Fehlende Werte werden weggelassen. Fehlt der Firmenname, protokolliert der Server das einmalig als Warnung.
+
 ## Security-Header
 
 `app/server/middleware/00.security-headers.ts` setzt auf jeder Antwort CSP (`frame-ancestors`, `base-uri`, `object-src`, `form-action`), `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy` und `Permissions-Policy`, in Produktion zusätzlich HSTS. `/admin`, `/bestellung` und `/api` bekommen `X-Robots-Tag: noindex`.

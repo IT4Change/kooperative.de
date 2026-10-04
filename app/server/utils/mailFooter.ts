@@ -1,37 +1,88 @@
 /**
- * Legal company footer for outgoing mails. Single source of truth — edit here.
- * Data from the app Impressum (app/pages/impressum.vue). NOTE: the legacy shop
- * mail used "Kooperative Dürnau GmbH & Co.KG" incl. a USt-ID — verify which
- * entity/USt-ID is correct for order confirmations and adjust if needed.
+ * Legal company footer for outgoing mails. Business mails need the company's
+ * mandatory details (§ 35a GmbHG, § 125a HGB) just like business letters.
+ *
+ * The details come from the server environment, not from this repository —
+ * it is public, and they include personal data (the managing director's name,
+ * a personal mail address). Set on the server:
+ *
+ *   COMPANY_NAME      legal name of the seller
+ *   COMPANY_STREET    street and number
+ *   COMPANY_CITY      postcode and city
+ *   COMPANY_MANAGER   managing director(s)
+ *   COMPANY_REGISTER  register court and number
+ *   COMPANY_EMAIL     contact address
+ *   COMPANY_VAT_ID    optional, VAT identification number
+ *
+ * Read on every call, so a changed environment takes effect without a rebuild.
+ * Missing values are left out of the footer; a missing company name is logged,
+ * because a business mail without it lacks its mandatory details.
  */
-export const COMPANY = {
-  name: 'Kooperative Dürnau Verwaltungsgesellschaft mbH',
-  street: 'Im Winkel 11',
-  city: '88422 Dürnau',
-  manager: 'Rolf Reisiger',
-  register: 'Amtsgericht Ulm, HRB 650133',
-  email: 'reisiger@kooperative.de',
-  // ustId: 'DE… ',  // TODO: add if an Umsatzsteuer-ID should appear
+export interface Company {
+  name: string
+  street: string
+  city: string
+  manager: string
+  register: string
+  email: string
+  vatId: string
+}
+
+let warned = false
+
+export function company(): Company {
+  const env = (key: string) => (process.env[key] ?? '').trim()
+  const data = {
+    name: env('COMPANY_NAME'),
+    street: env('COMPANY_STREET'),
+    city: env('COMPANY_CITY'),
+    manager: env('COMPANY_MANAGER'),
+    register: env('COMPANY_REGISTER'),
+    email: env('COMPANY_EMAIL'),
+    vatId: env('COMPANY_VAT_ID'),
+  }
+  if (!data.name && !warned) {
+    warned = true
+    console.warn('[mail] COMPANY_* is not configured — mails go out without the company details')
+  }
+  return data
+}
+
+const esc = (s: string) =>
+  s.replace(/[<>&"]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' })[c]!)
+
+/** The footer's lines, without the empty ones. */
+function lines(c: Company): { address: string; legal: string; vat: string } {
+  return {
+    address: [c.street, c.city].filter(Boolean).join(', '),
+    legal: [c.manager && `Geschäftsführer: ${c.manager}`, c.register].filter(Boolean).join(' · '),
+    vat: c.vatId && `USt-IdNr.: ${c.vatId}`,
+  }
 }
 
 export function footerText(withInvoiceNote = false): string {
-  const lines = [
-    '—',
-    COMPANY.name,
-    `${COMPANY.street}, ${COMPANY.city}`,
-    `Geschäftsführer: ${COMPANY.manager} · ${COMPANY.register}`,
-    COMPANY.email,
-  ]
-  if (withInvoiceNote) lines.push('', 'Diese Bestellbestätigung ist keine Rechnung.')
-  return lines.join('\n')
+  const c = company()
+  const l = lines(c)
+  const out = ['—', c.name, l.address, l.legal, l.vat, c.email].filter(Boolean)
+  if (withInvoiceNote) out.push('', 'Diese Bestellbestätigung ist keine Rechnung.')
+  return out.join('\n')
 }
 
 export function footerHtml(withInvoiceNote = false): string {
+  const c = company()
+  const l = lines(c)
+  const rows = [
+    c.name && `<strong>${esc(c.name)}</strong>`,
+    esc(l.address),
+    esc(l.legal),
+    esc(l.vat),
+    c.email && `<a href="mailto:${esc(c.email)}" style="color:#999">${esc(c.email)}</a>`,
+  ].filter(Boolean)
+  const note = withInvoiceNote
+    ? '<br><span style="color:#bbb">Diese Bestellbestätigung ist keine Rechnung.</span>'
+    : ''
   return `<hr style="border:0;border-top:1px solid #eee;margin:16px 0">
     <p style="font-size:11px;color:#999;line-height:1.6;margin:0">
-      <strong>${COMPANY.name}</strong><br>
-      ${COMPANY.street}, ${COMPANY.city}<br>
-      Geschäftsführer: ${COMPANY.manager} · ${COMPANY.register}<br>
-      <a href="mailto:${COMPANY.email}" style="color:#999">${COMPANY.email}</a>${withInvoiceNote ? '<br><span style="color:#bbb">Diese Bestellbestätigung ist keine Rechnung.</span>' : ''}
+      ${rows.join('<br>\n      ')}${note}
     </p>`
 }

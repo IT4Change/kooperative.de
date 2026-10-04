@@ -277,7 +277,7 @@ async function main() {
        (\`customers_id\`, \`entry_gender\`, \`entry_company\`, \`entry_firstname\`, \`entry_lastname\`,
         \`entry_street_address\`, \`entry_suburb\`, \`entry_postcode\`, \`entry_city\`,
         \`entry_state\`, \`entry_country_id\`, \`entry_zone_id\`)
-     VALUES (?, 'f', '', ?, ?, 'Im Winkel 11', '', '88422', 'Dürnau', '', 81, 0)`,
+     VALUES (?, 'f', '', ?, ?, 'Musterweg 1', '', '12345', 'Musterstadt', '', 81, 0)`,
     [customerId, E2E_CUSTOMER.firstname, E2E_CUSTOMER.lastname],
   )
   await db.query(

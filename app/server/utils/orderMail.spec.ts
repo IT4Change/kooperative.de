@@ -20,9 +20,9 @@ const CTX: OrderMailContext = {
     telephone: '0711 1234567',
   },
   shipping: {
-    street: 'Im Winkel 11',
-    postcode: '88422',
-    city: 'Dürnau',
+    street: 'Musterweg 1',
+    postcode: '12345',
+    city: 'Musterstadt',
     country: 'Deutschland',
   },
   items: [{ productId: '1', name: 'Honig', quantity: 2, unitPrice: 11.9, lineTotal: 23.8 }],
@@ -60,9 +60,9 @@ describe('buildOrderMail', () => {
   it('carries the delivery address', () => {
     const { text } = buildOrderMail(CTX)
 
-    expect(text).toContain('Im Winkel 11')
-    expect(text).toContain('88422')
-    expect(text).toContain('Dürnau')
+    expect(text).toContain('Musterweg 1')
+    expect(text).toContain('12345')
+    expect(text).toContain('Musterstadt')
     expect(text).toContain('Deutschland')
   })
 
