@@ -1,8 +1,9 @@
-import { mountSuspended } from '@nuxt/test-utils/runtime'
+import { mountSuspended, registerEndpoint } from '@nuxt/test-utils/runtime'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
 import pkg from '../../package.json'
 import { useConsent } from '../composables/useConsent'
+import { useLegal } from '../composables/useLegal'
 import { useStorage } from '../composables/useStorage'
 
 import DefaultLayout from './default.vue'
@@ -61,6 +62,14 @@ function scrollTo(y: number) {
   window.dispatchEvent(new Event('scroll'))
 }
 
+registerEndpoint('/api/legal/datenschutz', () => ({
+  slug: 'datenschutz',
+  title: 'Datenschutzerklärung',
+  html: '<p>Wir verarbeiten Ihre Daten.</p>',
+  versionNo: 2,
+  activatedAt: '2026-10-01T00:00:00.000Z',
+}))
+
 /** The dialogs are teleported to <body>, so a leftover mount would pollute it. */
 let unmount: (() => void) | null = null
 
@@ -71,6 +80,8 @@ beforeEach(() => {
   localStorage.clear()
   useConsent().decline()
   useStorage().dismissWarning()
+  // The legal dialog's state is app-wide (useState) and would outlive a test.
+  useLegal().close()
   scrollTo(0)
   vi.spyOn(window, 'scrollTo').mockImplementation()
 })
@@ -101,8 +112,7 @@ describe('header', () => {
       'Gäste',
       'Historie',
       'Kontakt',
-      'Impressum',
-      'Datenschutz',
+      'Rechtliches',
     ])
   })
 
@@ -399,7 +409,7 @@ describe('cookie banner', () => {
     expect(document.body.textContent).not.toContain('Cookie-Hinweis')
   })
 
-  it('closes when the customer leaves for the privacy policy', async () => {
+  it('shows the privacy policy on top of it, leaving the decision open', async () => {
     await mount()
     useConsent().require()
     await nextTick()
@@ -410,8 +420,23 @@ describe('cookie banner', () => {
     link?.click()
     await new Promise((resolve) => setTimeout(resolve, 0))
 
-    // Leaving the banner open on top of the policy would be absurd.
-    expect(document.body.textContent).not.toContain('Cookie-Hinweis')
+    expect(useLegal().current.value).toBe('datenschutz')
+    expect(document.body.textContent).toContain('Cookie-Hinweis')
+  })
+
+  it('stays open when Escape closes the policy in front of it', async () => {
+    await mount()
+    useConsent().require()
+    await nextTick()
+    useLegal().open('datenschutz')
+    await new Promise((resolve) => setTimeout(resolve, 0))
+
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', cancelable: true }))
+    await nextTick()
+
+    // Only the dialog in front reacts — one Escape must not also decline consent.
+    expect(useLegal().current.value).toBeNull()
+    expect(document.body.textContent).toContain('Cookie-Hinweis')
   })
 
   it('runs the pending action once accepted', async () => {
@@ -433,12 +458,21 @@ describe('cookie banner', () => {
 })
 
 describe('footer', () => {
-  it('carries the legal links', async () => {
+  it('carries a link to every legal page', async () => {
     const wrapper = await mount()
     const hrefs = wrapper.findAll('.footer-section a').map((a) => a.attributes('href'))
 
-    expect(hrefs).toContain('/impressum')
-    expect(hrefs).toContain('/datenschutz')
+    expect(hrefs).toStrictEqual(
+      expect.arrayContaining(['/impressum', '/datenschutz', '/agb', '/widerruf', '/versand']),
+    )
+  })
+
+  it('opens the legal dialog on the page that was clicked', async () => {
+    const wrapper = await mount()
+
+    await wrapper.get('.footer-section a[href="/widerruf"]').trigger('click')
+
+    expect(useLegal().current.value).toBe('widerruf')
   })
 
   it('shows the version this build was made from', async () => {

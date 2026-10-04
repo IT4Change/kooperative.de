@@ -232,3 +232,92 @@ describe('useModal', () => {
     expect(close).not.toHaveBeenCalled()
   })
 })
+
+describe('useModal with stacked dialogs', () => {
+  /** A dialog with its own close spy, so two of them can be told apart. */
+  function mountDialog(name: string) {
+    const isOpen = ref(false)
+    const closeIt = vi.fn<() => void>()
+    const wrapper = mount(
+      defineComponent({
+        setup() {
+          const panel = ref<HTMLElement>()
+          useModal(isOpen, panel, closeIt)
+          return () =>
+            isOpen.value
+              ? h('div', { ref: panel, tabindex: '-1', id: name }, [
+                  h('button', { id: `${name}-a` }, 'a'),
+                  h('button', { id: `${name}-b` }, 'b'),
+                ])
+              : null
+        },
+      }),
+      { attachTo: document.body },
+    )
+    mounted.push(wrapper)
+    return { isOpen, closeIt, wrapper }
+  }
+
+  afterEach(() => {
+    while (mounted.length > 0) mounted.pop()?.unmount()
+    document.body.innerHTML = ''
+  })
+
+  it('lets only the dialog in front react to Escape', async () => {
+    const back = mountDialog('back')
+    const front = mountDialog('front')
+    back.isOpen.value = true
+    await nextTick()
+    front.isOpen.value = true
+    await nextTick()
+
+    await press('Escape')
+
+    expect(front.closeIt).toHaveBeenCalledTimes(1)
+    expect(back.closeIt).not.toHaveBeenCalled()
+  })
+
+  it('hands the keyboard back once the front dialog closes', async () => {
+    const back = mountDialog('back')
+    const front = mountDialog('front')
+    back.isOpen.value = true
+    await nextTick()
+    front.isOpen.value = true
+    await nextTick()
+    front.isOpen.value = false
+    await nextTick()
+
+    await press('Escape')
+
+    expect(back.closeIt).toHaveBeenCalledTimes(1)
+  })
+
+  it('traps Tab only in the front dialog', async () => {
+    const back = mountDialog('back')
+    const front = mountDialog('front')
+    back.isOpen.value = true
+    await nextTick()
+    front.isOpen.value = true
+    await nextTick()
+    await nextTick()
+    document.getElementById('front-b')!.focus()
+
+    await press('Tab')
+
+    expect(active()).toBe('front-a')
+  })
+
+  it('forgets a dialog that is unmounted while open', async () => {
+    const back = mountDialog('back')
+    const front = mountDialog('front')
+    back.isOpen.value = true
+    await nextTick()
+    front.isOpen.value = true
+    await nextTick()
+
+    front.wrapper.unmount()
+    await press('Escape')
+
+    expect(back.closeIt).toHaveBeenCalledTimes(1)
+  })
+})

@@ -115,6 +115,11 @@
         <p class="text-xs text-gray-400 mt-3">
           Alternativ können Sie einfach auf die Bestätigungs-E-Mail antworten.
         </p>
+        <p class="text-xs text-gray-500 mt-3" data-testid="legal-notice">
+          Es gelten unsere <LegalLink slug="agb" class="underline">AGB</LegalLink>. Ihr
+          Widerrufsrecht:
+          <LegalLink slug="widerruf" class="underline">Widerrufsbelehrung</LegalLink>.
+        </p>
       </div>
     </template>
   </div>

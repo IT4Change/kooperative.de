@@ -35,9 +35,8 @@
           <span class="nav-spacer" />
           <a :href="HISTORIE_URL" class="info-link" @click="menuOpen = false">Historie</a>
           <a :href="KONTAKT_URL" class="info-link" @click="menuOpen = false">Kontakt</a>
-          <NuxtLink to="/impressum" class="info-link" @click="menuOpen = false">Impressum</NuxtLink>
-          <NuxtLink to="/datenschutz" class="info-link" @click="menuOpen = false"
-            >Datenschutz</NuxtLink
+          <LegalLink slug="impressum" class="info-link" @open="menuOpen = false"
+            >Rechtliches</LegalLink
           >
         </nav>
       </div>
@@ -46,6 +45,11 @@
     <main class="main">
       <slot />
     </main>
+
+    <!-- Rechtliches: opened by every LegalLink, on top of whatever else is open -->
+    <ClientOnly>
+      <LegalDialog />
+    </ClientOnly>
 
     <!-- Storage-Warnung (Cookies blockiert) -->
     <ClientOnly>
@@ -107,8 +111,8 @@
             </p>
             <p class="text-sm text-gray-600 mb-5">
               Mehr Informationen findest du in unserer
-              <NuxtLink to="/datenschutz" class="text-[#00af8c] underline" @click="declineConsent"
-                >Datenschutzerklärung</NuxtLink
+              <LegalLink slug="datenschutz" class="text-[#00af8c] underline"
+                >Datenschutzerklärung</LegalLink
               >.
             </p>
             <div class="flex flex-col sm:flex-row gap-2 sm:justify-end">
@@ -130,8 +134,12 @@
           <strong>Kontakt</strong>
           <nav>
             <a :href="KONTAKT_URL">Kontakt aufnehmen</a>
-            <NuxtLink to="/impressum">Impressum</NuxtLink>
-            <NuxtLink to="/datenschutz">Datenschutz</NuxtLink>
+          </nav>
+        </div>
+        <div class="footer-section">
+          <strong>Rechtliches</strong>
+          <nav aria-label="Rechtliches">
+            <LegalLink v-for="page in LEGAL_PAGES" :key="page.slug" :slug="page.slug" />
           </nav>
         </div>
       </div>
@@ -145,6 +153,7 @@
   // reach the template through a getter, which the coverage mapping then reads
   // as an untaken branch on every `:href` that uses them.
   import { HISTORIE_URL, KONTAKT_URL } from '~/composables/useSectionLinks'
+  import { LEGAL_PAGES } from '~/data/legalPages'
 
   const { app: appConfig, public: publicConfig } = useRuntimeConfig()
   const { baseURL } = appConfig

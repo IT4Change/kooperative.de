@@ -78,6 +78,13 @@ test.describe('dialogs', () => {
     await expect(page.getByTestId('cart-sidebar')).toBeVisible()
     await expectNoNewA11yViolations(page, 'warenkorb')
   })
+
+  test('the legal dialog', async ({ page }) => {
+    await page.goto('/')
+    await page.getByRole('contentinfo').getByRole('link', { name: 'AGB' }).click()
+    await expect(page.getByRole('dialog', { name: 'Rechtliches' })).toBeVisible()
+    await expectNoNewA11yViolations(page, 'dialog-rechtliches')
+  })
 })
 
 test.describe('checkout', () => {
@@ -135,5 +142,11 @@ test.describe('admin', () => {
     await page.goto('/admin/orders')
     await expect(page.getByRole('table')).toBeVisible()
     await expectNoNewA11yViolations(page, 'admin-bestellungen')
+  })
+
+  test('the legal text editor', async ({ page }) => {
+    await page.goto('/admin/legal/datenschutz')
+    await expect(page.getByRole('textbox', { name: 'Text (Markdown)' })).toBeVisible()
+    await expectNoNewA11yViolations(page, 'admin-rechtstexte')
   })
 })
