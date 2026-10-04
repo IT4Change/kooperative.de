@@ -26,7 +26,7 @@ async function confirmedOrder(page: import('@playwright/test').Page): Promise<nu
   await checkout(page, { shipping: 'abholung', payment: 'vorkasse' })
   const mail = await waitForMail(to(CUSTOMER.email), 'the confirmation request')
   await page.goto(confirmationLink(mail))
-  await page.getByRole('button', { name: /verbindlich bestätigen/ }).click()
+  await page.getByRole('button', { name: 'Zahlungspflichtig bestellen' }).click()
   await expect(page.getByRole('heading', { name: /bestätigt/i })).toBeVisible()
   const pending = await latestPending(CUSTOMER.email)
   return pending!.orders_id!
