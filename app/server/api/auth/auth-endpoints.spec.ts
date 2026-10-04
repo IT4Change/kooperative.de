@@ -198,9 +198,9 @@ describe('GET /api/auth/me', () => {
             customers_firstname: 'Erika',
             customers_lastname: 'Musterfrau',
             customers_telephone: '0711',
-            entry_street_address: 'Im Winkel 11',
-            entry_postcode: '88422',
-            entry_city: 'Dürnau',
+            entry_street_address: 'Musterweg 1',
+            entry_postcode: '12345',
+            entry_city: 'Musterstadt',
             entry_country_id: 81,
           },
         ],
@@ -214,7 +214,7 @@ describe('GET /api/auth/me', () => {
       authenticated: true,
       customerId: 3,
       email: 'kundin@example.org',
-      address: { street: 'Im Winkel 11', postcode: '88422', city: 'Dürnau', countryId: 81 },
+      address: { street: 'Musterweg 1', postcode: '12345', city: 'Musterstadt', countryId: 81 },
     })
   })
 

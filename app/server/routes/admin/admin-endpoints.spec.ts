@@ -120,8 +120,8 @@ describe('GET /admin/api/customers', () => {
     customers_lastname: 'Musterfrau',
     customers_email_address: 'kundin@example.org',
     customers_telephone: '0711',
-    entry_postcode: '88422',
-    entry_city: 'Dürnau',
+    entry_postcode: '12345',
+    entry_city: 'Musterstadt',
   }
 
   it('lists customers with a combined name and place', async () => {
@@ -140,7 +140,7 @@ describe('GET /admin/api/customers', () => {
       name: 'Erika Musterfrau',
       email: 'kundin@example.org',
       telephone: '0711',
-      city: '88422 Dürnau',
+      city: '12345 Musterstadt',
     })
   })
 
