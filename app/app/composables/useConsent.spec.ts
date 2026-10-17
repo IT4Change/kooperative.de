@@ -95,6 +95,46 @@ describe('first visit', () => {
   })
 })
 
+describe('revoking consent', () => {
+  it('forgets the consent and removes what the site stored', async () => {
+    localStorage.setItem(CONSENT_KEY, 'true')
+    localStorage.setItem('kooperative-cart', '[]')
+    localStorage.setItem('fremder-schluessel', 'bleibt')
+    const consent = await freshConsent()
+
+    consent.revoke()
+
+    expect(consent.consentGiven.value).toBe(false)
+    expect(localStorage.getItem(CONSENT_KEY)).toBeNull()
+    expect(localStorage.getItem('kooperative-cart')).toBeNull()
+    // Only our own keys: whatever else lives on the origin is not ours to touch.
+    expect(localStorage.getItem('fremder-schluessel')).toBe('bleibt')
+  })
+
+  it('asks again before the next storing action', async () => {
+    localStorage.setItem(CONSENT_KEY, 'true')
+    const consent = await freshConsent()
+    consent.revoke()
+    const action = vi.fn()
+
+    expect(consent.require(action)).toBe(false)
+    expect(action).not.toHaveBeenCalled()
+    expect(consent.showBanner.value).toBe(true)
+  })
+
+  it('still revokes for this session when storage is blocked', async () => {
+    localStorage.setItem(CONSENT_KEY, 'true')
+    const consent = await freshConsent()
+    vi.spyOn(Storage.prototype, 'removeItem').mockImplementation(() => {
+      throw new Error('SecurityError')
+    })
+
+    consent.revoke()
+
+    expect(consent.consentGiven.value).toBe(false)
+  })
+})
+
 describe('returning visit', () => {
   it('picks the stored consent up', async () => {
     localStorage.setItem(CONSENT_KEY, 'true')

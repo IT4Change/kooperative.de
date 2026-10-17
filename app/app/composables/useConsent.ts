@@ -4,7 +4,9 @@
  * The consent flag itself is written via raw localStorage.
  */
 
-const CONSENT_KEY = 'kooperative-consent-v1'
+// Every key this site writes to localStorage starts with this prefix.
+const STORAGE_PREFIX = 'kooperative-'
+const CONSENT_KEY = `${STORAGE_PREFIX}consent-v1`
 
 const consentGiven = ref(false)
 const showBanner = ref(false)
@@ -55,6 +57,23 @@ function decline() {
   pendingAction = null
 }
 
+/**
+ * Withdraws a consent given earlier (Art. 7 Abs. 3 DSGVO: as easy as giving it).
+ * Removes the flag and everything this site stored under its own prefix, so
+ * the cart is gone from the device too, not just no longer written.
+ */
+function revoke() {
+  consentGiven.value = false
+  pendingAction = null
+  try {
+    for (const key of Object.keys(localStorage)) {
+      if (key.startsWith(STORAGE_PREFIX)) localStorage.removeItem(key)
+    }
+  } catch {
+    // Nothing was persisted if storage is blocked, so there is nothing to remove.
+  }
+}
+
 export function useConsent() {
   init()
   return {
@@ -63,5 +82,6 @@ export function useConsent() {
     require,
     accept,
     decline,
+    revoke,
   }
 }
