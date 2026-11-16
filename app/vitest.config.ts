@@ -6,6 +6,16 @@ export default defineVitestConfig({
   root: path.resolve(__dirname),
   test: {
     setupFiles: ['./test/setup.ts'],
+    // Fictitious company details for the mail footer (server/utils/mailFooter.ts).
+    // The real ones live in the server environment only — this repository is public.
+    env: {
+      COMPANY_NAME: 'Musterfirma GmbH',
+      COMPANY_STREET: 'Musterweg 1',
+      COMPANY_CITY: '12345 Musterstadt',
+      COMPANY_MANAGER: 'Max Mustermann',
+      COMPANY_REGISTER: 'Amtsgericht Musterstadt, HRB 12345',
+      COMPANY_EMAIL: 'info@example.org',
+    },
     environment: 'nuxt',
     include: ['app/**/*.spec.ts', 'server/**/*.spec.ts'],
     // Every spec file gets its own Nuxt environment, which takes over a second

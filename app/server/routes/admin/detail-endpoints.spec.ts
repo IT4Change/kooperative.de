@@ -30,14 +30,14 @@ const ORDER_HEADER = {
   customers_name: 'Erika Musterfrau',
   customers_email_address: 'kundin@example.org',
   customers_telephone: '0711',
-  customers_street_address: 'Im Winkel 11',
-  customers_postcode: '88422',
-  customers_city: 'Dürnau',
+  customers_street_address: 'Musterweg 1',
+  customers_postcode: '12345',
+  customers_city: 'Musterstadt',
   customers_country: 'Deutschland',
   delivery_name: 'Erika Musterfrau',
-  delivery_street_address: 'Im Winkel 11',
-  delivery_postcode: '88422',
-  delivery_city: 'Dürnau',
+  delivery_street_address: 'Musterweg 1',
+  delivery_postcode: '12345',
+  delivery_city: 'Musterstadt',
   delivery_country: 'Deutschland',
   payment_method: 'Bezahlung mit Vorkasse',
   orders_status: 3,
@@ -143,8 +143,8 @@ describe('GET /admin/api/orders/[id]', () => {
       { params: { id: '55' } },
     )
 
-    expect(result.order.customer).toMatchObject({ street: 'Im Winkel 11', city: 'Dürnau' })
-    expect(result.order.delivery).toMatchObject({ street: 'Im Winkel 11', city: 'Dürnau' })
+    expect(result.order.customer).toMatchObject({ street: 'Musterweg 1', city: 'Musterstadt' })
+    expect(result.order.delivery).toMatchObject({ street: 'Musterweg 1', city: 'Musterstadt' })
   })
 
   it.each([['abc'], ['0'], ['-1']])('rejects the invalid id %j', async (id) => {

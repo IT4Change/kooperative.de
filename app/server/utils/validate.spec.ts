@@ -13,9 +13,9 @@ const VALID_REGISTER = {
   email: 'Max@Example.ORG',
   telephone: '0711 1234567',
   password: 'supersecret',
-  street: 'Im Winkel 11',
-  postcode: '88422',
-  city: 'Dürnau',
+  street: 'Musterweg 1',
+  postcode: '12345',
+  city: 'Musterstadt',
   country: 'DE',
 }
 

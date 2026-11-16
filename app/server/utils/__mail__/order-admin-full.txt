@@ -10,8 +10,8 @@ Kunde:
   Tel.: 07164 123456
   Kunden-Nr.: 3
 Lieferadresse:
-  Im Winkel 11
-  88422 Dürnau
+  Musterweg 1
+  12345 Musterstadt
   Deutschland
 Positionen:
   1. 2× Honig  ·  11.90 €/Stk  =  23.80 €
