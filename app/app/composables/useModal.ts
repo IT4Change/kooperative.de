@@ -13,15 +13,28 @@
  *   - Focus returns to whatever was focused before, so a keyboard user is not
  *     dumped at the top of the document.
  *   - Tab wraps inside the dialog while it is open (focus trap).
+ *
+ * Dialogs can stack — the legal dialog opens on top of the cart, for instance.
+ * Only the topmost open dialog reacts to the keyboard, so Escape closes the
+ * one in front instead of all of them at once.
  */
 const FOCUSABLE =
   'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+
+/** Open dialogs in the order they opened; the last one is in front. */
+const openStack: symbol[] = []
+
+function leaveStack(id: symbol) {
+  const index = openStack.indexOf(id)
+  if (index !== -1) openStack.splice(index, 1)
+}
 
 export function useModal(
   isOpen: Ref<boolean> | ComputedRef<boolean>,
   panel: Ref<HTMLElement | undefined>,
   close: () => void,
 ) {
+  const id = Symbol('modal')
   let previouslyFocused: HTMLElement | null = null
 
   function focusables(): HTMLElement[] {
@@ -32,7 +45,7 @@ export function useModal(
   }
 
   function onKeydown(event: KeyboardEvent) {
-    if (!isOpen.value) return
+    if (!isOpen.value || openStack.at(-1) !== id) return
 
     if (event.key === 'Escape') {
       event.preventDefault()
@@ -58,7 +71,9 @@ export function useModal(
   }
 
   watch(isOpen, async (open) => {
+    leaveStack(id)
     if (open) {
+      openStack.push(id)
       previouslyFocused = document.activeElement as HTMLElement | null
       await nextTick()
       // Prefer the first control; fall back to the panel itself (tabindex="-1"),
@@ -74,6 +89,7 @@ export function useModal(
     document.addEventListener('keydown', onKeydown)
   })
   onBeforeUnmount(() => {
+    leaveStack(id)
     document.removeEventListener('keydown', onKeydown)
   })
 }
