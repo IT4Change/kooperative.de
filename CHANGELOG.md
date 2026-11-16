@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.12.0](https://github.com/IT4Change/kooperative.de/compare/v0.11.0...v0.12.0) (2026-11-16)
+
+
+### Features
+
+* **app:** versioned legal texts for both shops ([#72](https://github.com/IT4Change/kooperative.de/issues/72)) ([6db81e4](https://github.com/IT4Change/kooperative.de/commit/6db81e402aea2b440b7caa52547b0cd4e926a6fc))
+
+
+### Bug Fixes
+
+* **app:** label the binding order button "Zahlungspflichtig bestellen" ([#73](https://github.com/IT4Change/kooperative.de/issues/73)) ([cf60329](https://github.com/IT4Change/kooperative.de/commit/cf603293e815036667da809b39f8bf1691ebbe30))
+* **app:** refuse cross-site state changes in the admin ([#74](https://github.com/IT4Change/kooperative.de/issues/74)) ([5ffb4e1](https://github.com/IT4Change/kooperative.de/commit/5ffb4e171daa48780c6610151a6673f1d4e08642))
+
 ## [0.11.0](https://github.com/IT4Change/kooperative.de/compare/v0.10.0...v0.11.0) (2026-10-01)
 
 
