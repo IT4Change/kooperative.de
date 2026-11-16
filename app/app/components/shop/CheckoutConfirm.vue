@@ -84,6 +84,17 @@
       den Zahlungskonditionen, die Sie zur Bestätigung des Kaufs zurücksenden.
     </p>
 
+    <p class="mb-3 text-xs text-gray-500 leading-relaxed" data-testid="legal-notice">
+      Es gelten unsere <LegalLink slug="agb" class="underline hover:text-[#00af8c]">AGB</LegalLink>.
+      Informationen zu Ihrem Widerrufsrecht finden Sie in der
+      <LegalLink slug="widerruf" class="underline hover:text-[#00af8c]"
+        >Widerrufsbelehrung</LegalLink
+      >, zum Umgang mit Ihren Daten in der
+      <LegalLink slug="datenschutz" class="underline hover:text-[#00af8c]"
+        >Datenschutzerklärung</LegalLink
+      >.
+    </p>
+
     <p
       v-if="submitError"
       class="mb-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2"

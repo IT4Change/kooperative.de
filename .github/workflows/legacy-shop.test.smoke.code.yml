@@ -1,0 +1,48 @@
+name: "legacy-shop:test:smoke patches for the old osCommerce shop"
+
+on: push
+
+jobs:
+  # only (but most important) job from this workflow required for pull requests
+  # check results serve as run conditions for all other jobs here
+  files-changed:
+    name: Detect File Changes - legacy-shop-test-smoke
+    runs-on: ubuntu-latest
+    outputs:
+      changes: ${{ steps.changes.outputs.filter }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v4.1.7
+
+      - name: Check for legacy-shop file changes
+        uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+        id: changes
+        with:
+          token: ${{ github.token }}
+          filters: |
+            filter:
+              - 'legacy-shop/**/*'
+              - '.github/workflows/legacy-shop.*'
+          list-files: shell
+
+  smoke:
+    if: needs.files-changed.outputs.changes == 'true'
+    name: Smoke - Legacy Shop
+    needs: files-changed
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v4.1.7
+
+      # The runner's preinstalled PHP (8.x) has no mysql extension, which is what
+      # the fixture needs to stand in for mysql_query. The original shop pages are
+      # not in the repository (old/ is ignored), so the cases that compare against
+      # them are skipped here and only run locally.
+      - name: PHP version
+        run: php -v
+
+      # The shop itself runs PHP 5 — lint the patches with the oldest PHP image
+      # Docker Hub still serves (5.3/5.4 manifests can no longer be pulled).
+      - name: Legacy shop | Smoke + PHP 5 lint
+        run: legacy-shop/test/run.sh
+        env:
+          PHP5_IMAGE: php:5.5-cli
