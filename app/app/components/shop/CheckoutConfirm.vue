@@ -77,11 +77,12 @@
     </div>
 
     <p
-      class="mb-3 text-xs text-gray-500 bg-amber-50 border border-amber-200 rounded px-3 py-2 leading-relaxed"
+      class="mb-3 text-xs text-gray-500 bg-gray-50 border border-gray-200 rounded px-3 py-2 leading-relaxed"
+      data-testid="binding-notice"
     >
-      Mit "Bestellung absenden" wird Ihre Bestellung an uns übermittelt &mdash; sie ist
-      <strong>noch nicht rechtsverbindlich</strong>. Wir senden Ihnen eine Bestätigungs-E-Mail mit
-      den Zahlungskonditionen, die Sie zur Bestätigung des Kaufs zurücksenden.
+      Mit „Zahlungspflichtig bestellen“ geben Sie eine <strong>verbindliche Bestellung</strong> ab.
+      Sie erhalten eine Eingangsbestätigung per E-Mail; der Kaufvertrag kommt mit unserer
+      Auftragsbestätigung oder dem Versand der Ware zustande.
     </p>
 
     <p class="mb-3 text-xs text-gray-500 leading-relaxed" data-testid="legal-notice">
@@ -112,7 +113,7 @@
         Zurück
       </button>
       <KoopButton size="sm" :disabled="submitting" @click="$emit('send')">
-        {{ submitting ? 'Sende…' : 'Bestellung absenden' }}
+        {{ submitting ? 'Sende…' : 'Zahlungspflichtig bestellen' }}
       </KoopButton>
     </div>
   </div>

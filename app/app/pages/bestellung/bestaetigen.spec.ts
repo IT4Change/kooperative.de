@@ -5,14 +5,17 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import ConfirmPage from './bestaetigen.vue'
 
 /**
- * The review page behind the link in the confirmation mail. Its button is the
- * step that makes the order binding, so its wording is not a matter of taste:
- * § 312j Abs. 3 BGB requires it to state the obligation to pay — otherwise no
- * contract comes about at all.
+ * The review page behind the link in the order mails. For an order still under
+ * the former confirmation flow its button is the step that makes the order
+ * binding, so its wording is not a matter of taste: § 312j Abs. 3 BGB requires
+ * it to state the obligation to pay. For a direct order (standard shop) the
+ * page only shows the order — it must neither offer a button nor claim the
+ * order was "confirmed".
  */
 const TOKEN = 'a'.repeat(64)
 
 interface View {
+  direct?: boolean
   status: string
   orderId: number | null
   shipping: { label: string; price: number }
@@ -94,6 +97,18 @@ describe('order confirmation page', () => {
     const wrapper = await mount()
 
     expect(wrapper.get('button').text()).toBe('Zahlungspflichtig bestellen')
+  })
+
+  it('shows a direct order as received, without a button', async () => {
+    view = { ...PENDING, status: 'materialized', orderId: 55, direct: true }
+
+    const wrapper = await mount()
+
+    expect(wrapper.text()).toContain('Ihre Bestellung Nr. 55')
+    expect(wrapper.text()).toContain('eingegangen')
+    expect(wrapper.text()).not.toContain('bestätigt')
+    expect(wrapper.find('button').exists()).toBe(false)
+    expect(wrapper.text()).toContain('Honig')
   })
 
   it('shows what is being ordered before the button', async () => {

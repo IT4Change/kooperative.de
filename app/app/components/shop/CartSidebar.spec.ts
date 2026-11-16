@@ -242,7 +242,7 @@ describe('step machine', () => {
     cart.goToConfirm()
     await new Promise((resolve) => setTimeout(resolve, 0))
 
-    expect(bodyText()).toContain('Bestellung absenden')
+    expect(bodyText()).toContain('Zahlungspflichtig bestellen')
   })
 
   it('sends a signed-in customer straight to shipping and payment', async () => {
@@ -308,19 +308,22 @@ describe('step machine', () => {
     expect(cart.bankIban.value).toBe('DE02120300000000202051')
   })
 
-  it('explains the confirmation mail after sending', async () => {
+  it('names the order number and the receipt after sending', async () => {
     const cart = await openWithItem()
     cart.shippingMethod.value = 'abholung'
     cart.paymentMethod.value = 'vorkasse'
-    fetchMock.mockResolvedValue({ ok: true, pendingId: 12, total: 11.9 })
+    fetchMock.mockResolvedValue({ ok: true, orderId: 55, total: 11.9 })
 
     await cart.submitOrder()
     await new Promise((resolve) => setTimeout(resolve, 0))
 
-    // The contract only comes about through the customer's reply, so this
-    // screen has to say so rather than just "thank you".
+    // The order is placed directly: the customer gets its number at once and
+    // learns that the mail is a receipt, the contract follows by acceptance.
     expect(bodyText()).toContain('Vielen Dank!')
-    expect(bodyText()).toContain('Bestätigungs-E-Mail')
+    expect(bodyText()).toContain('Nr. 55')
+    expect(bodyText()).toContain('Eingangsbestätigung')
+    expect(bodyText()).toContain('Auftragsbestätigung')
+    expect(bodyText()).not.toContain('antworten')
     expect(document.body.querySelector('[data-testid="cart-success"]')).not.toBeNull()
   })
 })

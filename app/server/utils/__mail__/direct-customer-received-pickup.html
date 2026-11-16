@@ -1,9 +1,9 @@
 <!DOCTYPE html><html><body style="font-family:system-ui,sans-serif;color:#222;max-width:640px">
-    <div style="background:#00af8c;color:#fff;padding:12px 16px;border-radius:8px 8px 0 0"><strong>Neue Bestellung (unbestätigt)</strong></div>
+    <div style="background:#00af8c;color:#fff;padding:12px 16px;border-radius:8px 8px 0 0"><strong>Eingang Ihrer Bestellung #56</strong></div>
     <div style="border:1px solid #ddd;border-top:0;padding:16px;border-radius:0 0 8px 8px">
-    <p style="margin:0 0 12px">Eine neue Bestellung ist eingegangen und wartet auf die <strong>Bestätigung des Kunden</strong>.</p>
-    <p style="margin:0 0 4px">Kunde: <strong>Erika Musterfrau</strong> · <a href="mailto:kundin@example.org">kundin@example.org</a></p>
-    <p style="margin:16px 0"><a href="https://shop.example.org/admin/orders/55" style="background:#00af8c;color:#fff;text-decoration:none;padding:10px 18px;border-radius:6px;display:inline-block">Im Admin öffnen →</a></p>
+    <p style="margin:0 0 12px">Hallo,</p>
+    <p style="margin:0 0 12px">vielen Dank für Ihre Bestellung <strong>#56</strong>. Sie ist bei uns eingegangen.</p>
+    <p style="margin:0 0 12px;color:#555">Diese E-Mail bestätigt nur den Eingang Ihrer Bestellung und ist noch keine Annahme. Der Kaufvertrag kommt zustande, wenn wir Ihre Bestellung mit einer Auftragsbestätigung annehmen oder die Ware versenden.</p>
     <table style="width:100%;border-collapse:collapse;font-size:14px;margin:8px 0">
     <thead><tr style="text-align:left;color:#666">
       <th style="padding:4px 6px">Artikel</th><th style="padding:4px 6px;text-align:right">Menge</th><th style="padding:4px 6px;text-align:right">Summe</th>
@@ -26,17 +26,19 @@
     </tr></tbody>
     <tfoot>
       <tr><td colspan="2" style="padding:4px 6px;text-align:right">Zwischensumme</td><td style="padding:4px 6px;text-align:right">47,71 €</td></tr>
-      <tr><td colspan="2" style="padding:4px 6px;text-align:right">Versand (Versand mit DPD)</td><td style="padding:4px 6px;text-align:right">7,50 €</td></tr>
+      <tr><td colspan="2" style="padding:4px 6px;text-align:right">Versand (Abholung)</td><td style="padding:4px 6px;text-align:right">nach Aufwand</td></tr>
       <tr><td colspan="2" style="padding:4px 6px;text-align:right;color:#888;font-size:12px">MwSt (19%, im Preis enthalten)</td><td style="padding:4px 6px;text-align:right;color:#888;font-size:12px">6,08 €</td></tr><tr><td colspan="2" style="padding:4px 6px;text-align:right;color:#888;font-size:12px">MwSt (7%, im Preis enthalten)</td><td style="padding:4px 6px;text-align:right;color:#888;font-size:12px">0,63 €</td></tr>
-      <tr><td colspan="2" style="padding:4px 6px;text-align:right;font-weight:bold">Gesamt</td><td style="padding:4px 6px;text-align:right;font-weight:bold">55,21 €</td></tr>
+      <tr><td colspan="2" style="padding:4px 6px;text-align:right;font-weight:bold">Gesamt</td><td style="padding:4px 6px;text-align:right;font-weight:bold">47,71 €</td></tr>
     </tfoot>
   </table>
   <p style="font-size:13px;color:#555;margin:4px 0">Zahlung: <strong>Bezahlung mit Vorkasse</strong></p>
+    <p style="margin:16px 0"><a href="https://shop.example.org/bestellung/bestaetigen?token=abc123" style="background:#00af8c;color:#fff;text-decoration:none;padding:10px 18px;border-radius:6px;display:inline-block">Bestellung ansehen →</a></p>
+    <p style="margin:12px 0 0;color:#555">Herzliche Grüsze<br>Kooperative Dürnau eG</p>
     <hr style="border:0;border-top:1px solid #eee;margin:16px 0">
     <p style="font-size:11px;color:#999;line-height:1.6;margin:0">
       <strong>Musterfirma GmbH</strong><br>
       Musterweg 1, 12345 Musterstadt<br>
       Geschäftsführer: Max Mustermann · Amtsgericht Musterstadt, HRB 12345<br>
-      <a href="mailto:info@example.org" style="color:#999">info@example.org</a>
+      <a href="mailto:info@example.org" style="color:#999">info@example.org</a><br><span style="color:#bbb">Diese Bestellbestätigung ist keine Rechnung.</span>
     </p></div>
   </body></html>

@@ -6,6 +6,13 @@ import { insertComputedOrder } from './orderCompute'
 import type { OrderComputation, OrderInput } from './orderCompute'
 import type { Pool, RowDataPacket } from 'mysql2/promise'
 
+/**
+ * How a pending order became an osCommerce order: confirmed by the customer
+ * (link/reply), released by the operator (admin), or — since the shop became a
+ * standard shop — placed directly at checkout without a confirmation step.
+ */
+export type PendingVia = 'link' | 'reply' | 'admin' | 'direct'
+
 export interface PendingPayload {
   input: OrderInput
   comp: OrderComputation
@@ -119,7 +126,7 @@ export async function getPendingByOrderId(db: Pool, ordersId: number): Promise<P
 export async function materializePending(
   db: Pool,
   pending: PendingRow,
-  via: 'link' | 'reply' | 'admin',
+  via: PendingVia,
   ctx: { remoteIp?: string; confirmNote?: string } = {},
 ): Promise<{ ordersId: number; alreadyDone: boolean }> {
   if (pending.status === 'cancelled') {

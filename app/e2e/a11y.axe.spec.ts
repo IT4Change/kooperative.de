@@ -119,7 +119,7 @@ test.describe('checkout', () => {
     await page.locator('input[name="payment"][value="vorkasse"]').check()
     await page.getByRole('button', { name: 'Weiter zur Übersicht' }).click()
     // Stops short of sending: the scan has no business writing an order.
-    await expect(page.getByRole('button', { name: 'Bestellung absenden' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Zahlungspflichtig bestellen' })).toBeVisible()
     await expectNoNewA11yViolations(page, 'checkout-uebersicht')
   })
 })

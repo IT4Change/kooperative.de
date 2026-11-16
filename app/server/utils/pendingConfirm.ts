@@ -4,7 +4,7 @@ import { sendAndLogOrderMail } from './orderMailLog'
 import { buildCustomerConfirmed, buildAdminConfirmed } from './pendingMail'
 import { materializePending } from './pendingOrder'
 
-import type { PendingRow } from './pendingOrder'
+import type { PendingRow, PendingVia } from './pendingOrder'
 import type { H3Event } from 'h3'
 import type { Pool } from 'mysql2/promise'
 
@@ -18,7 +18,7 @@ export async function confirmPending(
   db: Pool,
   event: H3Event,
   pending: PendingRow,
-  via: 'link' | 'reply' | 'admin',
+  via: Exclude<PendingVia, 'direct'>,
   ctx: { remoteIp?: string; confirmNote?: string } = {},
 ): Promise<{ ordersId: number; alreadyDone: boolean }> {
   const result = await materializePending(db, pending, via, ctx)
