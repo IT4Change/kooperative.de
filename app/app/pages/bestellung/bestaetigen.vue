@@ -110,10 +110,18 @@
           :disabled="confirming"
           @click="confirm"
         >
-          {{ confirming ? 'Wird bestätigt…' : 'Jetzt verbindlich bestätigen' }}
+          <!-- § 312j Abs. 3 BGB: the button that triggers the obligation to pay has to
+               say so unambiguously — "zahlungspflichtig bestellen" is the wording the
+               law itself offers. -->
+          {{ confirming ? 'Wird übermittelt…' : 'Zahlungspflichtig bestellen' }}
         </button>
         <p class="text-xs text-gray-400 mt-3">
           Alternativ können Sie einfach auf die Bestätigungs-E-Mail antworten.
+        </p>
+        <p class="text-xs text-gray-500 mt-3" data-testid="legal-notice">
+          Es gelten unsere <LegalLink slug="agb" class="underline">AGB</LegalLink>. Ihr
+          Widerrufsrecht:
+          <LegalLink slug="widerruf" class="underline">Widerrufsbelehrung</LegalLink>.
         </p>
       </div>
     </template>
