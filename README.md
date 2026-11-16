@@ -55,6 +55,8 @@ kooperative.de/
 │   ├── vitest.config.ts         # Vitest + Coverage-Schwellen
 │   ├── nuxt.config.ts           # Nuxt-Konfiguration
 │   └── package.json
+├── database/migrations/         # Additive Schema-Migrationen (beim Deploy ausgeführt)
+├── legacy-shop/                 # Patches für den Altshop (shop.kooperative.de)
 ├── docs/
 │   ├── wwweb.pdf                # Original-Sitemap
 │   ├── PROJECT.md               # Projektdefinition
@@ -105,6 +107,35 @@ Der integrierte Shop (`/shop`) mit Warenkorb-Bestellfunktion per E-Mail (kein On
 - **URL-State**: Suche und Filter in Query-Parametern (`?q=...&kategorie=...`) -- jeder Zustand ist verlinkbar
 - **Warenkorb**: Sidebar-Overlay, localStorage-Persistenz, öffnet sich automatisch beim Hinzufügen
 - **Bestellung**: Warenkorb → Bestellformular → Bestätigung → mailto-Link
+
+## Rechtstexte
+
+Impressum, Datenschutz, AGB, Widerruf sowie Versand & Zahlung kommen aus der Datenbank
+(Migration `005_koop_legal_text.sql`) und gelten für **beide** Shops:
+
+- **Neuer Shop:** Header-Eintrag „Rechtliches“ und jeder Rechtstext-Link (Footer,
+  Cookie-Hinweis, Checkout) öffnen ein Popup mit einem Tab pro Seite. Daneben gibt es
+  die Einzelseiten `/impressum`, `/datenschutz`, `/agb`, `/widerruf` und `/versand`
+  (direkte Links, ohne JavaScript).
+- **Admin → Rechtstexte:** Markdown-Editor mit Live-Vorschau. Jede Änderung wird eine
+  neue Version; „Live schalten“ setzt genau eine Version pro Seite live, und ältere
+  Versionen lassen sich wieder aktivieren. `[[Platzhalter]]` werden markiert, und vor
+  dem Live-Schalten wird gewarnt.
+- **Altshop:** Patches ohne Änderung bestehender Dateien, siehe `legacy-shop/README.md`.
+- **Die Texte selbst liegen nicht in diesem Repository.** Lokal liegen sie in
+  `legal/<seite>/v1.md, v2.md, …` (per `.gitignore` ausgeschlossen). Mit dem
+  Import-Skript gelangen sie über die Admin-API in einen laufenden Shop. Importiert
+  werden nur Seiten, die noch keine Version haben:
+
+  ```sh
+  cd app
+  LEGAL_IMPORT_AUTH=user:passwort node scripts/legal-import.mjs ../legal --url https://… --dry-run
+  LEGAL_IMPORT_AUTH=user:passwort node scripts/legal-import.mjs ../legal --url https://…
+  ```
+
+  Das Dateiformat steht im Kopf von `app/scripts/legal-import.mjs`.
+- **Ohne Text** (noch nichts importiert, Datenbank nicht erreichbar) zeigt der neue
+  Shop einen neutralen Hinweis. Der Altshop zeigt dann seine Originalseite.
 
 ## Konfiguration
 

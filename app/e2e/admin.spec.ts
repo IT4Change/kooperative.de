@@ -26,7 +26,7 @@ async function confirmedOrder(page: import('@playwright/test').Page): Promise<nu
   await checkout(page, { shipping: 'abholung', payment: 'vorkasse' })
   const mail = await waitForMail(to(CUSTOMER.email), 'the confirmation request')
   await page.goto(confirmationLink(mail))
-  await page.getByRole('button', { name: /verbindlich bestätigen/ }).click()
+  await page.getByRole('button', { name: 'Zahlungspflichtig bestellen' }).click()
   await expect(page.getByRole('heading', { name: /bestätigt/i })).toBeVisible()
   const pending = await latestPending(CUSTOMER.email)
   return pending!.orders_id!
@@ -45,6 +45,21 @@ test.describe('admin access', () => {
     })
     const res = await ctx.request.get('/admin/api/dashboard')
     expect(res.status()).toBe(401)
+    await ctx.close()
+  })
+
+  /**
+   * The browser attaches Basic-auth credentials to any request to the site, also
+   * one a foreign page fires off. server/middleware/admin-csrf.ts turns those
+   * away before they reach a handler — with valid credentials, from another site.
+   */
+  test('refuses a state change sent from another site', async ({ browser }) => {
+    const ctx = await browser.newContext({ httpCredentials: ADMIN })
+    const res = await ctx.request.post('/admin/api/orders/1/status', {
+      headers: { origin: 'https://evil.example', 'sec-fetch-site': 'cross-site' },
+      data: { statusId: 3 },
+    })
+    expect(res.status()).toBe(403)
     await ctx.close()
   })
 

@@ -223,3 +223,23 @@ describe('sending', () => {
     expect(wrapper.text()).toContain('Artikel 1 nicht verfügbar')
   })
 })
+
+describe('legal notice', () => {
+  it('opens AGB, Widerrufsbelehrung and Datenschutz in the legal dialog', async () => {
+    useLegal().close()
+    const wrapper = await mount()
+    const links = wrapper.findAll('[data-testid="legal-notice"] a')
+
+    expect(links.map((a) => a.attributes('href'))).toStrictEqual([
+      '/agb',
+      '/widerruf',
+      '/datenschutz',
+    ])
+
+    await links[1].trigger('click')
+
+    // In place, so the half-finished checkout behind it stays as it is.
+    expect(useLegal().current.value).toBe('widerruf')
+    useLegal().close()
+  })
+})
