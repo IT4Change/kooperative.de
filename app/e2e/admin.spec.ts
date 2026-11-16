@@ -49,6 +49,21 @@ test.describe('admin access', () => {
   })
 
   /**
+   * The browser attaches Basic-auth credentials to any request to the site, also
+   * one a foreign page fires off. server/middleware/admin-csrf.ts turns those
+   * away before they reach a handler — with valid credentials, from another site.
+   */
+  test('refuses a state change sent from another site', async ({ browser }) => {
+    const ctx = await browser.newContext({ httpCredentials: ADMIN })
+    const res = await ctx.request.post('/admin/api/orders/1/status', {
+      headers: { origin: 'https://evil.example', 'sec-fetch-site': 'cross-site' },
+      data: { statusId: 3 },
+    })
+    expect(res.status()).toBe(403)
+    await ctx.close()
+  })
+
+  /**
    * Nitro tells JSON clients from browsers by looking for a leading "/api/" in
    * the path. The admin endpoints sit under "/admin/api/" so they can share the
    * pages' Basic-Auth realm, which used to make Nitro answer HTML-accepting
