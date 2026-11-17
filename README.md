@@ -1,309 +1,107 @@
 # Kooperative Dürnau
 
-Neue Website der Kooperative Dürnau eG -- Leben und Arbeiten in Gemeinschaft seit 1980.
+Website und Online-Shop der Kooperative Dürnau – Nachfolger der statischen
+Seite und des osCommerce-Shops `shop.kooperative.de`.
 
-**Live:** https://it4change.github.io/kooperative.de/
+- **Staging:** https://neu.kooperative.de
+- **Altshop:** https://shop.kooperative.de (läuft parallel weiter)
 
-## Tech Stack
-
-| Technologie | Version | Zweck |
-|------------|---------|-------|
-| Nuxt | 4.3 | Framework (SPA, Static Generation) |
-| Vue | 3.5 | UI-Komponenten |
-| Tailwind CSS | via @nuxtjs/tailwindcss 6.14 | Styling |
-| ESLint | 10 + eslint-config-it4c | Linting (typgestützt) |
-| Vitest | 5 via @nuxt/test-utils | Unit-Tests + Coverage |
-| GitHub Pages | - | Hosting (Static) |
-| GitHub Actions | - | CI/CD (Auto-Deploy bei Push auf master) |
-
-## Qualitätssicherung
-
-Alles in `app/`: `npm run test:lint` (ESLint + `vue-tsc`) und `npm run test:unit`
-(Vitest inkl. Coverage-Gate). In der CI läuft jedes Gate als eigener Workflow
-(`.github/workflows/app.test.*.yml`).
-
-Details — Aufbau der ESLint-Config, Test-Setup für Server-Module und das
-Coverage-Ratchet — stehen in [docs/testing.md](docs/testing.md).
-
-## Projektstruktur
+## Überblick
 
 ```
-kooperative.de/
-├── app/                         # Nuxt 4 Anwendung
-│   ├── app/
-│   │   ├── app.vue              # Root-Komponente (Layout + Page)
-│   │   ├── layouts/
-│   │   │   └── default.vue      # Layout: Header, Footer, Mobile-Menü
-│   │   ├── pages/
-│   │   │   ├── index.vue        # Startseite (alle Sektionen)
-│   │   │   └── shop/
-│   │   │       ├── index.vue    # Shop-Übersicht (Suche, Filter, Grid)
-│   │   │       └── [id].vue     # Produktdetailseite
-│   │   └── assets/css/
-│   │       └── main.css         # Globale Styles (scroll-behavior)
-│   ├── public/
-│   │   ├── img/
-│   │   │   ├── hero.jpg         # Hero-Hintergrund (Sonnenaufgang)
-│   │   │   ├── logo.gif         # Kooperative-Logo
-│   │   │   └── sections/        # Sektions-Hintergrundbilder
-│   │   ├── favicon.ico
-│   │   ├── robots.txt
-│   │   └── .nojekyll
-│   ├── test/                    # Geteiltes Test-Setup (Specs liegen bei der Quelle)
-│   ├── eslint.config.ts         # ESLint (Nuxt-Flat-Config + eslint-config-it4c)
-│   ├── prettier.config.ts       # Re-Export aus eslint-config-it4c/prettier
-│   ├── vitest.config.ts         # Vitest + Coverage-Schwellen
-│   ├── nuxt.config.ts           # Nuxt-Konfiguration
-│   └── package.json
-├── database/migrations/         # Additive Schema-Migrationen (beim Deploy ausgeführt)
-├── legacy-shop/                 # Patches für den Altshop (shop.kooperative.de)
-├── docs/
-│   ├── wwweb.pdf                # Original-Sitemap
-│   ├── PROJECT.md               # Projektdefinition
-│   ├── testing.md               # Lint- und Test-Setup
-│   ├── IMG.md                   # Bildübersicht
-│   └── img/                     # Alle heruntergeladenen Bilder
-├── .github/workflows/
-│   ├── app.test.lint.code.yml       # CI-Gate: ESLint
-│   ├── app.test.typecheck.code.yml  # CI-Gate: vue-tsc
-│   ├── app.test.unit.code.yml       # CI-Gate: Vitest + Coverage
-│   └── deploy.yml               # GitHub Pages Deployment
-└── README.md
+Browser ──► nginx ──► Nuxt 4 (SSR, ein Node-Prozess via pm2)
+                        ├─ Website, Shop, Rechtstexte
+                        ├─ /api      Login, Warenkorb, Bestellung
+                        └─ /admin    Bestellungen, Kunden, Produkte, Rechtstexte
+                              │
+                              ▼
+                   MariaDB (gemeinsam mit dem Altshop)
+                   osCommerce-Tabellen + eigene koop_*-Tabellen
 ```
 
-## Startseite (Single Page)
+- **Eine Datenbank für beide Shops.** Der neue Shop liest und schreibt die
+  osCommerce-Tabellen so, dass der Altshop und sein Admin unverändert weiter
+  funktionieren. Eigene Daten liegen in `koop_*`-Tabellen. Jeder Schreibpfad ist
+  in [docs/DB_WRITES.md](docs/DB_WRITES.md) aufgeführt.
+- **Altshop-Patches** ändern keine bestehende Datei:
+  [legacy-shop/README.md](legacy-shop/README.md).
+- **Rechtstexte** sind versioniert, kommen aus der Datenbank und gelten für
+  beide Shops. Die Texte selbst stehen nicht im Repository (siehe unten).
 
-Die Startseite ist als vertikale Fullscreen-Abfolge aufgebaut:
+## Lokal starten
 
-| Sektion | Farbe | Hintergrundbild | Inhalt |
-|---------|-------|-----------------|--------|
-| **Hero** | - | Sonnenaufgang (Unsplash) | Titel, Claim, Kurzbeschreibung |
-| **Bestellung** | Grün | Gemüseregal (Unsplash) | 8 Shop-Kategorien + CTA "Zum Shop" |
-| **Arbeit** | Gold | Werkzeug (Unsplash) | 5 Betriebe |
-| **Kultur** | Rot | Theatersaal (Unsplash) | 5 Kulturbereiche |
-| **Bildung** | Blau | Bücher (Unsplash) | 5 Bildungsbereiche |
-| **Gäste** | Lila | Berglandschaft (Unsplash) | 5 Gästebereiche |
+```sh
+docker compose up -d            # MariaDB (3306) + maildev (SMTP 1025, Web-UI 1080)
+cd app
+cp .env.template .env           # Defaults passen zum Compose-Stack
+npm ci
+node scripts/migrate.mjs        # koop_*-Tabellen anlegen
+npm run dev                     # http://localhost:3000
+```
 
-### Features
-
-- **Scroll-Snapping**: Nach unten → springt zur nächsten Sektion; nach oben → frei (nur Hero rastet ein)
-- **Shrinking Header**: Menü verkleinert sich beim Runterscrollen, wird groß beim Hochscrollen
-- **Grüne Info-Leiste**: Versteckt sich beim Scrollen
-- **Active-Section-Highlighting**: Menüeinträge werden hervorgehoben wenn Sektion sichtbar (IntersectionObserver)
-- **Logo-Highlight**: Logo wird größer + Glow wenn Hero sichtbar
-- **Mobile**: Hamburger-Menü, responsive Grids, angepasste Schriftgrößen
-- **Externe Links**: Betriebe/Kultur/Bildung → eigene Websites
-
-## Shop
-
-Der integrierte Shop (`/shop`) mit Warenkorb-Bestellfunktion per E-Mail (kein Online-Payment).
-
-### Features
-
-- **Produktübersicht**: Grid mit Produktkarten, Mini-Bildergalerie pro Karte
-- **Produktdetailseite**: `/shop/:id` mit großer Galerie, Beschreibung, Warenkorb-Button
-- **Volltextsuche**: Client-seitige Suche über Name, Beschreibung und Kategoriename
-- **Kategoriefilter**: Filter-Buttons mit Live-Anzahl der Treffer pro Kategorie (passt sich bei Suche an, leere Kategorien ausgegraut)
-- **URL-State**: Suche und Filter in Query-Parametern (`?q=...&kategorie=...`) -- jeder Zustand ist verlinkbar
-- **Warenkorb**: Sidebar-Overlay, localStorage-Persistenz, öffnet sich automatisch beim Hinzufügen
-- **Bestellung**: Warenkorb → Bestellformular → Bestätigung → mailto-Link
-
-## Rechtstexte
-
-Impressum, Datenschutz, AGB, Widerruf sowie Versand & Zahlung kommen aus der Datenbank
-(Migration `005_koop_legal_text.sql`) und gelten für **beide** Shops:
-
-- **Neuer Shop:** Header-Eintrag „Rechtliches“ und jeder Rechtstext-Link (Footer,
-  Cookie-Hinweis, Checkout) öffnen ein Popup mit einem Tab pro Seite. Daneben gibt es
-  die Einzelseiten `/impressum`, `/datenschutz`, `/agb`, `/widerruf` und `/versand`
-  (direkte Links, ohne JavaScript).
-- **Admin → Rechtstexte:** Markdown-Editor mit Live-Vorschau. Jede Änderung wird eine
-  neue Version; „Live schalten“ setzt genau eine Version pro Seite live, und ältere
-  Versionen lassen sich wieder aktivieren. `[[Platzhalter]]` werden markiert, und vor
-  dem Live-Schalten wird gewarnt.
-- **Altshop:** Patches ohne Änderung bestehender Dateien, siehe `legacy-shop/README.md`.
-- **Die Texte selbst liegen nicht in diesem Repository.** Lokal liegen sie in
-  `legal/<seite>/v1.md, v2.md, …` (per `.gitignore` ausgeschlossen). Mit dem
-  Import-Skript gelangen sie über die Admin-API in einen laufenden Shop. Importiert
-  werden nur Seiten, die noch keine Version haben:
-
-  ```sh
-  cd app
-  LEGAL_IMPORT_AUTH=user:passwort node scripts/legal-import.mjs ../legal --url https://… --dry-run
-  LEGAL_IMPORT_AUTH=user:passwort node scripts/legal-import.mjs ../legal --url https://…
-  ```
-
-  Das Dateiformat steht im Kopf von `app/scripts/legal-import.mjs`.
-- **Ohne Text** (noch nichts importiert, Datenbank nicht erreichbar) zeigt der neue
-  Shop einen neutralen Hinweis. Der Altshop zeigt dann seine Originalseite.
+Admin lokal: `/admin`, Zugang aus `ADMIN_USERS` (Default `admin:admin`).
 
 ## Konfiguration
 
-### `SESSION_SECRET` erzeugen
+Alle Variablen mit Kommentar in [`app/.env.template`](app/.env.template). In
+Stage und Produktion gehören die echten Werte nur auf den Server – das
+Repository ist öffentlich.
 
-Der `SESSION_SECRET` signiert die Login-Cookies (HMAC-SHA256). Für Stage und Produktion **muss** ein zufälliger Wert mit mindestens 32 Bytes Entropie verwendet werden — der Default in `.env.template` ist absichtlich unbrauchbar.
+| Variable | Zweck |
+|---|---|
+| `DB_*` | Verbindung zur gemeinsamen Datenbank |
+| `SESSION_SECRET` | Signiert die Login-Cookies; ≥ 32 Zeichen, z. B. `openssl rand -base64 48`. Ohne gültigen Wert verweigert Produktion den Login (503) |
+| `ADMIN_USERS` | Basic-Auth für `/admin`, `user:pass,user2:pass2`. Ohne Wert ist der Admin in Produktion gesperrt |
+| `ALLOW_DB_WRITES` | `false` macht den Shop schreibgeschützt (Stage) |
+| `SMTP_*`, `MAIL_FROM`, `MAIL_OPERATOR` | Mailversand; `MAIL_OPERATOR` bekommt die Bestellmails |
+| `PUBLIC_BASE_URL`, `ADMIN_BASE_URL` | Basis für Links in Mails (sonst aus dem Request-Host) |
+| `COMPANY_*` | Pflichtangaben im Mail-Footer (§ 35a GmbHG, § 125a HGB) |
 
-Generieren mit OpenSSL:
+## Rechtstexte importieren
 
-```bash
-openssl rand -base64 48
+Die Texte liegen lokal in `legal/<seite>/v1.md, v2.md, …` (gitignored) und
+gelangen über die Admin-API in einen laufenden Shop. Importiert werden nur
+Seiten, die noch keine Version haben; danach wird im Admin unter
+*Rechtstexte* bearbeitet und live geschaltet.
+
+```sh
+cd app
+LEGAL_IMPORT_AUTH=user:passwort node scripts/legal-import.mjs ../legal --url https://… --dry-run
+LEGAL_IMPORT_AUTH=user:passwort node scripts/legal-import.mjs ../legal --url https://…
 ```
 
-Den Output unverändert als `SESSION_SECRET=…` in die jeweilige `.env` (lokal) bzw. ins Deployment-Secrets-System (Stage/Prod) eintragen. Bei jedem Wechsel des Secrets werden alle bestehenden Sessions invalidiert — Nutzer:innen müssen sich neu anmelden.
+Das Dateiformat steht im Kopf von `app/scripts/legal-import.mjs`.
 
-In Produktion (`NODE_ENV=production`) verweigert der Server Login und Session-Prüfung (503), solange `SESSION_SECRET` fehlt, kürzer als 32 Zeichen ist oder dem Default aus `.env.template` entspricht.
+## Tests
 
-### Firmenangaben im Mail-Footer
+In `app/`:
 
-Jede Mail trägt im Footer die Pflichtangaben der Firma (§ 35a GmbHG, § 125a HGB). Weil das Repository öffentlich ist und diese Angaben personenbezogene Daten enthalten, kommen sie aus der Server-Umgebung: `COMPANY_NAME`, `COMPANY_STREET`, `COMPANY_CITY`, `COMPANY_MANAGER`, `COMPANY_REGISTER`, `COMPANY_EMAIL` und optional `COMPANY_VAT_ID` (siehe `app/.env.template`). Fehlende Werte werden weggelassen. Fehlt der Firmenname, protokolliert der Server das einmalig als Warnung.
+| Befehl | Prüft |
+|---|---|
+| `npm run test:lint` | ESLint + `vue-tsc` |
+| `npm run test:unit` | Vitest mit Coverage-Gate (100 %) |
+| `npm run e2e:stack:up && npm run test:e2e` | Playwright gegen eigenen Wegwerf-Stack (MariaDB 3307, maildev 1026) |
 
-## Security-Header
+Jedes Gate läuft in der CI als eigener Workflow. Aufbau und Konventionen:
+[docs/testing.md](docs/testing.md).
 
-`app/server/middleware/00.security-headers.ts` setzt auf jeder Antwort CSP (`frame-ancestors`, `base-uri`, `object-src`, `form-action`), `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy` und `Permissions-Policy`, in Produktion zusätzlich HSTS. `/admin`, `/bestellung` und `/api` bekommen `X-Robots-Tag: noindex`.
+## Release & Deployment
 
-## Version
+1. Commits folgen Conventional Commits; der PR-Titel wird geprüft.
+2. release-please pflegt einen Release-PR mit Version und `CHANGELOG.md`.
+3. Wird er gemergt, entsteht ein GitHub-Release. Ein Webhook auf dem Server
+   startet `.github/webhooks/deploy.sh`: Tag auschecken → `npm ci` → Build →
+   DB-Migrationen → pm2-Neustart → prüfen, dass `/api/version` die neue Version
+   meldet. Scheitert ein Schritt, bleibt die vorherige Version live.
 
-Die Version steht in `app/package.json` und wird bei jedem Release von release-please mit hochgezählt (`extra-files` in `release-please-config.json`, inkl. `package-lock.json`). Sie wird beim Build eingebrannt und angezeigt:
+Einrichtung von Webhook, pm2 und nginx: [.github/webhooks/README.md](.github/webhooks/README.md).
 
-- `GET /api/version` → `{ "version": "0.10.0", "builtAt": "…" }` (nicht cachebar)
-- `<meta name="app-version">` im HTML
-- dezent im Footer der Website
-- in der Admin-Sidebar inkl. Build-Zeitpunkt
+## Verzeichnisse
 
-`.github/webhooks/deploy.sh` prüft nach dem Neustart per `scripts/verify-deploy.mjs`, dass der Server die Version des deployten Tags meldet, und bricht sonst mit Fehler ab.
-
-## Deployment
-
-Automatisch via GitHub Actions bei Push auf `master`:
-
-1. `npm ci` im `app/`-Verzeichnis
-2. `npx nuxt generate` erstellt statische Dateien
-3. Deploy nach GitHub Pages unter `/kooperative.de/`
-
-Manuell: **Settings → Pages → Source: GitHub Actions**
-
----
-
-## Sitemap (aus docs/wwweb.pdf)
-
-### Hauptnavigation
-
-| Bereich | Beschreibung |
-|---------|-------------|
-| **Kooperative Dürnau** | Startseite |
-| **Bestellung** | Online-Shop |
-| **Arbeit** | Arbeitsbereiche der Kooperative |
-| **Kultur** | Kulturangebote |
-| **Bildung** | Bildungsangebote |
-| **Gäste** | Informationen für Gäste |
-
-### Info (global)
-
-Historie, Kontakt, Impressum, Datenschutz
-
-### Bestellung (Shop)
-
-| Kategorie | Unterkategorien |
-|-----------|----------------|
-| **Bücher** | Kooperative, Andere, Gebrauchte, Kataloge, Karten, Noten |
-| **Papeterie** | Bücher, Notizblöcke, Postkarten, Poster |
-| **Medien** | Texte, Sprache, Filme, Musik |
-| **Sonett** | Wäsche, Geschirr, Putzmittel, Körperpflege, Zubehör |
-| **Körperpflege** | Gesicht, Mund & Zähne, Haut & Haare, Hand & Fuss, Bad & Dusche, Anwendungen |
-| **Holz** | Spiele, Türen, Stühle, Särge |
-
-### Arbeit
-
-Bau, Druckerei, Schreinerei, Gärtnerei Morgengrauen (extern), Allround Dienst Reisiger
-
-### Kultur
-
-Veranstaltungen, Theater, Landwirtschaft, Kulturfond, poinz zero (extern) -- gemeinsamer Kalender
-
-### Bildung
-
-Veranstaltungen, Sprache, Bienen, Praktika, Dorfuniversität (extern) -- gemeinsamer Kalender
-
-### Gäste
-
-Veranstaltungen, Orientierung, Lernen, Hilfe, Tagesgäste -- gemeinsamer Kalender
-
----
-
-## Verlinkte externe URLs
-
-### Shop (shop.kooperative.de)
-
-| Bereich | URL |
-|---------|-----|
-| Shop Startseite | https://shop.kooperative.de/ |
-| Bücher | https://shop.kooperative.de/buecher_aktuell.php |
-| Papeterie | https://shop.kooperative.de/papeterie_aktuell.php |
-| Medien | https://shop.kooperative.de/medien_aktuell.php |
-| Sonett | https://shop.kooperative.de/sonett_aktuell.php |
-| Körperpflege | https://shop.kooperative.de/koerperpflege_aktuell.php |
-| Holz | https://shop.kooperative.de/holz_aktuell.php |
-| Lebensmittel | https://shop.kooperative.de/lebensmittel_aktuell.php |
-| Diverses | https://shop.kooperative.de/diverses_aktuell.php |
-
-### Externe Websites
-
-| Bereich | URL |
-|---------|-----|
-| Gärtnerei Morgengrauen | https://www.gaertnerei-morgengrauen.de/ |
-| poinz zero (Fercher von Steinwand e.V.) | https://www.ferchervonsteinwand.org/ |
-| Dorfuniversität | https://www.dorf-uni.de/ |
-
-### Noch ohne externe URL
-
-Bau, Druckerei, Schreinerei, Allround Dienst Reisiger
-
----
-
-## Bestehende Websites (Referenz)
-
-| Website | Typ | Technik |
-|---------|-----|---------|
-| [kooperative.de](https://www.kooperative.de/) | Hauptseite | Statisches HTML, GIF, JS-Popups |
-| [gaertnerei-morgengrauen.de](https://www.gaertnerei-morgengrauen.de/) | Gärtnerei | Statisches HTML |
-| [dorf-uni.de](https://www.dorf-uni.de/) | Dorfuniversität | PHP |
-| [ferchervonsteinwand.org](https://www.ferchervonsteinwand.org/) | Kulturverein | Frames, DE/EN |
-| [restderwelt.de](https://www.restderwelt.de/) | Privat | Planeten-Navigation |
-
----
-
-## Arbeitsprotokoll
-
-### 2026-02-17 -- Initiale Umsetzung
-
-1. **Sitemap-Analyse**: `docs/wwweb.pdf` analysiert und Seitenstruktur dokumentiert
-2. **Bestehende Websites dokumentiert**: 5 Websites analysiert (kooperative.de, gaertnerei-morgengrauen.de, dorf-uni.de, ferchervonsteinwand.org, restderwelt.de)
-3. **Nuxt-Startseite erstellt**: Layout mit Header/Footer + Startseite mit allen Bereichen
-4. **Tailwind CSS installiert**: `@nuxtjs/tailwindcss` Modul
-5. **Hero-Sektion**: 100vh mit Hintergrundbild, Text-Overlay
-6. **Suche aus Header entfernt**
-7. **Logo im Menü**: Kooperative-Logo als Bild eingebaut
-8. **Shrinking Header**: Fixed-Menü das sich beim Scrollen verkleinert (Scroll-Richtung-aware)
-9. **Grüne Info-Leiste**: Versteckt sich beim Runterscrollen
-10. **Bestellung-Sektion**: 100vh, 8 Shop-Kategorien mit externen Links zu shop.kooperative.de, CTA "Zum Shop"
-11. **Arbeit-Sektion**: 100vh, 5 Betriebe, externe Links wo vorhanden
-12. **Kultur-Sektion**: 100vh, 5 Bereiche, poinz zero → ferchervonsteinwand.org
-13. **Bildung-Sektion**: 100vh, 5 Bereiche, Dorfuniversität → dorf-uni.de
-14. **Gäste-Sektion**: 100vh, 5 Bereiche
-15. **Bilder von bestehenden Websites heruntergeladen**: 24 Bilder in docs/img/
-16. **Hintergrundbilder**: Stock Photos von Unsplash für alle Sektionen + Hero
-17. **Lesbarkeit**: Text-Schatten + dunkle Overlays auf allen Sektionen
-18. **Scroll-Snapping**: JS-basiert -- runter springt zur nächsten Sektion, hoch ist frei (Hero rastet ein)
-19. **Mobiloptimierung**: Hamburger-Menü, responsive Grids/Schriftgrößen, min-h-screen auf Mobile
-20. **Active-Section-Highlighting**: IntersectionObserver markiert aktiven Menüeintrag
-21. **Logo-Highlight**: Logo wird größer + Glow wenn Hero sichtbar
-22. **GitHub Pages Deployment**: GitHub Actions Workflow, baseURL-Fix für Bild-Pfade
-
-### 2026-02-18 -- Shop-Ausbau
-
-1. **Produktdetailseite**: Dynamische Route `/shop/:id` mit Galerie, Produktinfo, Warenkorb-Integration
-2. **Volltextsuche**: Suchfeld durchsucht Name, Beschreibung und Kategoriename
-3. **URL-State**: Kategorie und Suche als Query-Parameter synchronisiert (verlinkbar, Back/Forward)
-4. **Kategorie-Counts**: Filter-Buttons zeigen Trefferanzahl, passt sich bei Suche an
-5. **Leere Kategorien ausgegraut**: Kategorien mit 0 Treffern sind disabled und visuell abgeschwächt
-6. **Warenkorb öffnet automatisch**: Sidebar öffnet sich beim Hinzufügen eines Produkts
+| Pfad | Inhalt |
+|---|---|
+| `app/` | Nuxt-Anwendung: `app/` (Frontend), `server/` (API, Admin-API, Mails), `e2e/`, `scripts/` |
+| `database/` | Docker-Image der Dev-DB und `migrations/` (additiv, beim Deploy ausgeführt) |
+| `legacy-shop/` | Patches für den Altshop |
+| `docs/` | Doku, Bildmaterial, [Sitemap aus der Konzeptphase](docs/sitemap.md) |
+| `.github/` | CI-Workflows, Release-Konfiguration, Deploy-Webhook |
