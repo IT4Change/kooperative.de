@@ -305,14 +305,16 @@ describe('the status stepper', () => {
     expect(wrapper.text()).toContain('Kundin hat telefonisch bestätigt.')
   })
 
-  it('says nothing about a confirmation that never happened', async () => {
-    // A new-shop order can sit in the list before the customer answered.
+  it('explains that a direct new-shop order had no confirmation step', async () => {
+    // Since the standard-shop checkout, a new-shop order carries no confirmation.
     detail = { ...base(), confirmation: null }
 
     const wrapper = await mount()
 
+    expect(wrapper.find('[data-testid="direct-order-hint"]').exists()).toBe(true)
+    expect(wrapper.text()).toContain('Zahlungspflichtig bestellen')
     expect(wrapper.text()).not.toContain('Vom Kunden bestätigt')
-    expect(wrapper.text()).not.toContain('Schritt 1 entfällt')
+    expect(wrapper.text()).not.toContain('alten Shop')
   })
 
   it('explains that old orders were never confirmed', async () => {

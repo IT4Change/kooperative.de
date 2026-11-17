@@ -1,8 +1,9 @@
 import { getPendingByToken } from '../../../utils/pendingOrder'
 
 /**
- * Public (token-gated) read of a pending order, for the customer review page.
- * Returns the pinned order content so the customer can check it before confirming.
+ * Public (token-gated) read of a new-shop order, for the customer review page.
+ * Returns the pinned order content: for an order still awaiting confirmation
+ * (former flow) to check before confirming, for a direct order to look it up.
  */
 export default defineEventHandler(async (event) => {
   const token = (getRouterParam(event, 'token') || '').trim()
@@ -18,6 +19,9 @@ export default defineEventHandler(async (event) => {
   return {
     status: pending.status,
     orderId: pending.ordersId,
+    // Placed at checkout without a confirmation step (standard shop). The page
+    // then speaks of a received order, not a confirmed one.
+    direct: pending.confirmedVia === 'direct',
     customer: {
       name: comp.customer.name,
       email: comp.customer.email,

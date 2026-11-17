@@ -3,10 +3,10 @@ import { describe, it, expect } from 'vitest'
 
 import { buildOrderMail } from './orderMail'
 import {
-  buildCustomerConfirmRequest,
-  buildAdminNewPending,
   buildCustomerConfirmed,
   buildAdminConfirmed,
+  buildCustomerOrderReceived,
+  buildAdminNewOrder,
 } from './pendingMail'
 import { buildStatusMail } from './statusMail'
 
@@ -184,16 +184,18 @@ const CASES: [name: string, mail: BuiltMail][] = [
   ['order-admin-full', buildOrderMail(CTX)],
   ['order-admin-bare', buildOrderMail(CTX_BARE)],
 
-  // Confirmation flow, in the order the four mails go out.
+  // Direct order (standard shop): receipt to the customer, new order to the admin.
   [
-    'pending-customer-confirm-request',
-    buildCustomerConfirmRequest({ pendingId: 12, comp: COMP, reviewUrl: REVIEW_URL }),
+    'direct-customer-received',
+    buildCustomerOrderReceived({ orderId: 55, comp: COMP, reviewUrl: REVIEW_URL }),
   ],
   [
-    'pending-customer-confirm-request-pickup',
-    buildCustomerConfirmRequest({ pendingId: 13, comp: COMP_PICKUP, reviewUrl: REVIEW_URL }),
+    'direct-customer-received-pickup',
+    buildCustomerOrderReceived({ orderId: 56, comp: COMP_PICKUP, reviewUrl: REVIEW_URL }),
   ],
-  ['pending-admin-new', buildAdminNewPending({ pendingId: 12, comp: COMP, adminUrl: ADMIN_URL })],
+  ['direct-admin-new', buildAdminNewOrder({ orderId: 55, comp: COMP, adminUrl: ADMIN_URL })],
+
+  // Former confirmation flow — still finishes orders placed before the switch.
   [
     'pending-customer-confirmed',
     buildCustomerConfirmed({ orderId: 55, comp: COMP, reviewUrl: REVIEW_URL }),

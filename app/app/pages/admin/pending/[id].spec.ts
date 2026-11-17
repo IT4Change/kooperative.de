@@ -395,6 +395,8 @@ describe('a confirmed process', () => {
   it.each([
     ['reply', 'per Antwort'],
     ['link', 'per Link'],
+    // A standard-shop order: placed directly, never confirmed by anyone.
+    ['direct', 'direkt bestellt'],
   ])('names confirmation via %s', async (via, label) => {
     detail = {
       ...base(),

@@ -326,6 +326,7 @@
     return 'bg-amber-100 text-amber-800'
   })
   function viaLabel(via: string | null): string {
+    if (via === 'direct') return 'direkt bestellt'
     return via === 'admin' ? 'manuell im Admin' : via === 'reply' ? 'per Antwort' : 'per Link'
   }
 

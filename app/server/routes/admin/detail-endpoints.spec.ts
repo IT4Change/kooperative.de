@@ -341,6 +341,27 @@ describe('GET /admin/api/orders/[id]', () => {
     expect(result.statusFlow[0]).toMatchObject({ id: -1, name: 'Bestätigt', state: 'done' })
   })
 
+  it('shows a direct new-shop order without a confirmation step', async () => {
+    // Standard-shop checkout: new shop, but nobody ever confirmed — the step
+    // is greyed out like for the old shop, the origin stays "neu".
+    orderDb()
+    getPendingByOrderId.mockResolvedValue({
+      confirmedVia: 'direct',
+      confirmedAt: '2026-11-16 20:00:00',
+      confirmNote: null,
+    })
+
+    const result = await callHandler<{
+      origin: string
+      confirmation: null
+      statusFlow: { id: number; name: string; state: string; note?: string }[]
+    }>(orderDetail, { params: { id: '55' } })
+
+    expect(result.origin).toBe('neu')
+    expect(result.confirmation).toBeNull()
+    expect(result.statusFlow[0]).toMatchObject({ id: -1, state: 'skipped', note: 'entfällt' })
+  })
+
   it('carries the reason of a manual release to the order view', async () => {
     orderDb()
     getPendingByOrderId.mockResolvedValue({

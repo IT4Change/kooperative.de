@@ -25,9 +25,11 @@ vi.mock(import('../utils/dbWrite'), () => ({ dbUpdateExpr }))
 const computeOrder = vi.hoisted(() => vi.fn())
 vi.mock(import('../utils/orderCompute'), () => ({ computeOrder }))
 
-const createPendingOrder = vi.hoisted(() => vi.fn())
 const getPendingByToken = vi.hoisted(() => vi.fn())
-vi.mock(import('../utils/pendingOrder'), () => ({ createPendingOrder, getPendingByToken }))
+vi.mock(import('../utils/pendingOrder'), () => ({ getPendingByToken }))
+
+const placeDirectOrder = vi.hoisted(() => vi.fn())
+vi.mock(import('../utils/directOrder'), () => ({ placeDirectOrder }))
 
 const confirmPending = vi.hoisted(() => vi.fn())
 vi.mock(import('../utils/pendingConfirm'), () => ({ confirmPending }))
@@ -81,7 +83,7 @@ beforeEach(() => {
   useMockDb()
   getCatalog.mockResolvedValue({ products: [product()], categories: CATEGORIES })
   computeOrder.mockResolvedValue(COMP)
-  createPendingOrder.mockResolvedValue({ id: 12, token: 'tok' })
+  placeDirectOrder.mockResolvedValue({ ordersId: 55, pendingId: 12 })
   confirmPending.mockResolvedValue({ ordersId: 55, alreadyDone: false })
   sendAndLogOrderMail.mockResolvedValue({ status: 'sent', errorMessage: null })
 })
@@ -329,34 +331,28 @@ describe('POST /api/orders', () => {
   }
   const cookie = () => `koop_session=${signSession({ customerId: 3, email: 'kundin@example.org' })}`
 
-  it('parks the order as pending and reports its id', async () => {
+  it('places the order directly and reports its order number', async () => {
     const result = await callHandler(ordersPost, {
       method: 'POST',
       body: ORDER,
       headers: { cookie: cookie() },
     })
 
-    expect(result).toStrictEqual({ ok: true, pendingId: 12, total: 23.8 })
-    // Nothing is written to the osCommerce tables before the customer confirms.
-    expect(createPendingOrder).toHaveBeenCalledWith(
+    // "Zahlungspflichtig bestellen" is binding: no confirmation round trip, the
+    // customer gets the osCommerce order number straight away.
+    expect(result).toStrictEqual({ ok: true, orderId: 55, total: 23.8 })
+    expect(placeDirectOrder).toHaveBeenCalledWith(
       expect.anything(),
-      expect.objectContaining({ customerId: 3, email: 'kundin@example.org', total: 23.8 }),
       expect.anything(),
+      { input: expect.objectContaining({ paymentMethod: 'vorkasse' }), comp: COMP },
+      expect.objectContaining({}),
     )
   })
 
-  it('mails the customer and the operator', async () => {
+  it('computes the order for the customer behind the session', async () => {
     await callHandler(ordersPost, { method: 'POST', body: ORDER, headers: { cookie: cookie() } })
 
-    expect(sendAndLogOrderMail).toHaveBeenCalledTimes(2)
-    const directions = sendAndLogOrderMail.mock.calls.map(([, m]) => m.direction as string)
-    expect(directions).toStrictEqual(['to_customer', 'to_admin'])
-  })
-
-  it('lets the operator reply straight to the customer', async () => {
-    await callHandler(ordersPost, { method: 'POST', body: ORDER, headers: { cookie: cookie() } })
-
-    expect(sendAndLogOrderMail.mock.calls[1][1].replyTo).toBe('kundin@example.org')
+    expect(computeOrder).toHaveBeenCalledWith(expect.anything(), 3, expect.anything())
   })
 
   it('refuses an anonymous checkout', async () => {
@@ -375,6 +371,7 @@ describe('POST /api/orders', () => {
       }),
     ).rejects.toMatchObject({ statusCode: 400 })
     expect(computeOrder).not.toHaveBeenCalled()
+    expect(placeDirectOrder).not.toHaveBeenCalled()
   })
 })
 
@@ -390,6 +387,7 @@ describe('GET /api/orders/pending/[token]', () => {
 
     expect(result).toMatchObject({
       status: 'pending',
+      direct: false,
       customer: { name: 'Erika Musterfrau' },
       subtotal: 23.8,
       payment: 'Bezahlung mit Vorkasse',
@@ -398,6 +396,22 @@ describe('GET /api/orders/pending/[token]', () => {
     expect(result.items).toStrictEqual([
       { name: 'Honig', quantity: 2, unitPrice: 11.9, lineTotal: 23.8 },
     ])
+  })
+
+  it('marks an order placed without a confirmation step as direct', async () => {
+    getPendingByToken.mockResolvedValue({
+      ...PENDING,
+      status: 'materialized',
+      ordersId: 55,
+      confirmedVia: 'direct',
+    })
+
+    const result = await callHandler<Record<string, unknown>>(pendingByToken, {
+      params: { token: 'tok' },
+    })
+
+    // The review page must not tell a direct order it was "confirmed".
+    expect(result).toMatchObject({ status: 'materialized', orderId: 55, direct: true })
   })
 
   it('rounds the tax rows to cents', async () => {

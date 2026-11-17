@@ -103,6 +103,6 @@ export async function checkout(
   if (notes != null) await page.getByLabel('Anmerkungen (optional)').fill(notes)
   await page.getByRole('button', { name: 'Weiter zur Übersicht' }).click()
 
-  await page.getByRole('button', { name: 'Bestellung absenden' }).click()
+  await page.getByRole('button', { name: 'Zahlungspflichtig bestellen' }).click()
   await expect(page.getByTestId('cart-success')).toBeVisible()
 }

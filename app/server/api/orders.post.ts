@@ -1,20 +1,13 @@
 import { requireSession } from '../utils/auth'
-import { reviewLink, adminPendingLink } from '../utils/links'
-import { MAIL_OPERATOR } from '../utils/mailer'
+import { placeDirectOrder } from '../utils/directOrder'
 import { computeOrder } from '../utils/orderCompute'
-import { sendAndLogOrderMail } from '../utils/orderMailLog'
-import { buildCustomerConfirmRequest, buildAdminNewPending } from '../utils/pendingMail'
-import { createPendingOrder } from '../utils/pendingOrder'
 import { parseOrder } from '../utils/validate'
 
 /**
- * New-shop checkout — mail-based confirmation flow.
- * The order is NOT written to the osCommerce tables here. It is computed (prices
- * pinned) and stored as a koop_pending_order ("Bestätigung ausstehend"). The
- * customer receives a confirmation-request mail (link → review page, or reply);
- * the administration receives an "unbestätigt" info mail. The order is only
- * materialized into osCommerce once confirmed (see api/orders/confirm.post.ts and
- * the admin pending endpoints).
+ * New-shop checkout. "Zahlungspflichtig bestellen" is the customer's binding
+ * offer (§ 312j BGB): the order is written to osCommerce right away and the
+ * customer receives a receipt — not yet an acceptance, see AGB § 2 and
+ * placeDirectOrder().
  */
 export default defineEventHandler(async (event) => {
   const session = requireSession(event)
@@ -24,55 +17,7 @@ export default defineEventHandler(async (event) => {
   const db = useDB()
 
   const comp = await computeOrder(db, session.customerId, input)
+  const { ordersId } = await placeDirectOrder(db, event, { input, comp }, { remoteIp })
 
-  const { id: pendingId, token } = await createPendingOrder(
-    db,
-    {
-      customerId: comp.customer.customerId,
-      email: comp.customer.email,
-      payload: { input, comp },
-      total: comp.total,
-    },
-    { remoteIp },
-  )
-
-  const review = reviewLink(event, token)
-  const adminUrl = adminPendingLink(event, pendingId)
-
-  // Customer: please confirm your order
-  const cust = buildCustomerConfirmRequest({ pendingId, comp, reviewUrl: review })
-  await sendAndLogOrderMail(
-    db,
-    {
-      pendingOrderId: pendingId,
-      direction: 'to_customer',
-      recipient: comp.customer.email,
-      mailType: 'order_confirmation_request',
-      subject: cust.subject,
-      text: cust.text,
-      html: cust.html,
-      sentBy: 'system',
-    },
-    { remoteIp },
-  )
-
-  // Administration: a new unconfirmed order has arrived
-  const adm = buildAdminNewPending({ pendingId, comp, adminUrl })
-  await sendAndLogOrderMail(
-    db,
-    {
-      pendingOrderId: pendingId,
-      direction: 'to_admin',
-      recipient: MAIL_OPERATOR,
-      mailType: 'admin_new_pending',
-      subject: adm.subject,
-      text: adm.text,
-      html: adm.html,
-      replyTo: comp.customer.email,
-      sentBy: 'system',
-    },
-    { remoteIp },
-  )
-
-  return { ok: true, pendingId, total: comp.total }
+  return { ok: true, orderId: ordersId, total: comp.total }
 })
