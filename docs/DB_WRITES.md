@@ -154,9 +154,12 @@ damit der Alt-Shop bei einem späteren Login den Eintrag im IBAN-Formular voraus
 
 ### 3a. Bestellung anlegen — `POST /api/orders`
 
-**INSERT INTO `koop_pending_order`** (`token, customers_id, email, payload` (JSON:
-`{input, comp}` mit gepinnter Berechnung), `total`, `status='pending'`, `created_at`),
+**INSERT INTO `koop_pending_order`** (`token`, optional `idempotency_key`, `customers_id,
+email, payload` (JSON: `{input, comp}` mit gepinnter Berechnung), `total`,
+`status='pending'`, `created_at`),
 unmittelbar gefolgt von der Materialisierung aus 3b mit `confirmed_via='direct'`.
+Kommt derselbe `idempotency_key` erneut, wird **nichts** geschrieben und keine Mail
+verschickt; die Antwort nennt die erste Bestellung.
 Plus 2× **INSERT INTO `koop_order_mail_log`** (`order_received` an Kunde,
 `admin_new_order` an Betreiber).
 
@@ -281,6 +284,7 @@ Migrationen:
 - `004_pending_confirm_note.sql` — Notiz zur manuellen Bestätigung.
 - `005_koop_legal_text.sql` — versionierte Rechtstexte (Versionen, Live-Zeiger, Aktivierungsprotokoll).
 - `006_pending_direct_order.sql` — `confirmed_via` um `'direct'` erweitert (Direktkauf).
+- `007_pending_idempotency_key.sql` — `idempotency_key` + Unique-Key je Kunde (doppelte Bestellversuche).
 
 **„Bestätigung ausstehend" ist via „Materialize-on-confirm" umgesetzt:** Der Status
 existiert nur in `koop_pending_order`, NICHT als Zeile in der geteilten `orders_status`.

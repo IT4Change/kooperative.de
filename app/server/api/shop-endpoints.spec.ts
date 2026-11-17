@@ -5,6 +5,7 @@ import '../../test/setup-server'
 import { callHandler, createTestEvent, statusOf } from '../../test/helpers/event'
 import { createMockDb } from '../../test/helpers/mock-db'
 import { signSession } from '../utils/auth'
+import { LIMITS, resetRateLimits } from '../utils/rateLimit'
 
 import ibanInfoEndpoint from './iban/info.get'
 import ordersConfirm from './orders/confirm.post'
@@ -79,6 +80,7 @@ function useMockDb(stubs: Parameters<typeof createMockDb>[0] = []) {
 }
 
 beforeEach(() => {
+  resetRateLimits()
   vi.clearAllMocks()
   useMockDb()
   getCatalog.mockResolvedValue({ products: [product()], categories: CATEGORIES })
@@ -344,7 +346,11 @@ describe('POST /api/orders', () => {
     expect(placeDirectOrder).toHaveBeenCalledWith(
       expect.anything(),
       expect.anything(),
-      { input: expect.objectContaining({ paymentMethod: 'vorkasse' }), comp: COMP },
+      {
+        input: expect.objectContaining({ paymentMethod: 'vorkasse' }),
+        comp: COMP,
+        idempotencyKey: undefined,
+      },
       expect.objectContaining({}),
     )
   })
@@ -372,6 +378,32 @@ describe('POST /api/orders', () => {
     ).rejects.toMatchObject({ statusCode: 400 })
     expect(computeOrder).not.toHaveBeenCalled()
     expect(placeDirectOrder).not.toHaveBeenCalled()
+  })
+
+  it('passes the attempt’s idempotency key on', async () => {
+    const key = '2F1C7A52-8C4E-4B8E-9F00-0123456789AB'
+    await callHandler(ordersPost, {
+      method: 'POST',
+      body: { ...ORDER, idempotencyKey: key },
+      headers: { cookie: cookie() },
+    })
+
+    expect(placeDirectOrder).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.anything(),
+      expect.objectContaining({ idempotencyKey: key.toLowerCase() }),
+      expect.anything(),
+    )
+  })
+
+  it('stops a customer who orders more often than any household does', async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const send = async () =>
+      callHandler(ordersPost, { method: 'POST', body: ORDER, headers: { cookie: cookie() } })
+    for (let i = 0; i < LIMITS.ordersPerCustomer.max; i++) await send()
+
+    await expect(send()).rejects.toMatchObject({ statusCode: 429 })
+    expect(placeDirectOrder).toHaveBeenCalledTimes(LIMITS.ordersPerCustomer.max)
   })
 })
 

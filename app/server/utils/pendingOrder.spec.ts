@@ -7,6 +7,7 @@ import { createMockDb } from '../../test/helpers/mock-db'
 import {
   createPendingOrder,
   getPendingByToken,
+  findPendingByIdempotencyKey,
   getPendingById,
   getPendingByOrderId,
   materializePending,
@@ -129,6 +130,19 @@ describe('createPendingOrder', () => {
   })
 })
 
+describe('createPendingOrder with an idempotency key', () => {
+  it('stores the key, and leaves the column alone without one', async () => {
+    const db = createMockDb()
+    const args = { customerId: 3, email: 'e@example.org', payload: PAYLOAD as never, total: 1 }
+
+    await createPendingOrder(db.pool, { ...args, idempotencyKey: 'k' })
+    await createPendingOrder(db.pool, args)
+
+    expect(dbInsert.mock.calls[0][2]).toMatchObject({ idempotency_key: 'k' })
+    expect(dbInsert.mock.calls[1][2]).not.toHaveProperty('idempotency_key')
+  })
+})
+
 describe('lookups', () => {
   it.each([
     ['token', () => getPendingByToken, 'a'.repeat(64), 'WHERE token = ?'],
@@ -154,6 +168,18 @@ describe('lookups', () => {
 
     await expect(getPendingById(db.pool, 12)).resolves.toBeNull()
     await expect(getPendingByOrderId(db.pool, 55)).resolves.toBeNull()
+    await expect(findPendingByIdempotencyKey(db.pool, 3, 'k')).resolves.toBeNull()
+  })
+
+  it('finds a checkout attempt by its key, within the customer only', async () => {
+    const db = createMockDb([{ match: 'koop_pending_order', rows: [row()] }])
+
+    const found = await findPendingByIdempotencyKey(db.pool, 3, 'k')
+
+    expect(found).toMatchObject({ id: 12 })
+    // A key alone must not reach another customer's order.
+    expect(db.sql(0)).toContain('WHERE customers_id = ? AND idempotency_key = ?')
+    expect(db.calls[0].params).toStrictEqual([3, 'k'])
   })
 
   it('reads a confirmed row with all its optional columns filled', async () => {

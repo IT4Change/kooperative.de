@@ -1,5 +1,6 @@
 import { verifyPassword, setSessionCookie } from '../../utils/auth'
 import { dbUpdateExpr } from '../../utils/dbWrite'
+import { LIMITS, rateLimit } from '../../utils/rateLimit'
 import { parseLogin } from '../../utils/validate'
 
 import type { RowDataPacket } from 'mysql2/promise'
@@ -7,6 +8,10 @@ import type { RowDataPacket } from 'mysql2/promise'
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
   const input = parseLogin(body)
+  const remoteIp = getRequestIP(event, { xForwardedFor: true })
+  // Before the lookup, so a blocked attempt costs neither a query nor a hash.
+  rateLimit(event, 'login:ip', remoteIp, LIMITS.loginPerIp)
+  rateLimit(event, 'login:email', input.email, LIMITS.loginPerEmail)
 
   const db = useDB()
   const [rows] = await db.execute<RowDataPacket[]>(
@@ -22,7 +27,6 @@ export default defineEventHandler(async (event) => {
   if (!verifyPassword(input.password, String(row.customers_password))) throw fail()
 
   const customerId = row.customers_id as number
-  const remoteIp = getRequestIP(event, { xForwardedFor: true })
 
   // Best-effort logon counter, exactly like the old shop
   try {
