@@ -1,3 +1,4 @@
+import { loadContractTerms } from './contractTerms'
 import { reviewLink, adminOrderLink } from './links'
 import { MAIL_OPERATOR } from './mailer'
 import { sendAndLogOrderMail } from './orderMailLog'
@@ -18,6 +19,10 @@ import type { Pool } from 'mysql2/promise'
  * relies on: the review token for the customer's mail link, the "neuer Shop"
  * origin (orders_id link) and the pinned price snapshot; materializing scrubs
  * the bank details from it exactly as for a confirmed order.
+ *
+ * The receipt carries the live AGB and Widerrufsbelehrung, so the customer
+ * holds the contract text on a durable medium (§ 312f Abs. 2 BGB) and the
+ * mail log proves which wording applied.
  *
  * Should the insert into osCommerce fail, the record stays 'pending' and shows
  * up in the admin as "Bestätigung ausstehend", where the operator can release
@@ -54,6 +59,7 @@ export async function placeDirectOrder(
     orderId: ordersId,
     comp,
     reviewUrl: reviewLink(event, token),
+    terms: await loadContractTerms(db),
   })
   await sendAndLogOrderMail(
     db,

@@ -68,9 +68,7 @@ describe('footerText', () => {
   it('appends the invoice note when asked for', async () => {
     const { footerText } = await load()
 
-    expect(footerText(true)).toMatch(
-      /info@example\.org\n\nDiese Bestellbestätigung ist keine Rechnung\.$/,
-    )
+    expect(footerText(true)).toMatch(/info@example\.org\n\nDiese E-Mail ist keine Rechnung\.$/)
   })
 })
 
@@ -113,7 +111,7 @@ describe('footerHtml', () => {
   it('appends the invoice note when asked for', async () => {
     const { footerHtml } = await load()
 
-    expect(footerHtml(true)).toContain('Diese Bestellbestätigung ist keine Rechnung.')
+    expect(footerHtml(true)).toContain('Diese E-Mail ist keine Rechnung.')
   })
 })
 

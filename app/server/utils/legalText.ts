@@ -21,6 +21,8 @@ export interface LiveLegalText {
   versionId: number
   versionNo: number
   html: string
+  /** The Markdown source — readable as plain text, e.g. for a mail's text part. */
+  bodyMd: string
   activatedAt: string
 }
 
@@ -54,7 +56,7 @@ const iso = (value: unknown) => new Date(value as string).toISOString()
 /** The live text of a page, or null when none has been activated yet. */
 export async function getLiveLegalText(db: Pool, slug: LegalSlug): Promise<LiveLegalText | null> {
   const [rows] = await db.execute<RowDataPacket[]>(
-    `SELECT v.id, v.version_no, v.body_html, l.activated_at
+    `SELECT v.id, v.version_no, v.body_html, v.body_md, l.activated_at
        FROM koop_legal_text_live l
        JOIN koop_legal_text_version v ON v.id = l.version_id
       WHERE l.slug = ? LIMIT 1`,
@@ -67,6 +69,7 @@ export async function getLiveLegalText(db: Pool, slug: LegalSlug): Promise<LiveL
     versionId: Number(row.id),
     versionNo: Number(row.version_no),
     html: String(row.body_html),
+    bodyMd: String(row.body_md),
     activatedAt: iso(row.activated_at),
   }
 }

@@ -50,7 +50,7 @@ describe('getLiveLegalText', () => {
     const db = createMockDb([
       {
         match: 'FROM koop_legal_text_live l',
-        rows: [{ id: 7, version_no: 2, body_html: '<p>x</p>', activated_at: T1 }],
+        rows: [{ id: 7, version_no: 2, body_html: '<p>x</p>', body_md: 'x', activated_at: T1 }],
       },
     ])
 
@@ -59,6 +59,7 @@ describe('getLiveLegalText', () => {
       versionId: 7,
       versionNo: 2,
       html: '<p>x</p>',
+      bodyMd: 'x',
       activatedAt: T1,
     })
     expect(db.calls[0].params).toStrictEqual(['agb'])

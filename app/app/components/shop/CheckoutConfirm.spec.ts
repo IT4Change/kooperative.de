@@ -227,14 +227,18 @@ describe('sending', () => {
 })
 
 describe('legal notice', () => {
-  it('opens AGB, Widerrufsbelehrung and Datenschutz in the legal dialog', async () => {
+  // Art. 246a § 1 / 246c EGBGB: what the customer must know before the
+  // binding click — delivery terms, withdrawal right, the terms, who sells.
+  it('links every text the customer must be able to read before ordering', async () => {
     useLegal().close()
     const wrapper = await mount()
     const links = wrapper.findAll('[data-testid="legal-notice"] a')
 
     expect(links.map((a) => a.attributes('href'))).toStrictEqual([
-      '/agb',
+      '/versand',
       '/widerruf',
+      '/agb',
+      '/impressum',
       '/datenschutz',
     ])
 
@@ -243,5 +247,25 @@ describe('legal notice', () => {
     // In place, so the half-finished checkout behind it stays as it is.
     expect(useLegal().current.value).toBe('widerruf')
     useLegal().close()
+  })
+
+  it('says that prices include VAT', async () => {
+    const wrapper = await mount()
+    expect(wrapper.find('[data-testid="vat-notice"]').text()).toBe('inkl. gesetzlicher MwSt.')
+  })
+
+  it('says where the contract text goes', async () => {
+    const wrapper = await mount()
+    expect(wrapper.find('[data-testid="legal-notice"]').text()).toContain(
+      'Sie erhalten ihn mit der Eingangsbestätigung per E-Mail',
+    )
+  })
+
+  it('tells a prepayment customer that shipping waits for the payment', async () => {
+    const prepay = await mount({ payment: 'vorkasse' })
+    const debit = await mount({ payment: 'lastschrift', iban: 'DE89370400440532013000' })
+
+    expect(prepay.find('[data-testid="delivery-notice"]').text()).toContain('nach Zahlungseingang')
+    expect(debit.find('[data-testid="delivery-notice"]').text()).not.toContain('Zahlungseingang')
   })
 })
