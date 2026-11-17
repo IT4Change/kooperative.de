@@ -41,6 +41,21 @@
         >
       </div>
 
+      <!-- Withdrawal declarations (§ 356a BGB) — the operator must not miss them. -->
+      <div
+        v-for="w in data.withdrawals"
+        :key="w.id"
+        class="bg-amber-50 border border-amber-300 text-amber-900 rounded-lg px-4 py-3 text-sm"
+        data-testid="withdrawal-notice"
+      >
+        <strong>Widerruf eingegangen</strong> am {{ dateTime(w.createdAt) }} –
+        {{ w.scope === 'all' ? 'gesamte Bestellung' : 'einzelne Artikel' }}.
+        <span v-if="w.items" class="block mt-1 whitespace-pre-wrap">Artikel: {{ w.items }}</span>
+        <span v-if="w.message" class="block mt-1 whitespace-pre-wrap"
+          >Nachricht: {{ w.message }}</span
+        >
+      </div>
+
       <!-- Status stepper -->
       <AdminStatusFlow :steps="data.statusFlow">
         <p
@@ -364,6 +379,13 @@
     oldAdminUrl: string | null
     availableStatuses: { id: number; name: string }[]
     mails: MailRow[]
+    withdrawals: {
+      id: number
+      scope: 'all' | 'partial'
+      items: string | null
+      message: string | null
+      createdAt: string
+    }[]
     order: {
       id: number
       statusId: number
@@ -441,6 +463,8 @@
     order_confirmation_request: 'Bestätigungsanfrage',
     order_received: 'Eingangsbestätigung',
     admin_new_order: 'Neue Bestellung',
+    withdrawal_received: 'Widerruf (Eingangsbestätigung)',
+    admin_withdrawal: 'Widerruf eingegangen',
     operator_notification: 'Betreiber-Info',
   }
   function mailTypeLabel(t: string): string {

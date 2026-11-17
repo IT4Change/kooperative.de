@@ -78,7 +78,7 @@ test('shows the live text on its own page', async ({ page }) => {
 test('opens the legal dialog in place, with a tab per page', async ({ page }) => {
   await page.goto('/')
 
-  await page.getByRole('contentinfo').getByRole('link', { name: 'Widerruf' }).click()
+  await page.getByRole('contentinfo').getByRole('link', { name: 'Widerruf', exact: true }).click()
 
   const dialog = page.getByRole('dialog', { name: 'Rechtliches' })
   await expect(dialog).toBeVisible()

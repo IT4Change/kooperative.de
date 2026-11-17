@@ -67,6 +67,7 @@ function base() {
         createdAt: '2026-03-04T10:01:00',
       },
     ],
+    withdrawals: [],
     order: {
       id: ID,
       statusId: 2,
@@ -408,6 +409,41 @@ describe('history and mails', () => {
     const wrapper = await mount()
 
     expect(wrapper.text()).toContain('Noch keine E-Mails zu dieser Bestellung.')
+  })
+})
+
+describe('withdrawals', () => {
+  it('shows nothing while none has been declared', async () => {
+    const wrapper = await mount()
+
+    expect(wrapper.find('[data-testid="withdrawal-notice"]').exists()).toBe(false)
+  })
+
+  it('puts a declared withdrawal above everything else, with what it covers', async () => {
+    detail = {
+      ...base(),
+      withdrawals: [
+        { id: 1, scope: 'all', items: null, message: null, createdAt: '2026-11-17T13:03:00Z' },
+        {
+          id: 2,
+          scope: 'partial',
+          items: '1× Honig',
+          message: 'Glas kaputt',
+          createdAt: '2026-11-18T09:00:00Z',
+        },
+      ],
+    }
+
+    const wrapper = await mount()
+    const notices = wrapper.findAll('[data-testid="withdrawal-notice"]').map((n) => n.text())
+
+    expect(notices).toHaveLength(2)
+    expect(notices[0]).toContain('Widerruf eingegangen')
+    expect(notices[0]).toContain('gesamte Bestellung')
+    expect(notices[0]).not.toContain('Artikel:')
+    expect(notices[1]).toContain('einzelne Artikel')
+    expect(notices[1]).toContain('Artikel: 1× Honig')
+    expect(notices[1]).toContain('Nachricht: Glas kaputt')
   })
 })
 

@@ -140,6 +140,10 @@
           <strong>Rechtliches</strong>
           <nav aria-label="Rechtliches">
             <LegalLink v-for="page in LEGAL_PAGES" :key="page.slug" :slug="page.slug" />
+            <!-- § 356a BGB: the withdrawal function, reachable from every page. -->
+            <NuxtLink to="/vertrag-widerrufen" data-testid="withdrawal-link"
+              >Vertrag widerrufen</NuxtLink
+            >
           </nav>
         </div>
       </div>

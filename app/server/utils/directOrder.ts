@@ -1,5 +1,5 @@
 import { loadContractTerms } from './contractTerms'
-import { reviewLink, adminOrderLink } from './links'
+import { reviewLink, adminOrderLink, withdrawalLink } from './links'
 import { MAIL_OPERATOR } from './mailer'
 import { sendAndLogOrderMail } from './orderMailLog'
 import { buildCustomerOrderReceived, buildAdminNewOrder } from './pendingMail'
@@ -108,6 +108,7 @@ export async function placeDirectOrder(
     orderId: ordersId,
     comp,
     reviewUrl: reviewLink(event, token),
+    withdrawalUrl: withdrawalLink(event, ordersId),
     terms: await loadContractTerms(db),
   })
   await sendAndLogOrderMail(

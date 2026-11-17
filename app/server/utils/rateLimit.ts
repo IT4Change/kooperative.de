@@ -29,6 +29,9 @@ export const LIMITS = {
   /** Per customer: a household orders a few times a day, not dozens. */
   ordersPerCustomer: { max: 10, windowMs: 60 * 60_000 },
   ordersPerIp: { max: 30, windowMs: 60 * 60_000 },
+  /** Generous: a withdrawal must never be blocked for a real person. */
+  withdrawalsPerIp: { max: 20, windowMs: 60 * 60_000 },
+  withdrawalsPerEmail: { max: 10, windowMs: 60 * 60_000 },
 } as const satisfies Record<string, Limit>
 
 interface Window {

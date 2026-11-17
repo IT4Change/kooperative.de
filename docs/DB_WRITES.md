@@ -184,6 +184,19 @@ Reply). Beide rufen `confirmPending` → `materializePending` → `insertCompute
 - Storno: `POST /admin/api/pending/:id/cancel` → **UPDATE `koop_pending_order`** SET
   `status='cancelled'` (nie materialisiert, kein osCommerce-Write).
 
+### 3c. Widerruf erklären — `POST /api/withdrawal` (§ 356a BGB)
+
+Dateien: `app/server/api/withdrawal.post.ts`, `app/server/utils/withdrawal.ts`.
+Ohne Login, für Bestellungen aus beiden Shops.
+
+- **INSERT INTO `koop_withdrawal`** (`name, email, order_ref, scope, items, message`,
+  `orders_id`/`customers_id` nur wenn Bestellnummer **und** E-Mail zu einer Bestellung in
+  `orders` passen, sonst `NULL`; `created_at`). Keine IP-Adresse, auch nicht im Write-Log.
+- 2× **INSERT INTO `koop_order_mail_log`** (`withdrawal_received` an Kunde,
+  `admin_withdrawal` an Betreiber; `orders_id` gesetzt, wenn zugeordnet).
+- **Keine** osCommerce-Writes: Der Bestellstatus ändert sich nicht, die Bearbeitung
+  (Rücksendung, Erstattung) bleibt beim Betreiber.
+
 ### 4. Admin: Bestellabwicklung (State-Machine) — `POST /admin/api/orders/:id/status`
 
 Dateipfad: `app/server/routes/admin/api/orders/[id]/status.post.ts`
@@ -285,6 +298,7 @@ Migrationen:
 - `005_koop_legal_text.sql` — versionierte Rechtstexte (Versionen, Live-Zeiger, Aktivierungsprotokoll).
 - `006_pending_direct_order.sql` — `confirmed_via` um `'direct'` erweitert (Direktkauf).
 - `007_pending_idempotency_key.sql` — `idempotency_key` + Unique-Key je Kunde (doppelte Bestellversuche).
+- `008_koop_withdrawal.sql` — Widerrufserklärungen über „Vertrag widerrufen“ (§ 356a BGB).
 
 **„Bestätigung ausstehend" ist via „Materialize-on-confirm" umgesetzt:** Der Status
 existiert nur in `koop_pending_order`, NICHT als Zeile in der geteilten `orders_status`.

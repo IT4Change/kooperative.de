@@ -9,6 +9,7 @@ import {
   parseRegister,
   parseLogin,
   parseOrder,
+  parseWithdrawal,
 } from './validate'
 
 const VALID_REGISTER = {
@@ -241,5 +242,43 @@ describe('parseIdempotencyKey', () => {
     expect(() => parseIdempotencyKey({ idempotencyKey: key })).toThrow(
       expect.objectContaining({ statusCode: 400 }),
     )
+  })
+})
+
+describe('parseWithdrawal', () => {
+  const VALID = { name: ' Erika Musterfrau ', email: 'Kundin@Example.org', orderRef: '#55' }
+
+  it('accepts the minimum the law asks for, without a reason', () => {
+    expect(parseWithdrawal(VALID)).toStrictEqual({
+      name: 'Erika Musterfrau',
+      email: 'kundin@example.org',
+      orderRef: '55',
+      scope: 'all',
+    })
+  })
+
+  it('carries the items of a partial withdrawal and an optional message', () => {
+    expect(
+      parseWithdrawal({ ...VALID, scope: 'partial', items: ' 1× Honig ', message: ' kaputt ' }),
+    ).toMatchObject({ scope: 'partial', items: '1× Honig', message: 'kaputt' })
+  })
+
+  it('drops items sent with a full withdrawal, and empty messages', () => {
+    const parsed = parseWithdrawal({ ...VALID, scope: 'all', items: 'egal', message: '   ' })
+
+    expect(parsed).not.toHaveProperty('items')
+    expect(parsed).not.toHaveProperty('message')
+  })
+
+  it.each([
+    ['no body', null, 'Ungültige Daten'],
+    ['a bad address', { ...VALID, email: 'kundin' }, 'E-Mail: ungültig'],
+    ['no order reference', { ...VALID, orderRef: ' ' }, 'Bestellnummer'],
+    ['an unknown scope', { ...VALID, scope: 'half' }, 'Umfang: ungültig'],
+    ['a partial withdrawal without items', { ...VALID, scope: 'partial' }, 'welche Artikel'],
+    ['items that are not text', { ...VALID, scope: 'partial', items: 3 }, 'Artikel: erwartet Text'],
+    ['an endless message', { ...VALID, message: 'x'.repeat(2001) }, 'maximal 2000'],
+  ])('rejects %s', (_label, body, message) => {
+    expect(() => parseWithdrawal(body)).toThrow(message)
   })
 })
