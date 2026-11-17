@@ -69,6 +69,9 @@
           €</span
         >
       </div>
+      <p class="text-xs text-gray-500 text-right" data-testid="vat-notice">
+        inkl. gesetzlicher MwSt.
+      </p>
     </div>
 
     <div v-if="notes" class="mb-4">
@@ -85,16 +88,38 @@
       Auftragsbestätigung oder dem Versand der Ware zustande.
     </p>
 
-    <p class="mb-3 text-xs text-gray-500 leading-relaxed" data-testid="legal-notice">
-      Es gelten unsere <LegalLink slug="agb" class="underline hover:text-[#00af8c]">AGB</LegalLink>.
-      Informationen zu Ihrem Widerrufsrecht finden Sie in der
-      <LegalLink slug="widerruf" class="underline hover:text-[#00af8c]"
-        >Widerrufsbelehrung</LegalLink
-      >, zum Umgang mit Ihren Daten in der
-      <LegalLink slug="datenschutz" class="underline hover:text-[#00af8c]"
-        >Datenschutzerklärung</LegalLink
-      >.
-    </p>
+    <ul
+      class="mb-3 text-xs text-gray-500 leading-relaxed space-y-1 list-disc pl-4"
+      data-testid="legal-notice"
+    >
+      <li data-testid="delivery-notice">
+        Lieferzeit und Versandkosten:
+        <LegalLink slug="versand" class="underline hover:text-[#00af8c]"
+          >Versand & Zahlung</LegalLink
+        ><span v-if="payment === 'vorkasse'">. Bei Vorkasse versenden wir nach Zahlungseingang</span
+        >.
+      </li>
+      <li>
+        Als Verbraucher haben Sie ein gesetzliches Widerrufsrecht – Einzelheiten und Ausnahmen in
+        der
+        <LegalLink slug="widerruf" class="underline hover:text-[#00af8c]"
+          >Widerrufsbelehrung</LegalLink
+        >.
+      </li>
+      <li>
+        Es gelten unsere
+        <LegalLink slug="agb" class="underline hover:text-[#00af8c]">AGB</LegalLink>. Wir speichern
+        den Vertragstext; Sie erhalten ihn mit der Eingangsbestätigung per E-Mail.
+      </li>
+      <li>
+        Verkäufer:
+        <LegalLink slug="impressum" class="underline hover:text-[#00af8c]">Impressum</LegalLink>.
+        Zum Umgang mit Ihren Daten:
+        <LegalLink slug="datenschutz" class="underline hover:text-[#00af8c]"
+          >Datenschutzerklärung</LegalLink
+        >.
+      </li>
+    </ul>
 
     <p
       v-if="submitError"

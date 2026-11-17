@@ -1,3 +1,4 @@
+import { loadContractTerms } from './contractTerms'
 import { reviewLink, adminOrderLink } from './links'
 import { MAIL_OPERATOR } from './mailer'
 import { sendAndLogOrderMail } from './orderMailLog'
@@ -44,6 +45,10 @@ function isDuplicateKey(err: unknown): boolean {
  * relies on: the review token for the customer's mail link, the "neuer Shop"
  * origin (orders_id link) and the pinned price snapshot; materializing scrubs
  * the bank details from it exactly as for a confirmed order.
+ *
+ * The receipt carries the live AGB and Widerrufsbelehrung, so the customer
+ * holds the contract text on a durable medium (§ 312f Abs. 2 BGB) and the
+ * mail log proves which wording applied.
  *
  * A checkout attempt may carry an idempotency key: the same key twice yields
  * the first order again (replayed: true) instead of a second one.
@@ -103,6 +108,7 @@ export async function placeDirectOrder(
     orderId: ordersId,
     comp,
     reviewUrl: reviewLink(event, token),
+    terms: await loadContractTerms(db),
   })
   await sendAndLogOrderMail(
     db,

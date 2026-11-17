@@ -11,6 +11,7 @@ import {
   seedLegacyPending,
   closeDb,
 } from './helpers/db'
+import { importLegalFixtures } from './helpers/legal'
 import { clearMails, waitForMail, waitForMailCount, to, confirmationLink } from './helpers/maildev'
 import { CUSTOMER, addToCart, checkout, openCart, openShop, productCard } from './helpers/shop'
 
@@ -27,6 +28,11 @@ import { CUSTOMER, addToCart, checkout, openCart, openShop, productCard } from '
  * switch; the last test walks it on a seeded record of that kind.
  */
 test.describe.configure({ mode: 'serial' })
+
+test.beforeAll(async ({ baseURL }) => {
+  // The receipt carries the live AGB and Widerrufsbelehrung.
+  await importLegalFixtures(baseURL!)
+})
 
 test.afterAll(async () => {
   await closeDb()
@@ -67,6 +73,9 @@ test.describe('order flow', () => {
     expect(customerMail.text).toContain('Honig')
     // A receipt, not an acceptance (AGB § 2).
     expect(customerMail.text).toContain('noch keine Annahme')
+    // The contract text on a durable medium (§ 312f Abs. 2 BGB).
+    expect(customerMail.text).toMatch(/==== Allgemeine Geschäftsbedingungen \(Fassung \d+\) ====/)
+    expect(customerMail.text).toMatch(/==== Widerrufsbelehrung \(Fassung \d+\) ====/)
 
     await waitForMailCount(to('betrieb@example.org'), 1, 'operator notice')
 
