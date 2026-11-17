@@ -44,6 +44,7 @@ describe('navigation', () => {
       'Bestellungen',
       'Produkte nur Anzeige',
       'Kunden nur Anzeige',
+      'Widerrufe',
       'Rechtstexte',
     ])
   })

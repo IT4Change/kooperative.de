@@ -18,6 +18,7 @@ Gesamt: 55,21 €
 Zahlung: Bezahlung mit Vorkasse
 
 Bestellung ansehen: https://shop.example.org/bestellung/bestaetigen?token=abc123
+Vertrag widerrufen: https://shop.example.org/vertrag-widerrufen?bestellung=55
 
 Herzliche Grüsze
 Kooperative Dürnau eG

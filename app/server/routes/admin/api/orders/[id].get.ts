@@ -127,6 +127,15 @@ export default defineEventHandler(async (event) => {
     console.warn('[admin/order] mail log unavailable:', (err as Error).message)
   }
 
+  // Withdrawal declarations linked to this order (§ 356a). Same tolerance as
+  // the mail log: environments without migration 008 simply show none.
+  let withdrawals: Awaited<ReturnType<typeof withdrawalsForOrder>> = []
+  try {
+    withdrawals = await withdrawalsForOrder(db, id)
+  } catch (err) {
+    console.warn('[admin/order] withdrawals unavailable:', (err as Error).message)
+  }
+
   // Link to the same order in the legacy osCommerce admin (if configured). Every
   // osCommerce order (incl. materialized new-shop ones) is visible there via oID.
   const adminBase = process.env.ADMIN_BASE_URL
@@ -144,6 +153,7 @@ export default defineEventHandler(async (event) => {
       name: String(r.orders_status_name),
     })),
     mails,
+    withdrawals,
     order: {
       id: Number(h.orders_id),
       statusId: Number(h.orders_status),

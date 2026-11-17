@@ -14,8 +14,20 @@
   - A patch always ends the request itself (it either renders its page or runs
     the original one), so the interrupted application_top never resumes.
 
+  Files in filters/ apply to every page (output filters, e.g. an extra footer
+  link). They are loaded once, before a patch takes over, so they also apply to
+  patched pages; deleting a file there switches that filter off.
+
   Must stay compatible with PHP 5.2: the shop still needs register_globals.
 */
+
+if (!defined('KOOP_FILTERS_LOADED')) {
+  define('KOOP_FILTERS_LOADED', 1);
+  $koop_filter_files = glob(dirname(__FILE__) . '/filters/*.php');
+  if (is_array($koop_filter_files)) {
+    foreach ($koop_filter_files as $koop_filter_file) include($koop_filter_file);
+  }
+}
 
 if (!defined('KOOP_PATCH_RUNNING')) {
   $koop_patch_script = basename($_SERVER['SCRIPT_NAME']);

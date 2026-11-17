@@ -10,10 +10,12 @@ import {
   buildAdminNewOrder,
 } from './pendingMail'
 import { buildStatusMail } from './statusMail'
+import { buildAdminWithdrawal, buildWithdrawalReceipt } from './withdrawalMail'
 
 import type { ContractTerm } from './contractTerms'
 import type { OrderComputation } from './orderCompute'
 import type { OrderMailContext } from './orderMail'
+import type { Withdrawal } from './withdrawal'
 
 /**
  * Whole-mail snapshots for every outgoing template.
@@ -161,6 +163,7 @@ const CTX_BARE: OrderMailContext = {
 }
 
 const REVIEW_URL = 'https://shop.example.org/bestellung/bestaetigen?token=abc123'
+const WITHDRAWAL_URL = 'https://shop.example.org/vertrag-widerrufen?bestellung=55'
 
 // Stand-ins for the live texts (the real ones are not in the repository), run
 // through the same renderer the admin uses, so the snapshot shows real markup.
@@ -205,6 +208,20 @@ function asPlainMail(mail: BuiltMail): string {
   ].join('\n')
 }
 
+// 14:03 in Dürnau — a fixed instant, so the "eingegangen am" line is stable.
+const WITHDRAWAL: Withdrawal = {
+  id: 3,
+  name: 'Erika Musterfrau',
+  email: 'kundin@example.org',
+  orderRef: '55',
+  scope: 'partial',
+  items: '1× Honig',
+  message: 'Glas kam beschädigt an.',
+  ordersId: 55,
+  customersId: 3,
+  createdAt: '2026-11-17T13:03:00.000Z',
+}
+
 const CASES: [name: string, mail: BuiltMail][] = [
   // Operator mail of the direct order path.
   ['order-admin-full', buildOrderMail(CTX)],
@@ -213,7 +230,13 @@ const CASES: [name: string, mail: BuiltMail][] = [
   // Direct order (standard shop): receipt to the customer, new order to the admin.
   [
     'direct-customer-received',
-    buildCustomerOrderReceived({ orderId: 55, comp: COMP, reviewUrl: REVIEW_URL, terms: TERMS }),
+    buildCustomerOrderReceived({
+      orderId: 55,
+      comp: COMP,
+      reviewUrl: REVIEW_URL,
+      withdrawalUrl: WITHDRAWAL_URL,
+      terms: TERMS,
+    }),
   ],
   [
     'direct-customer-received-pickup',
@@ -239,6 +262,25 @@ const CASES: [name: string, mail: BuiltMail][] = [
       via: 'admin',
       note: 'Kundin hat telefonisch bestätigt.',
     }),
+  ],
+
+  // Withdrawal function (§ 356a BGB).
+  ['withdrawal-customer-receipt', buildWithdrawalReceipt(WITHDRAWAL)],
+  ['withdrawal-admin-matched', buildAdminWithdrawal(WITHDRAWAL, ADMIN_URL)],
+  [
+    'withdrawal-admin-unmatched',
+    buildAdminWithdrawal(
+      {
+        ...WITHDRAWAL,
+        orderRef: 'vom 3. November',
+        scope: 'all',
+        items: null,
+        message: null,
+        ordersId: null,
+        customersId: null,
+      },
+      'https://shop.example.org/admin/withdrawals',
+    ),
   ],
 
   // Status notifications.
