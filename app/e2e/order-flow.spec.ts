@@ -149,6 +149,39 @@ test.describe('order flow', () => {
     expect(Number(pending!.total)).toBeCloseTo(17.9, 2)
   })
 
+  test('the same checkout request twice places one order', async ({ page }) => {
+    await openShop(page)
+    await addToCart(page, 'Honig')
+    await checkout(page, { shipping: 'abholung' })
+    const { input } = JSON.parse((await latestPending(CUSTOMER.email))!.payload) as {
+      input: Record<string, unknown>
+    }
+    await clearMails()
+
+    // A retry after a lost response: same body, same key, same session.
+    const body = { ...input, idempotencyKey: crypto.randomUUID() }
+    // From inside the page, like the shop itself: same cookie, same origin.
+    const post = async () =>
+      page.evaluate(async (data) => {
+        const res = await fetch('/api/orders', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(data),
+        })
+        return { status: res.status, body: (await res.json()) as { orderId: number } }
+      }, body)
+    const first = await post()
+    const second = await post()
+
+    expect(first.status).toBe(200)
+    expect(second.status).toBe(200)
+    expect(second.body.orderId).toBe(first.body.orderId)
+    const a = first.body
+    // One receipt — a second would read as a second order.
+    const log = await mailLog({ orderId: a.orderId })
+    expect(log.filter((l) => l.mail_type === 'order_received')).toHaveLength(1)
+  })
+
   test('an order from before the switch can still be confirmed, once', async ({ page }) => {
     await openShop(page)
     await addToCart(page, 'Honig')

@@ -91,12 +91,34 @@ export function parseLogin(body: unknown): LoginInput {
   return { email, password }
 }
 
+/** More positions than any real cart has; bounds the work one request can cause. */
+export const MAX_ORDER_LINES = 100
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+/**
+ * The checkout attempt's idempotency key (a UUID the browser makes per
+ * attempt). Optional — an older client without one still orders, just without
+ * the duplicate protection — but a malformed one is rejected, not ignored.
+ */
+export function parseIdempotencyKey(body: unknown): string | undefined {
+  const key = (body as Record<string, unknown> | null)?.idempotencyKey
+  if (key === undefined) return undefined
+  if (typeof key !== 'string' || !UUID.test(key)) {
+    throw createError({ statusCode: 400, statusMessage: 'idempotencyKey: ungültig' })
+  }
+  return key.toLowerCase()
+}
+
 export function parseOrder(body: unknown): OrderInput {
   if (!body || typeof body !== 'object')
     throw createError({ statusCode: 400, statusMessage: 'Ungültige Daten' })
   const b = body as Record<string, unknown>
   if (!Array.isArray(b.items) || b.items.length === 0) {
     throw createError({ statusCode: 400, statusMessage: 'Bestellliste leer' })
+  }
+  if (b.items.length > MAX_ORDER_LINES) {
+    throw createError({ statusCode: 400, statusMessage: 'Zu viele Positionen' })
   }
   const items = b.items.map((raw, idx) => {
     if (!raw || typeof raw !== 'object') {

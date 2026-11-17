@@ -506,6 +506,75 @@ describe('submitting the order', () => {
     expect(cart.submitError.value).toBe('Fehler beim Absenden')
   })
 
+  describe('the idempotency key', () => {
+    const keyOf = (call: number) => fetchMock.mock.calls[call][1].body.idempotencyKey as string
+
+    it('goes along with every order as a UUID', async () => {
+      const cart = await readyCart()
+
+      await cart.submitOrder()
+
+      expect(keyOf(0)).toMatch(/^[0-9a-f-]{36}$/)
+    })
+
+    it('stays the same when the same order is sent again after a failure', async () => {
+      const cart = await readyCart()
+      fetchMock.mockRejectedValueOnce(new Error('offline'))
+
+      await cart.submitOrder()
+      await cart.submitOrder()
+
+      // The first request may have arrived; the retry must not order twice.
+      expect(keyOf(1)).toBe(keyOf(0))
+    })
+
+    it('changes as soon as the order changes', async () => {
+      const cart = await readyCart()
+      fetchMock.mockRejectedValueOnce(new Error('offline'))
+
+      await cart.submitOrder()
+      cart.orderNotes.value = 'Doch lieber klingeln'
+      await cart.submitOrder()
+
+      expect(keyOf(1)).not.toBe(keyOf(0))
+    })
+
+    it('is a new one for the next order', async () => {
+      const cart = await readyCart()
+      await cart.submitOrder()
+      cart.addToCart(product())
+      cart.shippingMethod.value = 'abholung'
+      cart.paymentMethod.value = 'vorkasse'
+
+      await cart.submitOrder()
+
+      expect(keyOf(1)).not.toBe(keyOf(0))
+    })
+
+    it('is left out where the browser cannot make one', async () => {
+      const cart = await readyCart()
+      vi.stubGlobal('crypto', {})
+
+      await cart.submitOrder()
+
+      vi.unstubAllGlobals()
+      expect(fetchMock.mock.calls[0][1].body).not.toHaveProperty('idempotencyKey')
+    })
+  })
+
+  it('ignores a second click while the first order is on its way', async () => {
+    const cart = await readyCart()
+    let release!: (v: unknown) => void
+    fetchMock.mockReturnValueOnce(new Promise((resolve) => (release = resolve)))
+
+    const first = cart.submitOrder()
+    await expect(cart.submitOrder()).resolves.toBe(false)
+    release({ ok: true, orderId: 55, total: 11.9 })
+
+    await expect(first).resolves.toBe(true)
+    expect(fetchMock.mock.calls.filter((c) => c[0] === '/api/orders')).toHaveLength(1)
+  })
+
   it('clears the busy flag whether it worked or not', async () => {
     const cart = await readyCart()
     fetchMock.mockRejectedValue(new Error('offline'))

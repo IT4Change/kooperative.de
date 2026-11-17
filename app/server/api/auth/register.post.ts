@@ -1,16 +1,19 @@
 import { hashPassword, setSessionCookie } from '../../utils/auth'
 import { COUNTRY_IDS } from '../../utils/countries'
 import { dbInsert, dbUpdate } from '../../utils/dbWrite'
+import { LIMITS, rateLimit } from '../../utils/rateLimit'
 import { parseRegister } from '../../utils/validate'
 
 import type { RowDataPacket } from 'mysql2/promise'
 
 export default defineEventHandler(async (event) => {
+  const remoteIp = getRequestIP(event, { xForwardedFor: true })
+  // Also slows down probing which addresses are registered (the 409 below).
+  rateLimit(event, 'register:ip', remoteIp, LIMITS.registerPerIp)
   const body = await readBody(event)
   const input = parseRegister(body)
 
   const db = useDB()
-  const remoteIp = getRequestIP(event, { xForwardedFor: true })
 
   // Email-uniqueness check (no DB constraint exists). Race-prone on MyISAM, but volume is low.
   const [existing] = await db.execute<RowDataPacket[]>(
