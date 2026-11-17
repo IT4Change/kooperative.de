@@ -1,6 +1,7 @@
 // @vitest-environment node
 import { describe, it, expect } from 'vitest'
 
+import { renderLegalMarkdown } from './legalMarkdown'
 import { buildOrderMail } from './orderMail'
 import {
   buildCustomerConfirmed,
@@ -10,6 +11,7 @@ import {
 } from './pendingMail'
 import { buildStatusMail } from './statusMail'
 
+import type { ContractTerm } from './contractTerms'
 import type { OrderComputation } from './orderCompute'
 import type { OrderMailContext } from './orderMail'
 
@@ -159,6 +161,30 @@ const CTX_BARE: OrderMailContext = {
 }
 
 const REVIEW_URL = 'https://shop.example.org/bestellung/bestaetigen?token=abc123'
+
+// Stand-ins for the live texts (the real ones are not in the repository), run
+// through the same renderer the admin uses, so the snapshot shows real markup.
+const term = (slug: ContractTerm['slug'], title: string, versionNo: number, md: string) => ({
+  slug,
+  title,
+  versionNo,
+  html: renderLegalMarkdown(md),
+  text: md,
+})
+const TERMS: ContractTerm[] = [
+  term(
+    'agb',
+    'Allgemeine Geschäftsbedingungen',
+    3,
+    '## § 1 Geltungsbereich\n\nDiese AGB gelten für alle Bestellungen.\n\n## § 2 Vertragsschluss\n\n(1) Die Darstellung der Waren ist kein bindendes Angebot.\n',
+  ),
+  term(
+    'widerruf',
+    'Widerrufsbelehrung',
+    2,
+    '## Widerrufsrecht\n\nSie haben das Recht, binnen vierzehn Tagen ohne Angabe von Gründen diesen Vertrag zu widerrufen.\n',
+  ),
+]
 const ADMIN_URL = 'https://shop.example.org/admin/orders/55'
 
 interface BuiltMail {
@@ -187,7 +213,7 @@ const CASES: [name: string, mail: BuiltMail][] = [
   // Direct order (standard shop): receipt to the customer, new order to the admin.
   [
     'direct-customer-received',
-    buildCustomerOrderReceived({ orderId: 55, comp: COMP, reviewUrl: REVIEW_URL }),
+    buildCustomerOrderReceived({ orderId: 55, comp: COMP, reviewUrl: REVIEW_URL, terms: TERMS }),
   ],
   [
     'direct-customer-received-pickup',

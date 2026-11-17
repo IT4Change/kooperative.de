@@ -1,9 +1,7 @@
-import { execFile } from 'node:child_process'
-import { promisify } from 'node:util'
-
 import { test, expect } from '@playwright/test'
 
 import { query, closeDb } from './helpers/db'
+import { importLegalFixtures as importFixtures } from './helpers/legal'
 import { ADMIN } from './helpers/shop'
 
 import type { RowDataPacket } from 'mysql2/promise'
@@ -17,20 +15,9 @@ import type { RowDataPacket } from 'mysql2/promise'
  */
 test.describe.configure({ mode: 'serial' })
 
-const run = promisify(execFile)
-
 test.afterAll(async () => {
   await closeDb()
 })
-
-async function importFixtures(baseURL: string) {
-  const { stdout } = await run(
-    'node',
-    ['scripts/legal-import.mjs', 'e2e/fixtures/legal', '--url', baseURL],
-    { env: { ...process.env, LEGAL_IMPORT_AUTH: `${ADMIN.username}:${ADMIN.password}` } },
-  )
-  return stdout
-}
 
 interface VersionRow extends RowDataPacket {
   slug: string

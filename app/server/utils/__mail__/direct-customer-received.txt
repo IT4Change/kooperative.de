@@ -28,4 +28,22 @@ Musterweg 1, 12345 Musterstadt
 Geschäftsführer: Max Mustermann · Amtsgericht Musterstadt, HRB 12345
 info@example.org
 
-Diese Bestellbestätigung ist keine Rechnung.
+Diese E-Mail ist keine Rechnung.
+
+Für Ihre Bestellung gelten die folgenden Bedingungen. Bitte bewahren Sie diese E-Mail auf – sie ist Ihre Kopie des Vertragstextes.
+
+==== Allgemeine Geschäftsbedingungen (Fassung 3) ====
+
+## § 1 Geltungsbereich
+
+Diese AGB gelten für alle Bestellungen.
+
+## § 2 Vertragsschluss
+
+(1) Die Darstellung der Waren ist kein bindendes Angebot.
+
+==== Widerrufsbelehrung (Fassung 2) ====
+
+## Widerrufsrecht
+
+Sie haben das Recht, binnen vierzehn Tagen ohne Angabe von Gründen diesen Vertrag zu widerrufen.

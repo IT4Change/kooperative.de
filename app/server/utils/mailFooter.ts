@@ -64,7 +64,7 @@ export function footerText(withInvoiceNote = false): string {
   const c = company()
   const l = lines(c)
   const out = ['—', c.name, l.address, l.legal, l.vat, c.email].filter(Boolean)
-  if (withInvoiceNote) out.push('', 'Diese Bestellbestätigung ist keine Rechnung.')
+  if (withInvoiceNote) out.push('', 'Diese E-Mail ist keine Rechnung.')
   return out.join('\n')
 }
 
@@ -79,7 +79,7 @@ export function footerHtml(withInvoiceNote = false): string {
     c.email && `<a href="mailto:${esc(c.email)}" style="color:#999">${esc(c.email)}</a>`,
   ].filter(Boolean)
   const note = withInvoiceNote
-    ? '<br><span style="color:#bbb">Diese Bestellbestätigung ist keine Rechnung.</span>'
+    ? '<br><span style="color:#bbb">Diese E-Mail ist keine Rechnung.</span>'
     : ''
   return `<hr style="border:0;border-top:1px solid #eee;margin:16px 0">
     <p style="font-size:11px;color:#999;line-height:1.6;margin:0">
