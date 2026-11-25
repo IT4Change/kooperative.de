@@ -12,8 +12,10 @@ import type { H3Event } from 'h3'
 const createPendingOrder = vi.hoisted(() => vi.fn())
 const getPendingById = vi.hoisted(() => vi.fn())
 const materializePending = vi.hoisted(() => vi.fn())
+const findPendingByIdempotencyKey = vi.hoisted(() => vi.fn())
 vi.mock(import('./pendingOrder'), () => ({
   createPendingOrder,
+  findPendingByIdempotencyKey,
   getPendingById,
   materializePending,
 }))
@@ -55,6 +57,7 @@ beforeEach(() => {
   materializePending.mockResolvedValue({ ordersId: 55, alreadyDone: false })
   sendAndLogOrderMail.mockResolvedValue({ status: 'sent', errorMessage: null })
   loadContractTerms.mockResolvedValue(TERMS)
+  findPendingByIdempotencyKey.mockResolvedValue(null)
 })
 
 describe('placeDirectOrder', () => {
@@ -82,7 +85,7 @@ describe('placeDirectOrder', () => {
 
     expect(getPendingById).toHaveBeenCalledWith(db.pool, 12)
     expect(materializePending).toHaveBeenCalledWith(db.pool, PENDING, 'direct', {})
-    expect(result).toStrictEqual({ ordersId: 55, pendingId: 12 })
+    expect(result).toStrictEqual({ ordersId: 55, pendingId: 12, replayed: false })
   })
 
   it('sends the receipt to the customer and the new order to the operator', async () => {
@@ -150,5 +153,100 @@ describe('placeDirectOrder', () => {
       placeDirectOrder(db.pool, EVENT, { input: INPUT, comp: COMP }),
     ).rejects.toMatchObject({ statusCode: 500 })
     expect(materializePending).not.toHaveBeenCalled()
+  })
+
+  describe('a repeated checkout attempt (idempotency key)', () => {
+    const KEY = '2f1c7a52-8c4e-4b8e-9f00-0123456789ab'
+    const DONE = { id: 9, status: 'materialized', ordersId: 44 }
+
+    it('stores the key with the order', async () => {
+      const db = createMockDb()
+
+      await placeDirectOrder(db.pool, EVENT, { input: INPUT, comp: COMP, idempotencyKey: KEY })
+
+      expect(findPendingByIdempotencyKey).toHaveBeenCalledWith(db.pool, 3, KEY)
+      expect(createPendingOrder).toHaveBeenCalledWith(
+        db.pool,
+        expect.objectContaining({ idempotencyKey: KEY }),
+        {},
+      )
+    })
+
+    it('answers with the first order instead of placing a second one', async () => {
+      findPendingByIdempotencyKey.mockResolvedValue(DONE)
+
+      const result = await placeDirectOrder(createMockDb().pool, EVENT, {
+        input: INPUT,
+        comp: COMP,
+        idempotencyKey: KEY,
+      })
+
+      expect(result).toStrictEqual({ ordersId: 44, pendingId: 9, replayed: true })
+      expect(createPendingOrder).not.toHaveBeenCalled()
+      // The customer already has the receipt; a second one would read as a
+      // second order.
+      expect(sendAndLogOrderMail).not.toHaveBeenCalled()
+    })
+
+    it('refuses with 409 while the first attempt has no order number yet', async () => {
+      findPendingByIdempotencyKey.mockResolvedValue({ id: 9, status: 'pending', ordersId: null })
+
+      await expect(
+        placeDirectOrder(createMockDb().pool, EVENT, {
+          input: INPUT,
+          comp: COMP,
+          idempotencyKey: KEY,
+        }),
+      ).rejects.toMatchObject({ statusCode: 409 })
+      expect(createPendingOrder).not.toHaveBeenCalled()
+    })
+
+    it('hands the loser of a race the winner’s order', async () => {
+      // Both requests found nothing; the unique key let only one insert through.
+      findPendingByIdempotencyKey.mockResolvedValueOnce(null).mockResolvedValueOnce(DONE)
+      createPendingOrder.mockRejectedValue(Object.assign(new Error('Duplicate'), { errno: 1062 }))
+
+      const result = await placeDirectOrder(createMockDb().pool, EVENT, {
+        input: INPUT,
+        comp: COMP,
+        idempotencyKey: KEY,
+      })
+
+      expect(result).toMatchObject({ ordersId: 44, replayed: true })
+      expect(materializePending).not.toHaveBeenCalled()
+    })
+
+    it('passes any other insert failure on', async () => {
+      createPendingOrder.mockRejectedValue(Object.assign(new Error('gone'), { errno: 2006 }))
+
+      await expect(
+        placeDirectOrder(createMockDb().pool, EVENT, {
+          input: INPUT,
+          comp: COMP,
+          idempotencyKey: KEY,
+        }),
+      ).rejects.toThrow('gone')
+    })
+
+    it('passes a duplicate on when the winner cannot be found either', async () => {
+      createPendingOrder.mockRejectedValue(Object.assign(new Error('Duplicate'), { errno: 1062 }))
+
+      await expect(
+        placeDirectOrder(createMockDb().pool, EVENT, {
+          input: INPUT,
+          comp: COMP,
+          idempotencyKey: KEY,
+        }),
+      ).rejects.toThrow('Duplicate')
+    })
+
+    it('does not look anything up without a key', async () => {
+      createPendingOrder.mockRejectedValue(Object.assign(new Error('Duplicate'), { errno: 1062 }))
+
+      await expect(
+        placeDirectOrder(createMockDb().pool, EVENT, { input: INPUT, comp: COMP }),
+      ).rejects.toThrow('Duplicate')
+      expect(findPendingByIdempotencyKey).not.toHaveBeenCalled()
+    })
   })
 })

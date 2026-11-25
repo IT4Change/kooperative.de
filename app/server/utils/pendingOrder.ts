@@ -73,7 +73,14 @@ function mapRow(r: RowDataPacket): PendingRow {
 
 export async function createPendingOrder(
   db: Pool,
-  args: { customerId: number; email: string; payload: PendingPayload; total: number },
+  args: {
+    customerId: number
+    email: string
+    payload: PendingPayload
+    total: number
+    /** The checkout attempt's key, see findPendingByIdempotencyKey(). */
+    idempotencyKey?: string
+  },
   ctx: { remoteIp?: string } = {},
 ): Promise<{ id: number; token: string }> {
   const token = randomBytes(32).toString('hex')
@@ -82,6 +89,7 @@ export async function createPendingOrder(
     'koop_pending_order',
     {
       token,
+      ...(args.idempotencyKey && { idempotency_key: args.idempotencyKey }),
       customers_id: args.customerId,
       email: args.email,
       payload: JSON.stringify(args.payload),
@@ -98,6 +106,23 @@ export async function getPendingByToken(db: Pool, token: string): Promise<Pendin
   const [rows] = await db.execute<RowDataPacket[]>(
     'SELECT * FROM koop_pending_order WHERE token = ? LIMIT 1',
     [token],
+  )
+  return rows[0] ? mapRow(rows[0]) : null
+}
+
+/**
+ * The order a checkout attempt already produced, if any. The key is unique per
+ * customer (migration 007), so a repeated request — double click, network
+ * retry, a second tab — finds the first order instead of placing another.
+ */
+export async function findPendingByIdempotencyKey(
+  db: Pool,
+  customerId: number,
+  key: string,
+): Promise<PendingRow | null> {
+  const [rows] = await db.execute<RowDataPacket[]>(
+    'SELECT * FROM koop_pending_order WHERE customers_id = ? AND idempotency_key = ? LIMIT 1',
+    [customerId, key],
   )
   return rows[0] ? mapRow(rows[0]) : null
 }

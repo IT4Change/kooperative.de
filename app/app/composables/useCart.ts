@@ -16,6 +16,20 @@ const paymentMethod = ref<PaymentMethod | null>(null)
 const bankAccountHolder = ref('')
 const bankIban = ref('')
 const submitting = ref(false)
+/**
+ * The idempotency key of the current checkout attempt. It is reused while the
+ * same order is re-sent (a retry after a lost response must not place a second
+ * order) and replaced as soon as anything in the order changes.
+ */
+let attempt: { key: string; fingerprint: string } | null = null
+
+function attemptKey(payload: Record<string, unknown>): string | undefined {
+  // Only in secure contexts; without it the order still goes out, unprotected.
+  if (typeof crypto === 'undefined' || typeof crypto.randomUUID !== 'function') return undefined
+  const fingerprint = JSON.stringify(payload)
+  if (attempt?.fingerprint !== fingerprint) attempt = { key: crypto.randomUUID(), fingerprint }
+  return attempt.key
+}
 const submitError = ref('')
 /** osCommerce order number of the order just placed, for the success step. */
 const lastOrderId = ref<number | null>(null)
@@ -190,6 +204,8 @@ export function useCart() {
   }
 
   async function submitOrder(): Promise<boolean> {
+    // A second click that lands before the button re-renders as disabled.
+    if (submitting.value) return false
     if (!shippingMethod.value || !paymentMethod.value) {
       submitError.value = 'Bitte Versand- und Zahlungsart auswählen'
       return false
@@ -221,10 +237,12 @@ export function useCart() {
       }
       // Standard shop: the order is placed directly and gets its osCommerce
       // order number right away; the customer receives a receipt by mail.
+      const idempotencyKey = attemptKey(payload)
       const res = await $fetch<{ ok: boolean; orderId: number; total: number }>('/api/orders', {
         method: 'POST',
-        body: payload,
+        body: { ...payload, ...(idempotencyKey && { idempotencyKey }) },
       })
+      attempt = null
       lastOrderId.value = res.orderId
       checkoutStep.value = 'success'
       clearCart()

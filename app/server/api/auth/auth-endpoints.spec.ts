@@ -5,6 +5,7 @@ import '../../../test/setup-server'
 import { callHandler, createTestEvent } from '../../../test/helpers/event'
 import { createMockDb } from '../../../test/helpers/mock-db'
 import { hashPassword, signSession } from '../../utils/auth'
+import { LIMITS, resetRateLimits } from '../../utils/rateLimit'
 
 import login from './login.post'
 import logout from './logout.post'
@@ -55,6 +56,7 @@ const REGISTRATION = {
 }
 
 beforeEach(() => {
+  resetRateLimits()
   vi.clearAllMocks()
   dbInsert.mockResolvedValue(7)
   dbUpdate.mockResolvedValue(1)
@@ -345,5 +347,45 @@ describe('POST /api/auth/register', () => {
       { customers_id: 7 },
       expect.anything(),
     )
+  })
+})
+
+/** The status a call ends with: 200 on success, else the error's status code. */
+async function statusOfCall(call: Promise<unknown>): Promise<number> {
+  try {
+    await call
+    return 200
+  } catch (e: unknown) {
+    return (e as { statusCode: number }).statusCode
+  }
+}
+
+describe('rate limits', () => {
+  beforeEach(() => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {})
+  })
+
+  it('stops password guessing on one account before touching the database', async () => {
+    const db = useMockDb([{ match: 'FROM customers', rows: [CUSTOMER_ROW] }])
+    const attempt = async (email: string) =>
+      statusOfCall(callHandler(login, { method: 'POST', body: { email, password: 'falsch' } }))
+    for (let i = 0; i < LIMITS.loginPerEmail.max; i++) {
+      await expect(attempt('kundin@example.org')).resolves.toBe(401)
+    }
+    const queries = db.calls.length
+
+    await expect(attempt('kundin@example.org')).resolves.toBe(429)
+    expect(db.calls).toHaveLength(queries)
+    // Another account from the same place is still open.
+    await expect(attempt('nachbar@example.org')).resolves.toBe(401)
+  })
+
+  it('stops mass registrations from one address', async () => {
+    useMockDb([{ match: 'FROM customers', rows: [{ customers_id: 1 }] }])
+    const attempt = async () =>
+      statusOfCall(callHandler(register, { method: 'POST', body: REGISTRATION }))
+    for (let i = 0; i < LIMITS.registerPerIp.max; i++) await expect(attempt()).resolves.toBe(409)
+
+    await expect(attempt()).resolves.toBe(429)
   })
 })

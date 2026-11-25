@@ -3,7 +3,13 @@ import { describe, it, expect } from 'vitest'
 
 import '../../test/setup-server'
 
-import { parseRegister, parseLogin, parseOrder } from './validate'
+import {
+  MAX_ORDER_LINES,
+  parseIdempotencyKey,
+  parseRegister,
+  parseLogin,
+  parseOrder,
+} from './validate'
 
 const VALID_REGISTER = {
   gender: 'm',
@@ -100,6 +106,18 @@ describe('parseOrder', () => {
 
   it('accepts a minimal order', () => {
     expect(parseOrder(VALID_ORDER)).toStrictEqual(VALID_ORDER)
+  })
+
+  it('bounds the number of positions one request can carry', () => {
+    const line = { productId: '1', quantity: 1 }
+    const items = (n: number) => Array.from({ length: n }, () => line)
+
+    expect(parseOrder({ ...VALID_ORDER, items: items(MAX_ORDER_LINES) }).items).toHaveLength(
+      MAX_ORDER_LINES,
+    )
+    expect(() => parseOrder({ ...VALID_ORDER, items: items(MAX_ORDER_LINES + 1) })).toThrow(
+      'Zu viele Positionen',
+    )
   })
 
   it('keeps an explicit variantIndex and drops it when absent', () => {
@@ -204,5 +222,24 @@ describe('parseOrder', () => {
         }),
       ),
     ).toBe('Position 2: productId')
+  })
+})
+
+describe('parseIdempotencyKey', () => {
+  it('accepts a UUID and normalises its case', () => {
+    expect(parseIdempotencyKey({ idempotencyKey: '2F1C7A52-8C4E-4B8E-9F00-0123456789AB' })).toBe(
+      '2f1c7a52-8c4e-4b8e-9f00-0123456789ab',
+    )
+  })
+
+  it('is optional, for clients without one', () => {
+    expect(parseIdempotencyKey({})).toBeUndefined()
+    expect(parseIdempotencyKey(null)).toBeUndefined()
+  })
+
+  it.each([['not-a-uuid'], [42], ['']])('rejects %j rather than ignoring it', (key) => {
+    expect(() => parseIdempotencyKey({ idempotencyKey: key })).toThrow(
+      expect.objectContaining({ statusCode: 400 }),
+    )
   })
 })
