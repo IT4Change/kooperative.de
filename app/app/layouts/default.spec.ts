@@ -116,6 +116,13 @@ describe('header', () => {
     ])
   })
 
+  it('leaves the other areas out everywhere but on the home page', async () => {
+    const wrapper = await mount('/shop')
+    const labels = wrapper.findAll('.main-nav a').map((a) => a.text())
+
+    expect(labels).toStrictEqual(['Historie', 'Kontakt', 'Rechtliches'])
+  })
+
   it('points the section links at the old site', async () => {
     const wrapper = await mount()
 
@@ -170,26 +177,6 @@ describe('burger menu', () => {
   })
 })
 
-describe('active state', () => {
-  it('marks the shop link on the shop', async () => {
-    const wrapper = await mount('/shop')
-
-    expect(wrapper.get('.main-nav a').classes()).toContain('active')
-  })
-
-  it('marks it on a product page too', async () => {
-    const wrapper = await mount('/shop/1/honig')
-
-    expect(wrapper.get('.main-nav a').classes()).toContain('active')
-  })
-
-  it('leaves it alone elsewhere', async () => {
-    const wrapper = await mount('/impressum')
-
-    expect(wrapper.get('.main-nav a').classes()).not.toContain('active')
-  })
-})
-
 describe('logo', () => {
   it('scrolls to the top instead of reloading the start page', async () => {
     const wrapper = await mount('/')
@@ -201,6 +188,9 @@ describe('logo', () => {
 
   it('navigates home from anywhere else', async () => {
     const wrapper = await mount('/impressum')
+    // Mounting navigates the shared router, whose scroll behaviour calls
+    // scrollTo itself — only what the click does is under test.
+    vi.mocked(window.scrollTo).mockClear()
     const push = vi.spyOn(useRouter(), 'push')
 
     await wrapper.get('.logo').trigger('click')

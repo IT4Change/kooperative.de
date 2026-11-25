@@ -245,3 +245,117 @@ describe('hidden categories', () => {
     expect(snapshot.products[0].slug).toBe('karte-2')
   })
 })
+
+/**
+ * "Elixiere und Säfte" is still sold although its parent, the food range, is
+ * hidden — so it stands on its own at the top level.
+ */
+describe('promoted categories', () => {
+  const CATEGORIES = [
+    { categories_id: 52, parent_id: 0, sort_order: 1, categories_name: 'Lebensmittel' },
+    { categories_id: 54, parent_id: 52, sort_order: 0, categories_name: 'Bulgur' },
+    { categories_id: 59, parent_id: 52, sort_order: 0, categories_name: 'Elixiere und Säfte' },
+  ]
+  const PRODUCTS = [
+    productRow({ products_id: 1, products_name: 'Bulgur', category_id: 54 }),
+    productRow({ products_id: 2, products_name: 'Holundersaft', category_id: 59 }),
+  ]
+
+  function db() {
+    return createMockDb([
+      { match: 'FROM categories', rows: CATEGORIES },
+      { match: 'FROM products', rows: PRODUCTS },
+    ])
+  }
+
+  it('lifts the category out of its hidden parent', async () => {
+    const snapshot = await getCatalog(db().pool)
+
+    expect(snapshot.categories).toStrictEqual([
+      {
+        slug: 'elixiere-und-saefte',
+        name: 'Elixiere und Säfte',
+        description: '',
+        parentSlug: null,
+      },
+    ])
+  })
+
+  it('keeps its products, filed under the new top-level slug', async () => {
+    const snapshot = await getCatalog(db().pool)
+
+    expect(snapshot.products.map((p) => [p.name, p.category])).toStrictEqual([
+      ['Holundersaft', 'elixiere-und-saefte'],
+    ])
+  })
+})
+
+/**
+ * The storefront order comes from the shop owner, not from categories.sort_order,
+ * which the legacy shop still reads.
+ */
+describe('category order', () => {
+  let id = 0
+  const row = (name: string, parent = 0, sort = 0) => ({
+    categories_id: ++id,
+    parent_id: parent,
+    sort_order: sort,
+    categories_name: name,
+  })
+  // Deliberately in the legacy order, as the query returns it.
+  const buecher = row('Bücher', 0, 1)
+  const holz = row('Holz', 0, 6)
+  const neu = row('Neu', 0, 7)
+  const CATEGORIES = [
+    buecher,
+    row('Sonett', 0, 3),
+    row('Medien', 0, 4),
+    holz,
+    neu,
+    row('B', neu.categories_id, 1),
+    row('A', neu.categories_id, 2),
+    row('Andere Bücher', buecher.categories_id, 0),
+    row('Verlag der Kooperative', buecher.categories_id, 1),
+    row('Särge', holz.categories_id, 1),
+    row('Spiele', holz.categories_id, 2),
+    row('Türen', holz.categories_id, 3),
+  ]
+
+  async function slugsBelow(parentSlug: string | null) {
+    const db = createMockDb([
+      { match: 'FROM categories', rows: CATEGORIES },
+      { match: 'FROM products', rows: [] },
+    ])
+    const snapshot = await getCatalog(db.pool)
+    return snapshot.categories.filter((c) => c.parentSlug === parentSlug).map((c) => c.slug)
+  }
+
+  it('lists the top level in the given order, unlisted ones last', async () => {
+    await expect(slugsBelow(null)).resolves.toStrictEqual([
+      'buecher',
+      'medien',
+      'sonett',
+      'holz',
+      'neu',
+    ])
+  })
+
+  it('orders subcategories within their parent', async () => {
+    await expect(slugsBelow('buecher')).resolves.toStrictEqual([
+      'buecher/verlag-der-kooperative',
+      'buecher/andere-buecher',
+    ])
+  })
+
+  it('keeps the DB order below a parent without an order of its own', async () => {
+    await expect(slugsBelow('neu')).resolves.toStrictEqual(['neu/b', 'neu/a'])
+  })
+
+  it('keeps unlisted subcategories behind the listed ones', async () => {
+    await expect(slugsBelow('holz')).resolves.toStrictEqual([
+      'holz/spiele',
+      'holz/saerge',
+      'holz/tueren',
+    ])
+  })
+})

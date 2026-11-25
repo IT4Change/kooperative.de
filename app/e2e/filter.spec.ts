@@ -13,7 +13,7 @@ import type { Page } from '@playwright/test'
  * The seed builds the tree these tests rely on (scripts/seed-e2e.mjs):
  *   Naturkost     — Honig, Brot, plus the child Öle
  *     └ Öle       — Olivenöl
- *   Papeterie     — Karte
+ *   Schreibwaren  — Karte
  * so the default resolves to Naturkost › Öle.
  */
 test.describe.configure({ mode: 'serial' })
@@ -83,7 +83,7 @@ test.describe('category filter', () => {
   })
 
   test('a category without children needs no second row', async ({ page }) => {
-    await landOn(page, '/shop?kategorie=papeterie')
+    await landOn(page, '/shop?kategorie=schreibwaren')
     await expect(shownProducts(page)).toHaveText(['Karte'])
     await expect(page.locator('.border-l-2 button')).toHaveCount(0)
   })
@@ -99,7 +99,7 @@ test.describe('category filter', () => {
 test.describe('search across the preselected category', () => {
   test('searches the whole range, not just the active category', async ({ page }) => {
     await landOn(page, '/shop')
-    // "Karte" sits in Papeterie while Naturkost › Öle is active — without the
+    // "Karte" sits in Schreibwaren while Naturkost › Öle is active — without the
     // switch to "Alle" this would report nothing found.
     await page.getByLabel('Produkte durchsuchen').fill('Karte')
 
@@ -120,7 +120,7 @@ test.describe('search across the preselected category', () => {
 
   test('clearing the search restores a category the customer had chosen', async ({ page }) => {
     await landOn(page, '/shop')
-    await page.getByRole('button', { name: /^Papeterie/ }).click()
+    await page.getByRole('button', { name: /^Schreibwaren/ }).click()
     await expect(shownProducts(page)).toHaveText(['Karte'])
 
     const search = page.getByLabel('Produkte durchsuchen')
@@ -128,7 +128,7 @@ test.describe('search across the preselected category', () => {
     await expect(shownProducts(page)).toHaveText(['Honig'])
 
     await search.fill('')
-    await expect(page).toHaveURL(/kategorie=papeterie/)
+    await expect(page).toHaveURL(/kategorie=schreibwaren/)
     await expect(shownProducts(page)).toHaveText(['Karte'])
   })
 
@@ -147,9 +147,9 @@ test.describe('search across the preselected category', () => {
     await landOn(page, '/shop')
     await page.getByLabel('Produkte durchsuchen').fill('o')
 
-    // Papeterie holds no match, so the filter greys it out — the customer
+    // Schreibwaren holds no match, so the filter greys it out — the customer
     // cannot click their way into an empty result while a search is running.
-    await expect(page.getByRole('button', { name: /^Papeterie/ })).toBeDisabled()
+    await expect(page.getByRole('button', { name: /^Schreibwaren/ })).toBeDisabled()
   })
 })
 
