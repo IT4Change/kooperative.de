@@ -1,5 +1,6 @@
 import { footerText, footerHtml } from './mailFooter'
 
+import type { ContractTerm } from './contractTerms'
 import type { OrderComputation } from './orderCompute'
 
 /**
@@ -69,6 +70,36 @@ function wrap(title: string, inner: string): string {
 
 function button(url: string, label: string): string {
   return `<p style="margin:16px 0"><a href="${esc(url)}" style="background:${BRAND};color:#fff;text-decoration:none;padding:10px 18px;border-radius:6px;display:inline-block">${esc(label)}</a></p>`
+}
+
+const TERMS_INTRO =
+  'Für Ihre Bestellung gelten die folgenden Bedingungen. Bitte bewahren Sie diese ' +
+  'E-Mail auf – sie ist Ihre Kopie des Vertragstextes.'
+
+/** The contract terms as the mail's closing section (§ 312f Abs. 2 BGB). */
+function termsText(terms: readonly ContractTerm[]): string {
+  if (terms.length === 0) return ''
+  const parts = terms.map(
+    (t) => `==== ${t.title} (Fassung ${t.versionNo}) ====\n\n${t.text.trim()}`,
+  )
+  return ['', '', TERMS_INTRO, '', ...parts.flatMap((p) => [p, ''])].join('\n').trimEnd()
+}
+
+function termsHtml(terms: readonly ContractTerm[]): string {
+  if (terms.length === 0) return ''
+  const parts = terms
+    .map(
+      (t) => `
+    <section style="margin:16px 0 0">
+      <h2 style="font-size:15px;margin:0 0 8px">${esc(t.title)} <span style="font-weight:normal;color:#888">(Fassung ${t.versionNo})</span></h2>
+      ${t.html}
+    </section>`,
+    )
+    .join('')
+  return `<hr style="border:0;border-top:1px solid #eee;margin:16px 0">
+    <div style="font-size:12px;color:#444;line-height:1.5">
+    <p style="margin:0 0 8px">${esc(TERMS_INTRO)}</p>${parts}
+    </div>`
 }
 
 /** Customer: confirmation received (with the full order/invoice listing). */
@@ -159,6 +190,8 @@ export function buildCustomerOrderReceived(ctx: {
   orderId: number
   comp: OrderComputation
   reviewUrl: string
+  /** AGB and Widerrufsbelehrung as live at the time of the order. */
+  terms?: readonly ContractTerm[]
 }): { subject: string; text: string; html: string } {
   const c = ctx.comp
   const subject = `[Kooperative Dürnau] Eingang Ihrer Bestellung #${ctx.orderId}`
@@ -167,22 +200,23 @@ export function buildCustomerOrderReceived(ctx: {
     'Diese E-Mail bestätigt nur den Eingang Ihrer Bestellung und ist noch keine Annahme. ' +
     'Der Kaufvertrag kommt zustande, wenn wir Ihre Bestellung mit einer Auftragsbestätigung ' +
     'annehmen oder die Ware versenden.'
-  const text = [
-    greeting,
-    '',
-    `vielen Dank für Ihre Bestellung #${ctx.orderId}. Sie ist bei uns eingegangen.`,
-    '',
-    receipt,
-    '',
-    itemsText(c),
-    '',
-    `Bestellung ansehen: ${ctx.reviewUrl}`,
-    '',
-    'Herzliche Grüsze',
-    'Kooperative Dürnau eG',
-    '',
-    footerText(true),
-  ].join('\n')
+  const text =
+    [
+      greeting,
+      '',
+      `vielen Dank für Ihre Bestellung #${ctx.orderId}. Sie ist bei uns eingegangen.`,
+      '',
+      receipt,
+      '',
+      itemsText(c),
+      '',
+      `Bestellung ansehen: ${ctx.reviewUrl}`,
+      '',
+      'Herzliche Grüsze',
+      'Kooperative Dürnau eG',
+      '',
+      footerText(true),
+    ].join('\n') + termsText(ctx.terms ?? [])
   const html = wrap(
     `Eingang Ihrer Bestellung #${ctx.orderId}`,
     `
@@ -192,7 +226,7 @@ export function buildCustomerOrderReceived(ctx: {
     ${itemsHtml(c)}
     ${button(ctx.reviewUrl, 'Bestellung ansehen →')}
     <p style="margin:12px 0 0;color:#555">Herzliche Grüsze<br>Kooperative Dürnau eG</p>
-    ${footerHtml(true)}`,
+    ${footerHtml(true)}${termsHtml(ctx.terms ?? [])}`,
   )
   return { subject, text, html }
 }

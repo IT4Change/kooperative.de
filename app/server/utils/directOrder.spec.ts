@@ -25,6 +25,9 @@ vi.mock(import('./links'), () => ({
   reviewLink: (_e: unknown, token: string) => `https://shop.example.org/bestaetigen?token=${token}`,
   adminOrderLink: (_e: unknown, id: number) => `https://shop.example.org/admin/orders/${id}`,
 }))
+const TERMS = [{ slug: 'agb', title: 'AGB', versionNo: 3, html: 'h', text: 't' }]
+const loadContractTerms = vi.hoisted(() => vi.fn())
+vi.mock(import('./contractTerms'), () => ({ loadContractTerms }))
 vi.mock(import('./mailer'), () => ({ MAIL_OPERATOR: 'betrieb@example.org' }))
 vi.mock(import('./pendingMail'), () => ({
   buildCustomerOrderReceived: vi.fn(() => ({ subject: 'cs', text: 'ct', html: 'ch' })),
@@ -51,6 +54,7 @@ beforeEach(() => {
   getPendingById.mockResolvedValue(PENDING)
   materializePending.mockResolvedValue({ ordersId: 55, alreadyDone: false })
   sendAndLogOrderMail.mockResolvedValue({ status: 'sent', errorMessage: null })
+  loadContractTerms.mockResolvedValue(TERMS)
 })
 
 describe('placeDirectOrder', () => {
@@ -115,7 +119,10 @@ describe('placeDirectOrder', () => {
       orderId: 55,
       comp: COMP,
       reviewUrl: 'https://shop.example.org/bestaetigen?token=tok',
+      // The live AGB and Widerrufsbelehrung travel with the receipt.
+      terms: TERMS,
     })
+    expect(loadContractTerms).toHaveBeenCalledWith(db.pool)
     expect(buildAdminNewOrder).toHaveBeenCalledWith({
       orderId: 55,
       comp: COMP,

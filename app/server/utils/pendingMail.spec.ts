@@ -125,6 +125,63 @@ describe('buildCustomerOrderReceived', () => {
     expect(mail.text).toContain('Kooperative Dürnau')
     expect(mail.text).toContain('keine Rechnung')
   })
+
+  describe('contract terms (§ 312f Abs. 2 BGB)', () => {
+    const TERMS = [
+      {
+        slug: 'agb',
+        title: 'Allgemeine Geschäftsbedingungen',
+        versionNo: 3,
+        html: '<h2>§ 1</h2><p>Geltung</p>',
+        text: '## § 1\n\nGeltung',
+      },
+      {
+        slug: 'widerruf',
+        title: 'Widerrufsbelehrung',
+        versionNo: 2,
+        html: '<p>Widerrufsrecht</p>',
+        text: 'Widerrufsrecht\n',
+      },
+    ] as const
+    const withTerms = buildCustomerOrderReceived({
+      orderId: 55,
+      comp: COMP,
+      reviewUrl: REVIEW_URL,
+      terms: TERMS,
+    })
+
+    it('puts both texts, with their version, after the footer', () => {
+      const footer = withTerms.text.indexOf('keine Rechnung')
+      const agb = withTerms.text.indexOf('==== Allgemeine Geschäftsbedingungen (Fassung 3) ====')
+      const widerruf = withTerms.text.indexOf('==== Widerrufsbelehrung (Fassung 2) ====')
+      expect(footer).toBeGreaterThan(0)
+      expect(agb).toBeGreaterThan(footer)
+      expect(widerruf).toBeGreaterThan(agb)
+      expect(withTerms.text).toContain('Geltung')
+      expect(withTerms.text.endsWith('Widerrufsrecht')).toBe(true)
+    })
+
+    it('tells the customer to keep the mail', () => {
+      expect(withTerms.text).toContain('Bitte bewahren Sie diese E-Mail auf')
+      expect(withTerms.html).toContain('Bitte bewahren Sie diese E-Mail auf')
+    })
+
+    it('embeds the rendered texts in the HTML part', () => {
+      expect(withTerms.html).toContain('<h2>§ 1</h2><p>Geltung</p>')
+      expect(withTerms.html).toContain('Widerrufsbelehrung <span')
+      expect(withTerms.html).toContain('(Fassung 2)')
+    })
+
+    it('adds nothing when no text is available', () => {
+      const without = buildCustomerOrderReceived({
+        orderId: 55,
+        comp: COMP,
+        reviewUrl: REVIEW_URL,
+        terms: [],
+      })
+      expect(without).toStrictEqual(mail)
+    })
+  })
 })
 
 describe('buildAdminNewOrder', () => {
