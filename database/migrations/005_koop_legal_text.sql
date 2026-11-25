@@ -12,8 +12,7 @@
 -- ISO-8859-1-Altshop an.
 --
 -- Inhalte enthält die Migration bewusst nicht: Die Texte liegen nicht im
--- Repository und werden mit app/scripts/legal-import.mjs über die Admin-API
--- importiert.
+-- Repository und werden im Admin eingepflegt.
 
 CREATE TABLE IF NOT EXISTS `koop_legal_text_version` (
   `id`          INT UNSIGNED NOT NULL AUTO_INCREMENT,

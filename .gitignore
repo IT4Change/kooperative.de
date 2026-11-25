@@ -8,6 +8,6 @@ logs/
 # Guard: npm run from the repo root instead of app/ would land here
 node_modules/
 
-# Legal texts (Impressum, Datenschutz, AGB, ...) — imported into the database with
-# app/scripts/legal-import.mjs, never published in this repository
+# Local drafts of the legal texts (Impressum, Datenschutz, AGB, ...) — they live in
+# the database and are edited in the admin, never published in this repository
 /legal/
