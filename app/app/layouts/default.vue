@@ -131,6 +131,7 @@
         <div class="footer-section">
           <strong>Kooperative Dürnau eG</strong>
           <p>Leben und Arbeiten in Gemeinschaft seit 1980</p>
+          <p class="footer-version" data-testid="app-version">v{{ appVersion }}</p>
         </div>
         <div class="footer-section">
           <strong>Kontakt</strong>
@@ -145,7 +146,6 @@
           </nav>
         </div>
       </div>
-      <p class="footer-version" data-testid="app-version">v{{ appVersion }}</p>
     </footer>
   </div>
 </template>
@@ -426,18 +426,17 @@
     color: #fff;
   }
 
-  .footer-version {
-    margin-top: 1rem;
-    text-align: center;
-    font-size: 0.7rem;
-    /* Muted, but still above 4.5:1 on the #333 footer (WCAG AA). */
-    color: #aaa;
-  }
-
   .footer-section p {
     margin: 0.5rem 0 0;
     font-size: 0.9rem;
     color: #aaa;
+  }
+
+  /* Small print under the tagline: there for whoever looks for it. Same #aaa
+     as the tagline, which stays above 4.5:1 on the #333 footer (WCAG AA). */
+  .footer-section .footer-version {
+    margin-top: 0.25rem;
+    font-size: 0.7rem;
   }
 
   /* Mobile */
