@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.13.0](https://github.com/IT4Change/kooperative.de/compare/v0.12.0...v0.13.0) (2026-11-25)
+
+
+### Features
+
+* **app:** pre-order information and contract text in the receipt ([#78](https://github.com/IT4Change/kooperative.de/issues/78)) ([6040874](https://github.com/IT4Change/kooperative.de/commit/6040874123cd03cd5065816c814736f371721149))
+* **app:** show the version under the tagline in the footer ([#87](https://github.com/IT4Change/kooperative.de/issues/87)) ([c587455](https://github.com/IT4Change/kooperative.de/commit/c58745500ac71261ac4c775911d7e4335205fe82))
+* **app:** standard checkout without a confirmation step ([#77](https://github.com/IT4Change/kooperative.de/issues/77)) ([0961167](https://github.com/IT4Change/kooperative.de/commit/0961167d6a8132124b6e5c9994029506fa1158c5))
+
+
+### Bug Fixes
+
+* **app:** no stray scroll arrows in the legal dialog, standalone page in a new tab ([#85](https://github.com/IT4Change/kooperative.de/issues/85)) ([14053ee](https://github.com/IT4Change/kooperative.de/commit/14053eef8e4e27c345eefbff9945a9cf66aad35b))
+
+
+### Miscellaneous Chores
+
+* **app:** drop the legal text import script ([#86](https://github.com/IT4Change/kooperative.de/issues/86)) ([aa8af01](https://github.com/IT4Change/kooperative.de/commit/aa8af0126be115dc54e0da4bcdbbf913014dee43))
+
 ## [0.12.0](https://github.com/IT4Change/kooperative.de/compare/v0.11.0...v0.12.0) (2026-11-25)
 
 
