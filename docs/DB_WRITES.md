@@ -232,9 +232,8 @@ Admin unter **Rechtstexte** (`app/server/utils/legalText.ts`, alle Writes über 
 - **INSERT/UPDATE `koop_legal_text_live`** (`slug, version_id, activated_by, activated_at`)
   + **INSERT INTO `koop_legal_text_activation`** (Protokoll) — bei „Live schalten"
   (`POST /admin/api/legal/:slug/versions/:id/activate`).
-- Ausgangstexte kommen über `app/scripts/legal-import.mjs`. Das Skript nutzt dieselben
-  Admin-Endpunkte, schreibt also genauso und nur für Seiten **ohne** Version. Die Texte
-  selbst liegen nicht im Repository.
+- Die Texte selbst liegen nicht im Repository; sie kommen nur über diese Admin-Endpunkte
+  in die Datenbank.
 
 **Der Alt-Shop liest diese Tabellen** (nur lesend) über die Patches in `legacy-shop/` —
 Live-Schalten wirkt in beiden Shops. Siehe `legacy-shop/README.md`.

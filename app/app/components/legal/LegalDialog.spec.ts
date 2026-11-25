@@ -137,18 +137,26 @@ describe('LegalDialog', () => {
     expect(useLegal().isOpen.value).toBe(false)
   })
 
-  it('offers the page on its own URL and closes when that is followed', async () => {
+  it('offers the page on its own URL in a new tab, leaving the dialog open', async () => {
     await mount()
     useLegal().open('versand')
     await settle()
 
-    const link = [...document.querySelectorAll('a')].find(
-      (a) => a.textContent === 'Als eigene Seite öffnen',
+    const link = [...document.querySelectorAll('a')].find((a) =>
+      a.textContent.startsWith('Als eigene Seite öffnen'),
     )!
     expect(link.getAttribute('href')).toBe('/versand')
+    expect(link.getAttribute('target')).toBe('_blank')
+    expect(link.getAttribute('rel')).toBe('noopener')
+    // Screen readers hear that it leaves this tab.
+    expect(link.textContent).toBe('Als eigene Seite öffnen (neuer Tab)')
+    // Nothing in the dialog reacts to the link; the old one closed it on click.
+    link.addEventListener('click', (event) => {
+      event.preventDefault()
+    })
     link.click()
     await nextTick()
 
-    expect(useLegal().isOpen.value).toBe(false)
+    expect(useLegal().isOpen.value).toBe(true)
   })
 })
