@@ -14,7 +14,7 @@ import type { H3Event } from 'h3'
  *   compromised sibling subdomain must not be able to act in the admin.
  * - Without it, the `Origin` header has to name this host.
  * - With neither, the request comes from something that is not a browser
- *   (curl, scripts/legal-import.mjs …). Browsers always send Origin on
+ *   (curl, the E2E fixture helper …). Browsers always send Origin on
  *   cross-origin POSTs, so this is not a way around the check.
  *
  * The host comparison honours X-Forwarded-Host: behind the reverse proxy the
