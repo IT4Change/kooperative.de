@@ -22,16 +22,18 @@
         </button>
 
         <nav class="main-nav" :class="{ open: menuOpen }">
-          <NuxtLink to="/shop" :class="{ active: isShopActive }" @click="menuOpen = false"
-            >Bestellung</NuxtLink
-          >
-          <a
-            v-for="link in sectionLinks"
-            :key="link.id"
-            :href="link.href"
-            @click="menuOpen = false"
-            >{{ link.label }}</a
-          >
+          <!-- The other areas are only offered on the home page: inside the shop
+               the header stays out of the way, and the logo leads back home. -->
+          <template v-if="isHome">
+            <NuxtLink to="/shop" @click="menuOpen = false">Bestellung</NuxtLink>
+            <a
+              v-for="link in sectionLinks"
+              :key="link.id"
+              :href="link.href"
+              @click="menuOpen = false"
+              >{{ link.label }}</a
+            >
+          </template>
           <span class="nav-spacer" />
           <a :href="HISTORIE_URL" class="info-link" @click="menuOpen = false">Historie</a>
           <a :href="KONTAKT_URL" class="info-link" @click="menuOpen = false">Kontakt</a>
@@ -184,7 +186,7 @@
   let lastScrollY = 0
 
   const router = useRouter()
-  const isShopActive = computed(() => route.path.startsWith('/shop'))
+  const isHome = computed(() => route.path === '/')
   const sectionLinks = useSectionLinks()
 
   function scrollToTop() {
@@ -387,11 +389,6 @@
   }
 
   .main-nav a:hover {
-    color: #00af8c;
-  }
-
-  .main-nav a.active {
-    border-bottom-color: #00af8c;
     color: #00af8c;
   }
 
