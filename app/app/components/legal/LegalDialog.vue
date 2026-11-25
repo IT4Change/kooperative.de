@@ -22,11 +22,16 @@
           </button>
         </div>
 
-        <!-- Sub-navigation: one tab per legal page (WAI-ARIA tabs pattern). -->
+        <!-- Sub-navigation: one tab per legal page (WAI-ARIA tabs pattern).
+             The grey base line is an inset shadow, not a border: the selected tab's
+             underline has to sit on top of it, and pulling the tabs over a border
+             with a negative margin makes them 1px taller than the bar. With
+             overflow-x: auto the bar then scrolls vertically too, and browsers
+             with classic scrollbars draw a stray up/down arrow next to the tabs. -->
         <div
           role="tablist"
           aria-label="Rechtliche Seiten"
-          class="shrink-0 flex gap-1 overflow-x-auto px-5 sm:px-8 mt-3 border-b border-gray-200"
+          class="shrink-0 flex gap-1 overflow-x-auto overflow-y-hidden px-5 sm:px-8 mt-3 shadow-[inset_0_-1px_0_theme(colors.gray.200)]"
           @keydown="onTabKey"
         >
           <button
@@ -39,7 +44,7 @@
             :aria-selected="page.slug === current"
             :aria-controls="`${uid}-panel`"
             :tabindex="page.slug === current ? 0 : -1"
-            class="shrink-0 px-3 py-2 text-sm border-b-2 -mb-px whitespace-nowrap transition-colors"
+            class="shrink-0 px-3 py-2 text-sm border-b-2 whitespace-nowrap transition-colors"
             :class="
               page.slug === current
                 ? 'border-[#00af8c] text-[#007a62] font-semibold'
@@ -69,11 +74,14 @@
         <div
           class="shrink-0 flex justify-end px-5 py-3 sm:px-8 border-t border-gray-200 text-sm text-gray-600"
         >
-          <NuxtLink
-            :to="legalPage(current).path"
+          <!-- A new tab, so the dialog, the cart and a half-filled checkout stay
+               where they are in this one — the reason the dialog exists. -->
+          <a
+            :href="legalPage(current).path"
+            target="_blank"
+            rel="noopener"
             class="underline hover:text-[#00af8c]"
-            @click="close"
-            >Als eigene Seite öffnen</NuxtLink
+            >Als eigene Seite öffnen<span class="sr-only"> (neuer Tab)</span></a
           >
         </div>
       </div>

@@ -7,8 +7,7 @@ import { getLiveLegalText } from '../../utils/legalText'
  * Answers 200 for every known page, also when there is no text to show (none
  * activated yet, database unreachable): `html` is null then and the page says
  * the text is temporarily unavailable. The texts themselves are not part of
- * this repository — they are imported into the database
- * (scripts/legal-import.mjs) and edited in the admin.
+ * this repository — they live in the database and are edited in the admin.
  */
 export default defineEventHandler(async (event) => {
   const slug = getRouterParam(event, 'slug')

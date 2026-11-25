@@ -1,13 +1,13 @@
 import { test, expect } from '@playwright/test'
 
 import { query, closeDb } from './helpers/db'
-import { importLegalFixtures as importFixtures } from './helpers/legal'
+import { importLegalFixtures } from './helpers/legal'
 import { ADMIN } from './helpers/shop'
 
 import type { RowDataPacket } from 'mysql2/promise'
 
 /**
- * Legal texts end to end: imported with the script, shown on their own pages
+ * Legal texts end to end: created through the admin API, shown on their own pages
  * and in the legal dialog, edited and put live in the admin. The texts are
  * fictitious fixtures — the real ones are not in this repository.
  *
@@ -42,11 +42,11 @@ test('says the text is unavailable before any has been imported', async ({ page 
   await expect(page.getByTestId('legal-unavailable')).toBeVisible()
 })
 
-test('imports the texts with the script, and only once', async ({ baseURL }) => {
-  const first = await importFixtures(baseURL!)
+test('creates the texts through the admin API, and only once', async ({ baseURL }) => {
+  const first = await importLegalFixtures(baseURL!)
 
-  expect(first).toContain('impressum/v1.md (live) → v1')
-  expect(first).toContain('impressum/v2.md → v2, 1 placeholder(s)')
+  expect(first.impressum).toStrictEqual({ created: 2 })
+  expect(first.agb).toStrictEqual({ created: 1 })
   const rows = await versions()
   expect(rows).toHaveLength(6)
   expect(rows.filter((r) => r.live).map((r) => `${r.slug} v${r.version_no}`)).toStrictEqual([
@@ -59,9 +59,9 @@ test('imports the texts with the script, and only once', async ({ baseURL }) => 
   // Saved through the admin API, so in the name of the importing user.
   expect(new Set(rows.map((r) => r.created_by))).toStrictEqual(new Set([ADMIN.username]))
 
-  const second = await importFixtures(baseURL!)
+  const second = await importLegalFixtures(baseURL!)
 
-  expect(second).toContain('impressum: has 2 version(s) already — skipped')
+  expect(second.impressum).toBe('skipped')
   expect(await versions()).toHaveLength(6)
 })
 
