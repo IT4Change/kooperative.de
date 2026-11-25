@@ -21,6 +21,53 @@ function isHidden(slug: string): boolean {
 }
 
 /**
+ * Categories lifted to the top level, by their slug in the DB tree. "Elixiere
+ * und Säfte" is still sold although the rest of the food range is hidden, so it
+ * becomes a category of its own instead of disappearing with its parent.
+ *
+ * Done here rather than in the DB: the category tree is shared with the legacy
+ * shop, which must keep its own structure.
+ */
+const PROMOTED_CATEGORY_SLUGS = ['lebensmittel/elixiere-und-saefte']
+
+/**
+ * The order the storefront lists categories in, as given by the shop owner.
+ * Keyed by parent slug ('' = top level), each list holding child slug segments.
+ * Categories missing here keep their DB order (sort_order, then name) behind the
+ * listed ones, so a newly added category shows up rather than vanishing.
+ *
+ * Kept in code for the same reason as the promotion above: categories.sort_order
+ * also drives the legacy shop.
+ */
+const CATEGORY_ORDER: Record<string, string[]> = {
+  '': ['buecher', 'medien', 'papeterie', 'sonett', 'koerperpflege', 'elixiere-und-saefte', 'holz'],
+  buecher: ['verlag-der-kooperative', 'andere-buecher', 'kataloge', 'karten', 'noten'],
+  medien: ['film', 'musik', 'sprache', 'text'],
+  papeterie: ['postkarten', 'buecher', 'notizblocks', 'poster'],
+  sonett: ['waesche', 'putzmittel', 'geschirr', 'zubehoer', 'koerperpflege'],
+  koerperpflege: ['bad-dusche', 'haut-haare', 'hand-fusz', 'gesicht', 'mund-zaehne', 'anwendungen'],
+  holz: ['spiele', 'saerge'],
+}
+
+/** Position among its siblings; unlisted categories rank behind all listed ones. */
+function categoryRank(category: Category): number {
+  const segment = category.slug.slice(category.slug.lastIndexOf('/') + 1)
+  const index = CATEGORY_ORDER[category.parentSlug ?? '']?.indexOf(segment) ?? -1
+  return index === -1 ? Number.MAX_SAFE_INTEGER : index
+}
+
+/** Re-parents the promoted categories to the top level; other rows pass through. */
+function promoteCategories(rows: DbCategory[]): DbCategory[] {
+  const paths = buildCategoryPaths(rows)
+  return rows.map((row) =>
+    // buildCategoryPaths resolves every row it is given.
+    PROMOTED_CATEGORY_SLUGS.includes(paths.get(row.categories_id)!.slug)
+      ? { ...row, parent_id: 0 }
+      : row,
+  )
+}
+
+/**
  * Loads the catalog (categories + grouped products) from the osCommerce DB.
  * Shared by GET /api/products and the order pipeline so the variant grouping
  * (and thus the meaning of variantIndex) is IDENTICAL on client and server.
@@ -36,13 +83,15 @@ export async function loadCatalog(
     JOIN categories_description cd ON c.categories_id = cd.categories_id AND cd.language_id = 2
     ORDER BY c.parent_id, c.sort_order, cd.categories_name
   `)
-  const dbCategories = catRows as unknown as DbCategory[]
+  const dbCategories = promoteCategories(catRows as unknown as DbCategory[])
   // Paths are still built from every row: a hidden category may sit between two
   // visible ones, and dropping it early would change the slugs below it.
   const paths = buildCategoryPaths(dbCategories)
   const categories = dbCategories
     .map((row) => convertCategory(row, paths))
     .filter((c) => !isHidden(c.slug))
+    // Stable sort: unlisted categories keep the SQL order among themselves.
+    .sort((a, b) => categoryRank(a) - categoryRank(b))
 
   // SQL_BUFFER_RESULT materialises the result into a temporary table and lets
   // the server release the locks on products/products_description immediately,

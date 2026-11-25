@@ -78,7 +78,7 @@ test.describe('lazy loading', () => {
   })
 
   test('a filtered view that fits on one page shows no button', async ({ page }) => {
-    await openShop(page, 'papeterie')
+    await openShop(page, 'schreibwaren')
     await expect(cards(page)).toHaveCount(1)
     await expect(loadMore(page)).toHaveCount(0)
   })
