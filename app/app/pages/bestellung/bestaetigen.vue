@@ -19,11 +19,20 @@
             />
           </svg>
         </div>
-        <h1 class="text-2xl font-bold mb-2">Vielen Dank – Bestellung bestätigt</h1>
-        <p class="text-gray-600">
-          Ihre Bestellung<span v-if="orderId"> (Nr. {{ orderId }})</span> ist verbindlich bestätigt.
-          Wir bearbeiten sie nun und melden uns bei Ihnen.
-        </p>
+        <template v-if="data.direct">
+          <h1 class="text-2xl font-bold mb-2">Ihre Bestellung Nr. {{ orderId }}</h1>
+          <p class="text-gray-600">
+            Ihre Bestellung ist bei uns eingegangen. Wir prüfen sie und melden uns mit der
+            Auftragsbestätigung bei Ihnen.
+          </p>
+        </template>
+        <template v-else>
+          <h1 class="text-2xl font-bold mb-2">Vielen Dank – Bestellung bestätigt</h1>
+          <p class="text-gray-600">
+            Ihre Bestellung<span v-if="orderId"> (Nr. {{ orderId }})</span> ist verbindlich
+            bestätigt. Wir bearbeiten sie nun und melden uns bei Ihnen.
+          </p>
+        </template>
       </div>
 
       <!-- Cancelled -->
@@ -129,12 +138,12 @@
 </template>
 
 <script setup lang="ts">
-  useHead({ title: 'Bestellung bestätigen – Kooperative Dürnau' })
-
   const route = useRoute()
   const token = computed(() => (typeof route.query.token === 'string' ? route.query.token : ''))
 
   interface PendingView {
+    /** Placed at checkout without a confirmation step (standard shop). */
+    direct?: boolean
     status: string
     orderId: number | null
     customer: {
@@ -160,6 +169,13 @@
       immediate: !!token.value,
     },
   )
+
+  useHead({
+    title: () =>
+      data.value?.direct
+        ? 'Ihre Bestellung – Kooperative Dürnau'
+        : 'Bestellung bestätigen – Kooperative Dürnau',
+  })
 
   const justConfirmed = ref(false)
   const localOrderId = ref<number | null>(null)

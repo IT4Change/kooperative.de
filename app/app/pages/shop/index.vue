@@ -145,11 +145,11 @@
               </div>
               <div>
                 <p class="font-semibold text-gray-800">
-                  Versand und Zahlung w&auml;hlen, Bestellung absenden
+                  Versand und Zahlung w&auml;hlen, zahlungspflichtig bestellen
                 </p>
                 <p class="text-sm text-gray-500 mt-0.5">
-                  W&auml;hlen Sie Ihre Versand- und Zahlungsart. Die Bestellung wird per E-Mail an
-                  uns geschickt.
+                  W&auml;hlen Sie Ihre Versand- und Zahlungsart, pr&uuml;fen Sie die &Uuml;bersicht
+                  und schicken Sie die Bestellung mit &bdquo;Zahlungspflichtig bestellen&ldquo; ab.
                 </p>
               </div>
             </div>
@@ -160,14 +160,11 @@
                 5
               </div>
               <div>
-                <p class="font-semibold text-gray-800">Best&auml;tigungs-E-Mail beantworten</p>
+                <p class="font-semibold text-gray-800">Eingangsbest&auml;tigung erhalten</p>
                 <p class="text-sm text-gray-500 mt-0.5">
-                  Wir pr&uuml;fen Ihre Bestellung und senden Ihnen eine E-Mail zur Best&auml;tigung
-                  der Bestellung und der Zahlungskonditionen.
-                  <strong
-                    >Sie senden uns als Best&auml;tigung des Kaufs die E-Mail zur&uuml;ck</strong
-                  >
-                  &ndash; erst damit kommt der Kaufvertrag zustande.
+                  Sie erhalten sofort eine E-Mail mit allen Angaben zu Ihrer Bestellung. Wir
+                  pr&uuml;fen die Bestellung und nehmen sie mit einer Auftragsbest&auml;tigung an
+                  oder versenden direkt die Ware &ndash; damit kommt der Kaufvertrag zustande.
                 </p>
               </div>
             </div>

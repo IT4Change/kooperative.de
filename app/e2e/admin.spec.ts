@@ -1,7 +1,16 @@
 import { test, expect } from '@playwright/test'
 
-import { latestPending, orderById, orderStatusHistory, mailLog, query, closeDb } from './helpers/db'
-import { clearMails, waitForMail, to, confirmationLink } from './helpers/maildev'
+import {
+  latestPending,
+  orderById,
+  orderStatusHistory,
+  mailLog,
+  pendingById,
+  query,
+  seedLegacyPending,
+  closeDb,
+} from './helpers/db'
+import { clearMails, waitForMail, to } from './helpers/maildev'
 import { ADMIN, CUSTOMER, addToCart, checkout, openShop } from './helpers/shop'
 
 /** Same value .env.e2e hands the server, so the assertions read the real inbox. */
@@ -18,18 +27,23 @@ test.afterAll(async () => {
   await closeDb()
 })
 
-/** Places an order and confirms it, so the admin has something to work on. */
-async function confirmedOrder(page: import('@playwright/test').Page): Promise<number> {
+/** Places an order, so the admin has something to work on. */
+async function placedOrder(page: import('@playwright/test').Page): Promise<number> {
   await clearMails()
   await openShop(page)
   await addToCart(page, 'Honig')
   await checkout(page, { shipping: 'abholung', payment: 'vorkasse' })
-  const mail = await waitForMail(to(CUSTOMER.email), 'the confirmation request')
-  await page.goto(confirmationLink(mail))
-  await page.getByRole('button', { name: 'Zahlungspflichtig bestellen' }).click()
-  await expect(page.getByRole('heading', { name: /bestätigt/i })).toBeVisible()
   const pending = await latestPending(CUSTOMER.email)
   return pending!.orders_id!
+}
+
+/**
+ * An order still awaiting the customer's confirmation — only orders from before
+ * the standard-shop checkout can be in that state, so it is seeded.
+ */
+async function legacyPending(page: import('@playwright/test').Page) {
+  await placedOrder(page)
+  return seedLegacyPending((await latestPending(CUSTOMER.email))!.id)
 }
 
 test.describe('admin access', () => {
@@ -103,24 +117,20 @@ test.describe('admin', () => {
   })
 
   test('lists a pending order before it is confirmed', async ({ page }) => {
-    await clearMails()
-    await openShop(page)
-    await addToCart(page, 'Honig')
-    await checkout(page, { shipping: 'abholung' })
-    const pending = await latestPending(CUSTOMER.email)
+    const pending = await legacyPending(page)
 
     const res = await page.request.get('/admin/api/orders')
     const data = await res.json()
     const row = data.orders.find(
-      (o: { kind: string; id: number }) => o.kind === 'pending' && o.id === pending!.id,
+      (o: { kind: string; id: number }) => o.kind === 'pending' && o.id === pending.id,
     )
     expect(row).toBeDefined()
     expect(row.statusName).toBe('Bestätigung ausstehend')
     expect(row.origin).toBe('neu')
   })
 
-  test('opens the detail page of a confirmed order', async ({ page }) => {
-    const orderId = await confirmedOrder(page)
+  test('opens the detail page of a placed order', async ({ page }) => {
+    const orderId = await placedOrder(page)
 
     await page.goto(`/admin/orders/${orderId}`)
     await expect(page.getByText(CUSTOMER.name).first()).toBeVisible()
@@ -129,7 +139,7 @@ test.describe('admin', () => {
   })
 
   test('changes the status and notifies the customer', async ({ page }) => {
-    const orderId = await confirmedOrder(page)
+    const orderId = await placedOrder(page)
     await clearMails()
 
     await page.goto(`/admin/orders/${orderId}`)
@@ -161,13 +171,10 @@ test.describe('admin', () => {
    * the osCommerce half at "upcoming" after the order already existed.
    */
   test('releases a pending order by hand, with a reason', async ({ page }) => {
+    const pending = await legacyPending(page)
     await clearMails()
-    await openShop(page)
-    await addToCart(page, 'Honig')
-    await checkout(page, { shipping: 'abholung', payment: 'vorkasse' })
-    const pending = await latestPending(CUSTOMER.email)
 
-    await page.goto(`/admin/pending/${pending!.id}`)
+    await page.goto(`/admin/pending/${pending.id}`)
     const release = page.getByRole('button', { name: 'Manuell bestätigen' })
 
     // No reason, no release.
@@ -177,12 +184,12 @@ test.describe('admin', () => {
     await release.click()
 
     await expect
-      .poll(async () => (await latestPending(CUSTOMER.email))?.status, {
+      .poll(async () => (await pendingById(pending.id))?.status, {
         message: 'the pending order becomes materialized',
       })
       .toBe('materialized')
 
-    const orderId = (await latestPending(CUSTOMER.email))!.orders_id!
+    const orderId = (await pendingById(pending.id))!.orders_id!
 
     // Releasing moves straight on to the order. The confirmation view carries no
     // editing panel — it shows the process, not the order — so staying there was
@@ -193,7 +200,7 @@ test.describe('admin', () => {
     // Back on the confirmation view, which stays reachable on its own. Earlier
     // defects left step 2 grey although the order existed, and the header
     // claiming "noch keine Bestell-Nr." next to the number it had just been given.
-    await page.goto(`/admin/pending/${pending!.id}`)
+    await page.goto(`/admin/pending/${pending.id}`)
     await expect(page.getByRole('heading', { name: `Bestellung #${orderId}` })).toBeVisible()
     await expect(page.getByText('noch keine Bestell-Nr.')).toBeHidden()
     await expect(page.getByTestId('flow-step-1').locator('svg')).toBeVisible()
@@ -227,22 +234,30 @@ test.describe('admin', () => {
   })
 
   test('refuses a manual release without a reason', async ({ page }) => {
-    await openShop(page)
-    await addToCart(page, 'Honig')
-    await checkout(page, { shipping: 'abholung', payment: 'vorkasse' })
-    const pending = await latestPending(CUSTOMER.email)
+    const pending = await legacyPending(page)
 
     // The form disables the button; the endpoint has to refuse it regardless,
     // or the requirement would only hold for people using the form.
-    const res = await page.request.post(`/admin/api/pending/${pending!.id}/confirm`, { data: {} })
+    const res = await page.request.post(`/admin/api/pending/${pending.id}/confirm`, { data: {} })
 
     expect(res.status()).toBe(400)
     expect(await res.text()).toContain('Begründung')
-    expect((await latestPending(CUSTOMER.email))?.status).toBe('pending')
+    expect((await pendingById(pending.id))?.status).toBe('pending')
+  })
+
+  test('marks a direct new-shop order as having skipped the confirmation', async ({ page }) => {
+    const orderId = await placedOrder(page)
+
+    await page.goto(`/admin/orders/${orderId}`)
+
+    await expect(page.getByText('Neuer Shop', { exact: true })).toBeVisible()
+    await expect(page.getByTestId('direct-order-hint')).toBeVisible()
+    await expect(page.getByTestId('flow-step-1')).toHaveClass(/border-dashed/)
+    await expect(page.getByTestId('flow-step-2')).toHaveClass(/ring-4/)
   })
 
   test('marks an old-shop order as having skipped the confirmation', async ({ page }) => {
-    const orderId = await confirmedOrder(page)
+    const orderId = await placedOrder(page)
     // An order with no koop_pending_order row behind it is exactly what an
     // old-shop order looks like to the admin.
     await query('DELETE FROM koop_pending_order WHERE orders_id = ?', [orderId])
@@ -259,7 +274,7 @@ test.describe('admin', () => {
   })
 
   test('changes the status silently when notification is unchecked', async ({ page }) => {
-    const orderId = await confirmedOrder(page)
+    const orderId = await placedOrder(page)
     await clearMails()
 
     await page.goto(`/admin/orders/${orderId}`)

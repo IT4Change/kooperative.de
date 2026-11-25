@@ -75,6 +75,14 @@
             <span class="ml-1 whitespace-pre-wrap">{{ data.confirmation.note }}</span>
           </p>
         </template>
+        <p
+          v-else
+          class="mt-4 text-xs text-gray-500 bg-gray-50 border border-gray-200 rounded px-3 py-2"
+          data-testid="direct-order-hint"
+        >
+          Direkt im <strong>neuen Shop</strong> bestellt („Zahlungspflichtig bestellen“) – Schritt 1
+          entfällt, eine gesonderte Bestätigung durch den Kunden ist nicht mehr vorgesehen.
+        </p>
       </AdminStatusFlow>
 
       <div class="grid gap-6 lg:grid-cols-3">
@@ -431,6 +439,8 @@
     status_notification: 'Statusmeldung',
     status_notification_resend: 'Statusmeldung (erneut)',
     order_confirmation_request: 'Bestätigungsanfrage',
+    order_received: 'Eingangsbestätigung',
+    admin_new_order: 'Neue Bestellung',
     operator_notification: 'Betreiber-Info',
   }
   function mailTypeLabel(t: string): string {

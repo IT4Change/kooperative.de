@@ -2,19 +2,20 @@
 import { describe, it, expect } from 'vitest'
 
 import {
-  buildCustomerConfirmRequest,
-  buildAdminNewPending,
   buildCustomerConfirmed,
   buildAdminConfirmed,
+  buildCustomerOrderReceived,
+  buildAdminNewOrder,
 } from './pendingMail'
 
 import type { OrderComputation } from './orderCompute'
 
 /**
- * The four mails of the confirmation flow. They are the only channel through
- * which the contract actually comes about, so the tests check what a customer
- * has to be able to see: the items with their prices, the total, and the link
- * that confirms — plus that nothing they typed can inject markup.
+ * The order mails of the new shop: the receipt of a direct order, and the
+ * confirmed/released mails that still finish orders placed under the old
+ * confirmation flow. The tests check what a customer has to be able to see —
+ * the items with their prices, the total, the link — and that nothing they
+ * typed can inject markup.
  */
 const COMP: OrderComputation = {
   customer: {
@@ -54,17 +55,29 @@ const COMP: OrderComputation = {
 const REVIEW_URL = 'https://shop.example.org/bestellung/bestaetigen?token=abc'
 const ADMIN_URL = 'https://shop.example.org/admin/orders/55'
 
-describe('buildCustomerConfirmRequest', () => {
-  const mail = buildCustomerConfirmRequest({ pendingId: 12, comp: COMP, reviewUrl: REVIEW_URL })
+describe('buildCustomerOrderReceived', () => {
+  const mail = buildCustomerOrderReceived({ orderId: 55, comp: COMP, reviewUrl: REVIEW_URL })
 
-  it('asks for confirmation in the subject', () => {
-    expect(mail.subject).toBe('[Kooperative Dürnau] Bitte bestätigen Sie Ihre Bestellung')
+  it('names the order number in the subject', () => {
+    expect(mail.subject).toBe('[Kooperative Dürnau] Eingang Ihrer Bestellung #55')
   })
 
-  it('offers both ways to confirm', () => {
-    // The reply path is the legally relevant one and must not go missing.
+  it('confirms receipt only, not acceptance', () => {
+    // § 312i receipt vs. acceptance: the AGB let the contract come about only by
+    // an order confirmation or shipping. A mail that read as acceptance would
+    // bind the shop to an order it may have to decline.
+    expect(mail.text).toContain('noch keine Annahme')
+    expect(mail.text).toContain('Auftragsbestätigung')
+    expect(mail.html).toContain('noch keine Annahme')
+  })
+
+  it('does not ask the customer to confirm anything', () => {
+    expect(mail.text).not.toMatch(/bitte bestätigen/i)
+    expect(mail.text).not.toContain('antworten')
+  })
+
+  it('links to the order for review', () => {
     expect(mail.text).toContain(REVIEW_URL)
-    expect(mail.text).toContain('auf diese E-Mail antworten')
     expect(mail.html).toContain(REVIEW_URL)
   })
 
@@ -84,8 +97,8 @@ describe('buildCustomerConfirmRequest', () => {
   })
 
   it('says "nach Aufwand" when the shipping cost is not fixed yet', () => {
-    const collected = buildCustomerConfirmRequest({
-      pendingId: 12,
+    const collected = buildCustomerOrderReceived({
+      orderId: 55,
       comp: {
         ...COMP,
         shipping: { module: 'Abholung', totalTitle: 'Abholung:', gross: 0 },
@@ -99,8 +112,8 @@ describe('buildCustomerConfirmRequest', () => {
   })
 
   it('falls back to a neutral greeting without a name', () => {
-    const anonymous = buildCustomerConfirmRequest({
-      pendingId: 12,
+    const anonymous = buildCustomerOrderReceived({
+      orderId: 55,
       comp: { ...COMP, customer: { ...COMP.customer, name: '' } },
       reviewUrl: REVIEW_URL,
     })
@@ -114,13 +127,11 @@ describe('buildCustomerConfirmRequest', () => {
   })
 })
 
-describe('buildAdminNewPending', () => {
-  const mail = buildAdminNewPending({ pendingId: 12, comp: COMP, adminUrl: ADMIN_URL })
+describe('buildAdminNewOrder', () => {
+  const mail = buildAdminNewOrder({ orderId: 55, comp: COMP, adminUrl: ADMIN_URL })
 
-  it('names the customer in the subject', () => {
-    expect(mail.subject).toBe(
-      '[Koop · neuer Shop] Neue Bestellung (unbestätigt) – Erika Musterfrau',
-    )
+  it('names the order number in the subject', () => {
+    expect(mail.subject).toBe('[Koop · neuer Shop] Neue Bestellung #55 – bitte bearbeiten')
   })
 
   it('links straight into the admin', () => {
@@ -128,12 +139,14 @@ describe('buildAdminNewPending', () => {
     expect(mail.html).toContain(ADMIN_URL)
   })
 
-  it('states that the order is still waiting on the customer', () => {
-    expect(mail.text).toContain('wartet auf die Bestätigung')
+  it('says the order is ready to process, not waiting on the customer', () => {
+    expect(mail.text).toContain('kann bearbeitet werden')
+    expect(mail.text).not.toContain('wartet')
   })
 
   it('includes the customer address for a quick reply', () => {
     expect(mail.text).toContain('kundin@example.org')
+    expect(mail.html).toContain('mailto:kundin@example.org')
   })
 })
 
@@ -238,8 +251,8 @@ describe('escaping', () => {
       customer: { ...COMP.customer, name: '<script>alert(1)</script>' },
     }
 
-    const mail = buildCustomerConfirmRequest({
-      pendingId: 1,
+    const mail = buildCustomerOrderReceived({
+      orderId: 1,
       comp: hostile,
       reviewUrl: REVIEW_URL,
     })
@@ -254,8 +267,8 @@ describe('escaping', () => {
       lines: [{ ...COMP.lines[0], name: 'Honig <b>fett</b>' }],
     }
 
-    const mail = buildCustomerConfirmRequest({
-      pendingId: 1,
+    const mail = buildCustomerOrderReceived({
+      orderId: 1,
       comp: hostile,
       reviewUrl: REVIEW_URL,
     })

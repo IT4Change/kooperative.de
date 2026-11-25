@@ -194,7 +194,9 @@ describe('sending', () => {
   it('emits send', async () => {
     const wrapper = await mount()
 
-    const send = wrapper.findAll('button').find((b) => b.text().includes('absenden'))
+    const send = wrapper
+      .findAll('button')
+      .find((b) => b.text().includes('Zahlungspflichtig bestellen'))
     await send!.trigger('click')
 
     expect(wrapper.emitted('send')).toHaveLength(1)

@@ -382,7 +382,7 @@ describe('submitting the order', () => {
     cart.addToCart(product())
     cart.shippingMethod.value = 'abholung'
     cart.paymentMethod.value = 'vorkasse'
-    fetchMock.mockResolvedValue({ ok: true, pendingId: 12, total: 11.9 })
+    fetchMock.mockResolvedValue({ ok: true, orderId: 55, total: 11.9 })
     return cart
   }
 
@@ -391,7 +391,7 @@ describe('submitting the order', () => {
     cart.addToCart(SIZED, 1)
     cart.shippingMethod.value = 'abholung'
     cart.paymentMethod.value = 'vorkasse'
-    fetchMock.mockResolvedValue({ ok: true, pendingId: 12, total: 17.85 })
+    fetchMock.mockResolvedValue({ ok: true, orderId: 55, total: 17.85 })
 
     await cart.submitOrder()
 
@@ -416,6 +416,14 @@ describe('submitting the order', () => {
     })
     expect(cart.checkoutStep.value).toBe('success')
     expect(cart.isEmpty.value).toBe(true)
+  })
+
+  it('keeps the order number for the success step', async () => {
+    const cart = await readyCart()
+
+    await cart.submitOrder()
+
+    expect(cart.lastOrderId.value).toBe(55)
   })
 
   it('resets the checkout fields afterwards', async () => {
