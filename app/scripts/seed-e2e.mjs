@@ -72,7 +72,7 @@ export const E2E_CUSTOMER = {
 const CATEGORIES = [
   { id: 1, parent: 0, sort: 1, name: 'Naturkost' },
   { id: 2, parent: 1, sort: 1, name: 'Öle' },
-  { id: 3, parent: 0, sort: 2, name: 'Papeterie' },
+  { id: 3, parent: 0, sort: 2, name: 'Schreibwaren' },
   { id: 4, parent: 0, sort: 3, name: 'Zubehör' },
   // Hidden by the catalog (HIDDEN_CATEGORY_SLUGS in server/utils/catalog.ts):
   // the food range is sold elsewhere now. Present here — with active products,

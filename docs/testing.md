@@ -260,6 +260,12 @@ bleiben — sie prüfen den Katalog-Filter (`HIDDEN_CATEGORY_SLUGS` in
 `server/utils/catalog.ts`). Der sichtbare Kategoriebaum heißt deshalb
 „Naturkost", nicht „Lebensmittel".
 
+Die Kategorienamen kommen bewusst **nicht** in der Reihenfolgeliste
+(`CATEGORY_ORDER` in `server/utils/catalog.ts`) vor, deshalb „Schreibwaren"
+statt „Papeterie". Sonst würde jede Änderung an der vom Shop vorgegebenen Reihenfolge die
+Default-Kategorie der Filter-Specs verschieben. Die Reihenfolge selbst prüft
+`catalog.spec.ts`.
+
 Dazu 30 Füll-Produkte („Zubehör 01…30"), damit das Grid überhaupt paginiert —
 die Seitengröße ist 24. Sie sind bewusst so benannt, dass sie **hinter** den
 handgeschriebenen Fixtures einsortieren: das Grid sortiert nach Aufrufzahl,
