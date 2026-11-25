@@ -20,3 +20,13 @@ export function reviewLink(event: H3Event, token: string): string {
 export function adminOrderLink(event: H3Event, id: number): string {
   return `${baseUrl(event)}/admin/orders/${id}`
 }
+
+/** The withdrawal function (§ 356a BGB), prefilled with an order number if given. */
+export function withdrawalLink(event: H3Event, orderId?: number): string {
+  const query = orderId === undefined ? '' : `?bestellung=${orderId}`
+  return `${baseUrl(event)}/vertrag-widerrufen${query}`
+}
+
+export function adminWithdrawalsLink(event: H3Event): string {
+  return `${baseUrl(event)}/admin/withdrawals`
+}

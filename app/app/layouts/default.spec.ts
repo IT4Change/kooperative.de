@@ -465,6 +465,16 @@ describe('footer', () => {
     expect(useLegal().current.value).toBe('widerruf')
   })
 
+  // § 356a BGB: the withdrawal function has to be reachable from every page —
+  // as a plain link, not as a call to action.
+  it('links the withdrawal function', async () => {
+    const wrapper = await mount()
+    const link = wrapper.get('[data-testid="withdrawal-link"]')
+
+    expect(link.text()).toBe('Vertrag widerrufen')
+    expect(link.attributes('href')).toBe('/vertrag-widerrufen')
+  })
+
   it('shows the version this build was made from', async () => {
     const wrapper = await mount()
 

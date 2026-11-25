@@ -12,7 +12,7 @@ import type { OrderComputation } from './orderCompute'
  */
 
 const BRAND = '#00af8c'
-const esc = (s: string) =>
+export const esc = (s: string) =>
   s.replace(/[<>&"]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' })[c]!)
 const money = (n: number) => `${n.toFixed(2).replace('.', ',')} €`
 
@@ -61,7 +61,7 @@ function itemsHtml(comp: OrderComputation): string {
   <p style="font-size:13px;color:#555;margin:4px 0">Zahlung: <strong>${esc(comp.payment.label)}</strong></p>`
 }
 
-function wrap(title: string, inner: string): string {
+export function wrap(title: string, inner: string): string {
   return `<!DOCTYPE html><html><body style="font-family:system-ui,sans-serif;color:#222;max-width:640px">
     <div style="background:${BRAND};color:#fff;padding:12px 16px;border-radius:8px 8px 0 0"><strong>${esc(title)}</strong></div>
     <div style="border:1px solid #ddd;border-top:0;padding:16px;border-radius:0 0 8px 8px">${inner}</div>
@@ -211,6 +211,7 @@ export function buildCustomerOrderReceived(ctx: {
       itemsText(c),
       '',
       `Bestellung ansehen: ${ctx.reviewUrl}`,
+      ...(ctx.withdrawalUrl ? [`Vertrag widerrufen: ${ctx.withdrawalUrl}`] : []),
       '',
       'Herzliche Grüsze',
       'Kooperative Dürnau eG',
@@ -224,7 +225,7 @@ export function buildCustomerOrderReceived(ctx: {
     <p style="margin:0 0 12px">vielen Dank für Ihre Bestellung <strong>#${ctx.orderId}</strong>. Sie ist bei uns eingegangen.</p>
     <p style="margin:0 0 12px;color:#555">${esc(receipt)}</p>
     ${itemsHtml(c)}
-    ${button(ctx.reviewUrl, 'Bestellung ansehen →')}
+    ${button(ctx.reviewUrl, 'Bestellung ansehen →')}${ctx.withdrawalUrl ? `<p style="margin:0;font-size:12px"><a href="${esc(ctx.withdrawalUrl)}" style="color:#888">Vertrag widerrufen</a></p>` : ''}
     <p style="margin:12px 0 0;color:#555">Herzliche Grüsze<br>Kooperative Dürnau eG</p>
     ${footerHtml(true)}${termsHtml(ctx.terms ?? [])}`,
   )

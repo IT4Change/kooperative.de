@@ -4,7 +4,7 @@ import { describe, it, expect, afterEach } from 'vitest'
 
 import '../../test/setup-server'
 
-import { baseUrl, reviewLink, adminOrderLink } from './links'
+import { baseUrl, reviewLink, adminOrderLink, adminWithdrawalsLink, withdrawalLink } from './links'
 
 import type { H3Event } from 'h3'
 import type { IncomingMessage, ServerResponse } from 'node:http'
@@ -58,5 +58,20 @@ describe('link builders', () => {
 
   it('builds the admin deep links', () => {
     expect(adminOrderLink(event, 7)).toBe('https://shop.kooperative.de/admin/orders/7')
+  })
+})
+
+describe('withdrawal links', () => {
+  const event = eventFor('https://shop.kooperative.de/api/orders')
+
+  it('points to the withdrawal function, prefilled with the order when given', () => {
+    expect(withdrawalLink(event, 55)).toBe(
+      'https://shop.kooperative.de/vertrag-widerrufen?bestellung=55',
+    )
+    expect(withdrawalLink(event)).toBe('https://shop.kooperative.de/vertrag-widerrufen')
+  })
+
+  it('points the operator to the list of withdrawals', () => {
+    expect(adminWithdrawalsLink(event)).toBe('https://shop.kooperative.de/admin/withdrawals')
   })
 })

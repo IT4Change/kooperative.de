@@ -91,6 +91,64 @@ export function parseLogin(body: unknown): LoginInput {
   return { email, password }
 }
 
+export interface WithdrawalInput {
+  name: string
+  email: string
+  /** Order number (or whatever identifies the contract for the customer). */
+  orderRef: string
+  scope: 'all' | 'partial'
+  /** Which items, for a partial withdrawal. */
+  items?: string
+  message?: string
+}
+
+function optionalText(value: unknown, max: number, field: string): string | undefined {
+  if (value === undefined || value === null || value === '') return undefined
+  if (typeof value !== 'string')
+    throw createError({ statusCode: 400, statusMessage: `${field}: erwartet Text` })
+  const v = value.trim()
+  if (v.length > max)
+    throw createError({ statusCode: 400, statusMessage: `${field}: maximal ${max} Zeichen` })
+  return v || undefined
+}
+
+/**
+ * A withdrawal declaration (§ 356a BGB). Asks only what identifies the
+ * declaring person and the contract — no login, no reason: either would be an
+ * obstacle the law does not allow.
+ */
+export function parseWithdrawal(body: unknown): WithdrawalInput {
+  if (!body || typeof body !== 'object')
+    throw createError({ statusCode: 400, statusMessage: 'Ungültige Daten' })
+  const b = body as Record<string, unknown>
+  const name = asTrimmedString(b.name, 200, 'Name')
+  const email = asTrimmedString(b.email, 255, 'E-Mail').toLowerCase()
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    throw createError({ statusCode: 400, statusMessage: 'E-Mail: ungültig' })
+  }
+  const orderRef = asTrimmedString(b.orderRef, 64, 'Bestellnummer').replace(/^#/, '')
+  const scope = b.scope ?? 'all'
+  if (scope !== 'all' && scope !== 'partial') {
+    throw createError({ statusCode: 400, statusMessage: 'Umfang: ungültig' })
+  }
+  const items = optionalText(b.items, 2000, 'Artikel')
+  if (scope === 'partial' && !items) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: 'Artikel: bitte angeben, welche Artikel Sie widerrufen',
+    })
+  }
+  const message = optionalText(b.message, 2000, 'Nachricht')
+  return {
+    name,
+    email,
+    orderRef,
+    scope,
+    ...(scope === 'partial' && { items }),
+    ...(message && { message }),
+  }
+}
+
 /** More positions than any real cart has; bounds the work one request can cause. */
 export const MAX_ORDER_LINES = 100
 

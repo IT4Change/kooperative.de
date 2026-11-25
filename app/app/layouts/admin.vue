@@ -82,6 +82,7 @@
     },
     { label: 'Produkte', to: '/admin/products', match: ['/admin/products'], readonly: true },
     { label: 'Kunden', to: '/admin/customers', match: ['/admin/customers'], readonly: true },
+    { label: 'Widerrufe', to: '/admin/withdrawals', match: ['/admin/withdrawals'] },
     { label: 'Rechtstexte', to: '/admin/legal', match: ['/admin/legal'] },
   ]
 

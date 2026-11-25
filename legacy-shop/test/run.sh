@@ -32,7 +32,9 @@ fail() {
   failures=$((failures + 1))
 }
 
-# A fresh shop: fixture + (optionally) the loader with its patches.
+# A fresh shop: fixture + (optionally) the loader with its patches, and with
+# "with-filters" also the page-wide output filters. The patch tests leave the
+# filters out, so that their byte-for-byte comparisons test the patches alone.
 shop() {
   rm -rf "$WORK/shop"
   cp -R "$HERE/fixture" "$WORK/shop"
@@ -40,10 +42,11 @@ shop() {
     local original
     for original in datenschutz imprint agb; do cp "$ORIGINALS/$original.php" "$WORK/shop/"; done
   fi
-  if [ "${1:-}" = "with-patches" ]; then
+  if [ "${1:-}" = "with-patches" ] || [ "${1:-}" = "with-filters" ]; then
     mkdir -p "$WORK/shop/includes/local"
     cp -R "$ROOT/includes/local/." "$WORK/shop/includes/local/"
   fi
+  if [ "${1:-}" = "with-patches" ]; then rm -rf "$WORK/shop/includes/local/filters"; fi
 }
 
 # Runs a page; stdout to $WORK/out, stderr to $WORK/err.
@@ -156,6 +159,42 @@ run datenschutz.php '{"datenschutz":"<p>DB</p>"}'
 if cmp -s "$WORK/out" "$WORK/original" && [ ! -s "$WORK/err" ]; then
   pass 'removing a patch restores the original page'
 else fail 'removing a patch restores the original page'; fi
+
+# --- page-wide filters: "Vertrag widerrufen" in the footer ------------------------
+
+WITHDRAWAL_CELL='<td nowrap align="center"><a title="Vertrag widerrufen" href="https://neu.kooperative.de/vertrag-widerrufen" class="Othermenu">Vertrag widerrufen</a></td>'
+
+shop with-filters
+run datenschutz.php '{"datenschutz":"<p>DB</p>"}'
+if contains 'class="Othermenu">Impressum</a></td>'"$WITHDRAWAL_CELL" \
+  && [ "$(grep -cF 'Vertrag widerrufen</a>' "$WORK/out")" = 1 ] && contains '<p>DB</p>' \
+  && clean_stderr; then
+  pass 'the withdrawal link follows the Impressum cell, once, also on a patched page'
+else fail 'the withdrawal link follows the Impressum cell, once, also on a patched page'; cat "$WORK/out" "$WORK/err"; fi
+
+shop
+run unpatched.php
+cp "$WORK/out" "$WORK/original"
+shop with-filters
+run unpatched.php
+if cmp -s "$WORK/out" "$WORK/original" && [ ! -s "$WORK/err" ]; then
+  pass 'a page without the footer passes the filter byte for byte'
+else fail 'a page without the footer passes the filter byte for byte'; diff "$WORK/original" "$WORK/out" | head; fi
+
+shop with-filters
+rm "$WORK/shop/includes/local/filters/withdrawal_link.php"
+run datenschutz.php '{"datenschutz":"<p>DB</p>"}'
+if ! contains 'Vertrag widerrufen' && clean_stderr; then
+  pass 'deleting the filter removes the link'
+else fail 'deleting the filter removes the link'; fi
+
+if [ -d "$ORIGINALS" ]; then
+  shop with-filters
+  run imprint.php
+  if [ "$(grep -cF "$WITHDRAWAL_CELL" "$WORK/out")" = 1 ] && clean_stderr; then
+    pass 'the real footer gets the withdrawal link'
+  else fail 'the real footer gets the withdrawal link'; grep -n 'Impressum' "$WORK/out" | head -3; fi
+fi
 
 # --- PHP 5 syntax -------------------------------------------------------------------
 

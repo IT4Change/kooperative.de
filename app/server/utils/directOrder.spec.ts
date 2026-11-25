@@ -26,6 +26,8 @@ vi.mock(import('./orderMailLog'), () => ({ sendAndLogOrderMail }))
 vi.mock(import('./links'), () => ({
   reviewLink: (_e: unknown, token: string) => `https://shop.example.org/bestaetigen?token=${token}`,
   adminOrderLink: (_e: unknown, id: number) => `https://shop.example.org/admin/orders/${id}`,
+  withdrawalLink: (_e: unknown, id: number) =>
+    `https://shop.example.org/vertrag-widerrufen?bestellung=${id}`,
 }))
 const TERMS = [{ slug: 'agb', title: 'AGB', versionNo: 3, html: 'h', text: 't' }]
 const loadContractTerms = vi.hoisted(() => vi.fn())
@@ -122,6 +124,8 @@ describe('placeDirectOrder', () => {
       orderId: 55,
       comp: COMP,
       reviewUrl: 'https://shop.example.org/bestaetigen?token=tok',
+      // § 356a BGB: the withdrawal function, prefilled with this order.
+      withdrawalUrl: 'https://shop.example.org/vertrag-widerrufen?bestellung=55',
       // The live AGB and Widerrufsbelehrung travel with the receipt.
       terms: TERMS,
     })

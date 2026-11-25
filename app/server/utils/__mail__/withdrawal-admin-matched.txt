@@ -1,0 +1,18 @@
+Subject: [Koop · neuer Shop] Widerruf zu Bestellung 55 – bitte bearbeiten
+
+Am 17.11.2026 um 14:03 Uhr ist ein Widerruf eingegangen.
+Zugeordnet zu Bestellung #55.
+Im Admin öffnen: https://shop.example.org/admin/orders/55
+
+Name: Erika Musterfrau
+E-Mail: kundin@example.org
+Bestellung: 55
+Umfang: einzelne Artikel
+Artikel: 1× Honig
+Nachricht: Glas kam beschädigt an.
+
+—
+Musterfirma GmbH
+Musterweg 1, 12345 Musterstadt
+Geschäftsführer: Max Mustermann · Amtsgericht Musterstadt, HRB 12345
+info@example.org

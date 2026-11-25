@@ -14,6 +14,7 @@ nicht. Unser Loader nutzt diesen Einstiegspunkt:
 ```
 includes/local/configure.php          Loader
 includes/local/patches/<seite>.php    übernimmt <Shop-Root>/<seite>.php
+includes/local/filters/<name>.php     Ausgabefilter für jede Seite
 includes/local/koop/                  gemeinsamer Code der Patches
 ```
 
@@ -54,6 +55,24 @@ Das gespeicherte HTML ist reines ASCII (Umlaute usw. als numerische Entities).
 Es erscheint daher im ISO-8859-1-Altshop korrekt, egal welchen Zeichensatz die
 Datenbankverbindung verwendet.
 
+## Vertrag widerrufen (§ 356a BGB)
+
+`filters/withdrawal_link.php` setzt in den Footer **jeder** Seite direkt hinter
+„Impressum“ einen Link „Vertrag widerrufen“. Er führt zur Widerrufsfunktion des
+neuen Shops (`/vertrag-widerrufen`), die Erklärungen zu Bestellungen aus beiden
+Shops annimmt – der Altshop bekommt kein eigenes Formular.
+
+Technisch ist das ein Ausgabefilter (`ob_start`), den der Loader einmal pro
+Anfrage lädt, also auch für gepatchte Seiten. Eine Seite ohne die
+Impressum-Zelle (Popups, Weiterleitungen, Downloads) bleibt byte-genau
+unverändert. Voraussetzung ist, dass die GZIP-Kompression des Shops aus ist
+(`GZIP_COMPRESSION = false`, so ist es eingestellt) – sonst sähe der Filter
+nur komprimierte Daten und ließe die Seite unverändert.
+
+**Vor dem Kopieren** die Ziel-URL `KOOP_WITHDRAWAL_URL` oben in der Datei
+prüfen (Default: Staging `https://neu.kooperative.de/vertrag-widerrufen`).
+Link entfernen: Datei löschen.
+
 ## Installation
 
 Per FTP ins Shop-Verzeichnis kopieren, Pfade 1:1:
@@ -62,6 +81,7 @@ Per FTP ins Shop-Verzeichnis kopieren, Pfade 1:1:
 legacy-shop/includes/local/configure.php  →  <shop>/includes/local/configure.php
 legacy-shop/includes/local/koop/          →  <shop>/includes/local/koop/
 legacy-shop/includes/local/patches/       →  <shop>/includes/local/patches/
+legacy-shop/includes/local/filters/       →  <shop>/includes/local/filters/
 ```
 
 Voraussetzung: Migration 005 ist eingespielt, und die Texte sind importiert
@@ -83,6 +103,9 @@ sonst Platzhalterseiten aus der Fixture (so läuft er in der CI,
 - Patch aktiv: Der Text kommt aus der Datenbank.
 - Kein Text oder Datenbankfehler: Die Originalseite erscheint byte-identisch.
 - Patch entfernt: Die Originalseite ist zurück.
+- Filter: Der Widerrufslink steht genau einmal hinter „Impressum“, auch auf
+  gepatchten Seiten (und im echten Footer, wenn `old/` vorhanden ist); Seiten
+  ohne Footer bleiben byte-identisch; Filter gelöscht → kein Link.
 
 Der Code muss zu PHP 5.2 kompatibel bleiben: Der Altshop setzt
 `register_globals` voraus, läuft also höchstens auf PHP 5.3. Ältere

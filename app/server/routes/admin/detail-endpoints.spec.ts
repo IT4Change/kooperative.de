@@ -5,6 +5,7 @@ import '../../../test/setup-server'
 import { callHandler } from '../../../test/helpers/event'
 import { createMockDb } from '../../../test/helpers/mock-db'
 import { ORDER_STATUS_FLOW, buildStatusFlow, buildFullFlow } from '../../utils/orderStatus'
+import { withdrawalsForOrder } from '../../utils/withdrawal'
 
 import orderDetail from './api/orders/[id].get'
 import pendingDetail from './api/pending/[id].get'
@@ -57,6 +58,7 @@ beforeEach(() => {
     buildStatusFlow,
     buildFullFlow,
     getPendingByOrderId,
+    withdrawalsForOrder,
   })
 })
 
@@ -470,6 +472,53 @@ describe('GET /admin/api/orders/[id]', () => {
     expect(result.mails).toStrictEqual([])
     expect(result.order).toBeDefined()
     expect(warn).toHaveBeenCalled()
+    warn.mockRestore()
+  })
+
+  it('shows the withdrawals declared for the order', async () => {
+    orderDb([
+      {
+        match: 'FROM koop_withdrawal',
+        rows: [
+          {
+            id: 3,
+            name: 'Erika Musterfrau',
+            email: 'kundin@example.org',
+            order_ref: '55',
+            scope: 'partial',
+            items: '1× Honig',
+            message: null,
+            orders_id: 55,
+            customers_id: 3,
+            created_at: '2026-11-17T13:03:00.000Z',
+          },
+        ],
+      },
+    ])
+
+    const result = await callHandler<{ withdrawals: unknown[] }>(orderDetail, {
+      params: { id: '55' },
+    })
+
+    expect(result.withdrawals).toStrictEqual([
+      expect.objectContaining({ id: 3, scope: 'partial', items: '1× Honig', message: null }),
+    ])
+  })
+
+  it('still renders the order before the withdrawal table exists', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    orderDb([{ match: 'FROM koop_withdrawal', error: new Error("Table doesn't exist") }])
+
+    const result = await callHandler<{ withdrawals: unknown[]; order: unknown }>(orderDetail, {
+      params: { id: '55' },
+    })
+
+    expect(result.withdrawals).toStrictEqual([])
+    expect(result.order).toBeDefined()
+    expect(warn).toHaveBeenCalledWith(
+      '[admin/order] withdrawals unavailable:',
+      "Table doesn't exist",
+    )
     warn.mockRestore()
   })
 
