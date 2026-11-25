@@ -17,6 +17,8 @@ const bankAccountHolder = ref('')
 const bankIban = ref('')
 const submitting = ref(false)
 const submitError = ref('')
+/** osCommerce order number of the order just placed, for the success step. */
+const lastOrderId = ref<number | null>(null)
 
 let initialized = false
 
@@ -217,12 +219,13 @@ export function useCart() {
           iban: bankIban.value.replace(/\s+/g, '').toUpperCase(),
         }
       }
-      // New flow: the order is stored as pending and a confirmation mail is sent.
-      // No osCommerce order number exists yet (materialized only on confirmation).
-      await $fetch<{ ok: boolean; pendingId: number; total: number }>('/api/orders', {
+      // Standard shop: the order is placed directly and gets its osCommerce
+      // order number right away; the customer receives a receipt by mail.
+      const res = await $fetch<{ ok: boolean; orderId: number; total: number }>('/api/orders', {
         method: 'POST',
         body: payload,
       })
+      lastOrderId.value = res.orderId
       checkoutStep.value = 'success'
       clearCart()
       orderNotes.value = ''
@@ -258,6 +261,7 @@ export function useCart() {
     bankIban,
     submitting: readonly(submitting),
     submitError: readonly(submitError),
+    lastOrderId: readonly(lastOrderId),
     totalItems,
     totalPrice,
     isEmpty,

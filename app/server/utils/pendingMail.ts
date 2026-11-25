@@ -3,9 +3,11 @@ import { footerText, footerHtml } from './mailFooter'
 import type { OrderComputation } from './orderCompute'
 
 /**
- * Mail templates for the confirmation flow. Every mail carries a link so the
- * recipient can re-check the order content: customers get the token review link,
- * the administration gets the admin detail link.
+ * Mail templates for new-shop orders: the receipt of a direct order, and the
+ * confirmed / released mails that finish orders still placed under the former
+ * confirmation flow. Every mail carries a link so the recipient can re-check
+ * the order content: customers get the token review link, the administration
+ * gets the admin detail link.
  */
 
 const BRAND = '#00af8c'
@@ -67,76 +69,6 @@ function wrap(title: string, inner: string): string {
 
 function button(url: string, label: string): string {
   return `<p style="margin:16px 0"><a href="${esc(url)}" style="background:${BRAND};color:#fff;text-decoration:none;padding:10px 18px;border-radius:6px;display:inline-block">${esc(label)}</a></p>`
-}
-
-/** Customer: please confirm your order (link → review page, or reply). */
-export function buildCustomerConfirmRequest(ctx: {
-  pendingId: number
-  comp: OrderComputation
-  reviewUrl: string
-}): { subject: string; text: string; html: string } {
-  const c = ctx.comp
-  const subject = `[Kooperative Dürnau] Bitte bestätigen Sie Ihre Bestellung`
-  const greeting = c.customer.name ? `Hallo ${c.customer.name},` : 'Hallo,'
-  const text = [
-    greeting,
-    '',
-    'vielen Dank für Ihre Bestellung. Bitte bestätigen Sie sie verbindlich –',
-    'entweder über den folgenden Link (Inhalt prüfen und bestätigen):',
-    ctx.reviewUrl,
-    '',
-    'oder indem Sie einfach auf diese E-Mail antworten.',
-    '',
-    'Erst mit Ihrer Bestätigung kommt der Kaufvertrag zustande.',
-    '',
-    itemsText(c),
-    '',
-    'Herzliche Grüsze',
-    'Kooperative Dürnau eG',
-    '',
-    footerText(true),
-  ].join('\n')
-  const html = wrap(
-    'Bitte bestätigen Sie Ihre Bestellung',
-    `
-    <p style="margin:0 0 12px">${esc(greeting)}</p>
-    <p style="margin:0 0 4px">vielen Dank für Ihre Bestellung. Bitte bestätigen Sie sie verbindlich:</p>
-    ${button(ctx.reviewUrl, 'Inhalt prüfen & bestätigen →')}
-    <p style="margin:0 0 12px;color:#555">Alternativ genügt eine <strong>Antwort auf diese E-Mail</strong>. Erst mit Ihrer Bestätigung kommt der Kaufvertrag zustande.</p>
-    ${itemsHtml(c)}
-    <p style="margin:12px 0 0;color:#555">Herzliche Grüsze<br>Kooperative Dürnau eG</p>
-    ${footerHtml(true)}`,
-  )
-  return { subject, text, html }
-}
-
-/** Admin: a new (unconfirmed) order has arrived. */
-export function buildAdminNewPending(ctx: {
-  pendingId: number
-  comp: OrderComputation
-  adminUrl: string
-}): { subject: string; text: string; html: string } {
-  const c = ctx.comp
-  const subject = `[Koop · neuer Shop] Neue Bestellung (unbestätigt) – ${c.customer.name}`
-  const text = [
-    'Eine neue Bestellung ist eingegangen und wartet auf die Bestätigung des Kunden.',
-    `Kunde: ${c.customer.name} <${c.customer.email}>`,
-    `Vorgang im Admin: ${ctx.adminUrl}`,
-    '',
-    itemsText(c),
-    '',
-    footerText(false),
-  ].join('\n')
-  const html = wrap(
-    'Neue Bestellung (unbestätigt)',
-    `
-    <p style="margin:0 0 12px">Eine neue Bestellung ist eingegangen und wartet auf die <strong>Bestätigung des Kunden</strong>.</p>
-    <p style="margin:0 0 4px">Kunde: <strong>${esc(c.customer.name)}</strong> · <a href="mailto:${esc(c.customer.email)}">${esc(c.customer.email)}</a></p>
-    ${button(ctx.adminUrl, 'Im Admin öffnen →')}
-    ${itemsHtml(c)}
-    ${footerHtml(false)}`,
-  )
-  return { subject, text, html }
 }
 
 /** Customer: confirmation received (with the full order/invoice listing). */
@@ -209,6 +141,84 @@ export function buildAdminConfirmed(ctx: {
     `
     <p style="margin:0 0 12px">${esc(headline)}</p>
     ${ctx.note ? `<p style="margin:0 0 12px">Begründung: <em>${esc(ctx.note)}</em></p>` : ''}
+    <p style="margin:0 0 4px">Kunde: <strong>${esc(c.customer.name)}</strong> · <a href="mailto:${esc(c.customer.email)}">${esc(c.customer.email)}</a></p>
+    ${button(ctx.adminUrl, 'Im Admin öffnen →')}
+    ${itemsHtml(c)}
+    ${footerHtml(false)}`,
+  )
+  return { subject, text, html }
+}
+
+/**
+ * Customer: receipt of a direct order (§ 312i Abs. 1 Nr. 3 BGB).
+ * Deliberately NOT an acceptance — the contract is concluded by a separate order
+ * confirmation or by shipping (AGB § 2), so the shop can still decline, e.g.
+ * when an item is out of stock.
+ */
+export function buildCustomerOrderReceived(ctx: {
+  orderId: number
+  comp: OrderComputation
+  reviewUrl: string
+}): { subject: string; text: string; html: string } {
+  const c = ctx.comp
+  const subject = `[Kooperative Dürnau] Eingang Ihrer Bestellung #${ctx.orderId}`
+  const greeting = c.customer.name ? `Hallo ${c.customer.name},` : 'Hallo,'
+  const receipt =
+    'Diese E-Mail bestätigt nur den Eingang Ihrer Bestellung und ist noch keine Annahme. ' +
+    'Der Kaufvertrag kommt zustande, wenn wir Ihre Bestellung mit einer Auftragsbestätigung ' +
+    'annehmen oder die Ware versenden.'
+  const text = [
+    greeting,
+    '',
+    `vielen Dank für Ihre Bestellung #${ctx.orderId}. Sie ist bei uns eingegangen.`,
+    '',
+    receipt,
+    '',
+    itemsText(c),
+    '',
+    `Bestellung ansehen: ${ctx.reviewUrl}`,
+    '',
+    'Herzliche Grüsze',
+    'Kooperative Dürnau eG',
+    '',
+    footerText(true),
+  ].join('\n')
+  const html = wrap(
+    `Eingang Ihrer Bestellung #${ctx.orderId}`,
+    `
+    <p style="margin:0 0 12px">${esc(greeting)}</p>
+    <p style="margin:0 0 12px">vielen Dank für Ihre Bestellung <strong>#${ctx.orderId}</strong>. Sie ist bei uns eingegangen.</p>
+    <p style="margin:0 0 12px;color:#555">${esc(receipt)}</p>
+    ${itemsHtml(c)}
+    ${button(ctx.reviewUrl, 'Bestellung ansehen →')}
+    <p style="margin:12px 0 0;color:#555">Herzliche Grüsze<br>Kooperative Dürnau eG</p>
+    ${footerHtml(true)}`,
+  )
+  return { subject, text, html }
+}
+
+/** Admin: a new direct order has arrived and is ready to process. */
+export function buildAdminNewOrder(ctx: {
+  orderId: number
+  comp: OrderComputation
+  adminUrl: string
+}): { subject: string; text: string; html: string } {
+  const c = ctx.comp
+  const subject = `[Koop · neuer Shop] Neue Bestellung #${ctx.orderId} – bitte bearbeiten`
+  const headline = `Neue Bestellung #${ctx.orderId} ist eingegangen und kann bearbeitet werden.`
+  const text = [
+    headline,
+    `Kunde: ${c.customer.name} <${c.customer.email}>`,
+    `Im Admin öffnen: ${ctx.adminUrl}`,
+    '',
+    itemsText(c),
+    '',
+    footerText(false),
+  ].join('\n')
+  const html = wrap(
+    `Neue Bestellung #${ctx.orderId}`,
+    `
+    <p style="margin:0 0 12px">${esc(headline)}</p>
     <p style="margin:0 0 4px">Kunde: <strong>${esc(c.customer.name)}</strong> · <a href="mailto:${esc(c.customer.email)}">${esc(c.customer.email)}</a></p>
     ${button(ctx.adminUrl, 'Im Admin öffnen →')}
     ${itemsHtml(c)}

@@ -4,7 +4,7 @@ import { describe, it, expect, afterEach } from 'vitest'
 
 import '../../test/setup-server'
 
-import { baseUrl, reviewLink, adminPendingLink, adminOrderLink } from './links'
+import { baseUrl, reviewLink, adminOrderLink } from './links'
 
 import type { H3Event } from 'h3'
 import type { IncomingMessage, ServerResponse } from 'node:http'
@@ -57,7 +57,6 @@ describe('link builders', () => {
   })
 
   it('builds the admin deep links', () => {
-    expect(adminPendingLink(event, 42)).toBe('https://shop.kooperative.de/admin/pending/42')
     expect(adminOrderLink(event, 7)).toBe('https://shop.kooperative.de/admin/orders/7')
   })
 })

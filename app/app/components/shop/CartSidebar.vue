@@ -147,31 +147,26 @@
                     </svg>
                   </div>
                   <h3 class="text-lg font-semibold mb-1">Vielen Dank!</h3>
-                  <p class="text-sm text-gray-600">Ihre Bestellung wurde an uns übermittelt.</p>
+                  <p class="text-sm text-gray-600">
+                    Ihre Bestellung Nr. {{ lastOrderId }} ist bei uns eingegangen.
+                  </p>
                 </div>
                 <div
-                  class="rounded-lg bg-amber-50 border border-amber-200 p-4 mb-5 text-sm text-amber-900"
+                  class="rounded-lg bg-gray-50 border border-gray-200 p-4 mb-5 text-sm text-gray-700"
                 >
                   <p class="font-semibold mb-2">So geht es weiter:</p>
                   <ol class="space-y-2 list-decimal list-inside">
                     <li>
-                      Wir prüfen Ihre Bestellung und senden Ihnen eine
-                      <strong>Bestätigungs-E-Mail</strong> mit den Zahlungskonditionen.
+                      Sie erhalten gleich eine <strong>Eingangsbestätigung</strong> per E-Mail mit
+                      allen Angaben zu Ihrer Bestellung.
                     </li>
                     <li>
-                      Bitte <strong>antworten Sie auf diese E-Mail</strong>, um den Kauf
-                      rechtsverbindlich zu bestätigen.
+                      Wir prüfen die Bestellung und nehmen sie mit einer
+                      <strong>Auftragsbestätigung</strong> an oder versenden direkt die Ware.
                     </li>
-                    <li>
-                      Erst nach Ihrer Rück-Mail (und ggf. Zahlungseingang) versenden wir die Ware.
-                    </li>
+                    <li>Bei Vorkasse versenden wir die Ware nach Zahlungseingang.</li>
                   </ol>
                 </div>
-                <p class="text-xs text-gray-500 mb-5">
-                  Hintergrund: Aus rechtlichen Gründen kommt der Kaufvertrag nicht über die Webseite
-                  zustande, sondern erst durch Ihre E-Mail-Antwort. So funktioniert die Kooperative
-                  seit jeher.
-                </p>
                 <div class="flex justify-center">
                   <KoopButton size="sm" @click="closeCart">Schließen</KoopButton>
                 </div>
@@ -221,6 +216,7 @@
     removeFromCart,
     updateVariant,
     submitOrder,
+    lastOrderId,
   } = useCart()
 
   const { user } = useAuth()

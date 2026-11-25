@@ -58,7 +58,7 @@ export default defineEventHandler(async (event) => {
   )
   // New-shop origin: if this order was materialized from a pending confirmation,
   // the confirmation step is done and carries the confirmation info. An old-shop
-  // order never had that step — it is still rendered, greyed out as 'skipped', so
+  // order, and a new-shop order placed directly (standard shop), never had that step — it is still rendered, greyed out as 'skipped', so
   // the step numbering matches the pending and new-shop views.
   let origin: 'alt' | 'neu' = 'alt'
   let confirmation: { via: string | null; at: unknown; note: string | null } | null = null
@@ -66,7 +66,11 @@ export default defineEventHandler(async (event) => {
   let confirmedAt: string | null = null
   try {
     const pending = await getPendingByOrderId(db, id)
-    if (pending) {
+    if (pending?.confirmedVia === 'direct') {
+      // Standard-shop checkout: new shop, but no confirmation step ever existed
+      // for this order — shown as 'skipped' like an old-shop order.
+      origin = 'neu'
+    } else if (pending) {
       origin = 'neu'
       confirmation = {
         via: pending.confirmedVia,

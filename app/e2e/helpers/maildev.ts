@@ -69,7 +69,7 @@ export async function waitForMailCount(
 export const to = (address: string) => (mail: Mail) =>
   mail.to.some((t) => t.address.toLowerCase() === address.toLowerCase())
 
-/** Pulls the token-gated review URL out of a confirmation-request mail. */
+/** Pulls the token-gated review URL out of an order mail. */
 export function confirmationLink(mail: Mail): string {
   const match = /https?:\/\/\S*\/bestellung\/bestaetigen\?token=[A-Za-z0-9]+/.exec(mail.text)
   if (!match) throw new Error(`no confirmation link in mail "${mail.subject}"`)

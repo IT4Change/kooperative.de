@@ -1,3 +1,5 @@
+import { randomBytes } from 'node:crypto'
+
 import { createPool } from 'mysql2/promise'
 
 import type { Pool, RowDataPacket } from 'mysql2/promise'
@@ -39,6 +41,7 @@ export interface PendingRow extends RowDataPacket {
   total: string
   status: string
   orders_id: number | null
+  confirmed_via: string | null
   payload: string
 }
 
@@ -48,6 +51,30 @@ export async function latestPending(email: string): Promise<PendingRow | undefin
     'SELECT * FROM koop_pending_order WHERE email = ? ORDER BY id DESC LIMIT 1',
     [email],
   )
+  return rows[0]
+}
+
+/**
+ * An order still awaiting the customer's confirmation, as orders placed before
+ * the switch to the standard-shop checkout can exist in the live database.
+ * Copies the pinned snapshot of the given (direct) order into a fresh record
+ * with its own token, so the former confirmation paths stay testable.
+ */
+export async function seedLegacyPending(fromPendingId: number): Promise<PendingRow> {
+  const token = randomBytes(32).toString('hex')
+  await db().execute(
+    `INSERT INTO koop_pending_order
+       (token, customers_id, email, payload, total, status, created_at)
+     SELECT ?, customers_id, email, payload, total, 'pending', NOW()
+       FROM koop_pending_order WHERE id = ?`,
+    [token, fromPendingId],
+  )
+  const rows = await query<PendingRow>('SELECT * FROM koop_pending_order WHERE token = ?', [token])
+  return rows[0]
+}
+
+export async function pendingById(id: number): Promise<PendingRow | undefined> {
+  const rows = await query<PendingRow>('SELECT * FROM koop_pending_order WHERE id = ?', [id])
   return rows[0]
 }
 

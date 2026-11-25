@@ -17,10 +17,6 @@ export function reviewLink(event: H3Event, token: string): string {
   return `${baseUrl(event)}/bestellung/bestaetigen?token=${encodeURIComponent(token)}`
 }
 
-export function adminPendingLink(event: H3Event, id: number): string {
-  return `${baseUrl(event)}/admin/pending/${id}`
-}
-
 export function adminOrderLink(event: H3Event, id: number): string {
   return `${baseUrl(event)}/admin/orders/${id}`
 }
