@@ -57,20 +57,12 @@ Repository ist öffentlich.
 | `PUBLIC_BASE_URL`, `ADMIN_BASE_URL` | Basis für Links in Mails (sonst aus dem Request-Host) |
 | `COMPANY_*` | Pflichtangaben im Mail-Footer (§ 35a GmbHG, § 125a HGB) |
 
-## Rechtstexte importieren
+## Rechtstexte
 
-Die Texte liegen lokal in `legal/<seite>/v1.md, v2.md, …` (gitignored) und
-gelangen über die Admin-API in einen laufenden Shop. Importiert werden nur
-Seiten, die noch keine Version haben; danach wird im Admin unter
-*Rechtstexte* bearbeitet und live geschaltet.
-
-```sh
-cd app
-LEGAL_IMPORT_AUTH=user:passwort node scripts/legal-import.mjs ../legal --url https://… --dry-run
-LEGAL_IMPORT_AUTH=user:passwort node scripts/legal-import.mjs ../legal --url https://…
-```
-
-Das Dateiformat steht im Kopf von `app/scripts/legal-import.mjs`.
+Die Texte liegen nicht im Repository, sondern versioniert in der Datenbank.
+Gepflegt werden sie im Admin unter *Rechtstexte*: neue Fassung einfügen,
+speichern, live schalten. Live gilt sofort in beiden Shops. Lokale Entwürfe
+gehören nach `legal/` (gitignored).
 
 ## Tests
 
